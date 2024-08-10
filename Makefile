@@ -29,7 +29,7 @@ RM = rm -rf
 
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ FLAGS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
-CXXFLAGS 	= -Wall -Werror -Wextra -pedantic -std=c++98
+CXXFLAGS 	= -Wall -Werror -Wextra -Wshadow -pedantic -std=c++98 -g #-fsanitize=address
 
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ PATHS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
