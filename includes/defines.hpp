@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/01 12:08:59 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/12 14:40:12 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,5 +21,9 @@
 # include <errno.h>   // For errno
 # include <sys/types.h>
 # include <cstring>   // For memset
+
+// STL
+# include <vector>
+# include <map>
 
 #endif
