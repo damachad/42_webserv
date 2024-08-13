@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 12:32:14 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 13:52:43 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,3 +21,5 @@ const char *FileReadError::what() const throw()
 {
 	return (_message.c_str());
 }
+
+FileReadError::~FileReadError() throw(){}

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:30:13 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 12:31:31 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 13:52:01 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ class FileReadError : public std::exception
 	public:
 		FileReadError(const std::string &str) throw();
 		virtual const char *what() const throw();
+		virtual ~FileReadError() throw();
 };
 
 #endif

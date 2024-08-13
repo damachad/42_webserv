@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 11:50:40 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 14:00:36 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@ enum Method
 	POST,
 	DELETE
 };
+
+struct Context;
 
 typedef std::map<std::string, Context> Locations;
 
@@ -56,7 +58,8 @@ class ConfigParser
 		void	loadConfigs(const std::string &file);
 		void	loadDefaults(); // do it on constructor?
 		std::vector<Context>	getServers(void);
-		void	printContexts();
+		void	printConfigs();
+		void	printContext(Context context);
 };
 
 #endif
