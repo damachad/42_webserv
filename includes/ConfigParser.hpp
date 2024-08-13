@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 14:00:36 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 14:44:05 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,9 +57,9 @@ class ConfigParser
 
 		void	loadConfigs(const std::string &file);
 		void	loadDefaults(); // do it on constructor?
-		std::vector<Context>	getServers(void);
 		void	printConfigs();
 		void	printContext(Context context);
+		std::vector<Context>	getServers(void);
 };
 
 #endif
