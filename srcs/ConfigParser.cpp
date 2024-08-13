@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 14:43:52 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 16:04:05 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,8 @@ ConfigParser::ConfigParser(ConfigParser const &src)
 	*this = src;
 }
 
-ConfigParser::ConfigParser(const std::string &file)
-{
-	if (access(file.c_str(), R_OK))
-		throw FileReadError(file);
-	// else
-		// loadDefaults();
-}
+ConfigParser::ConfigParser(const std::string &file) : _configFile(file)
+{}
 
 ConfigParser::~ConfigParser(void)
 {}
@@ -35,6 +30,29 @@ ConfigParser &	ConfigParser::operator=(ConfigParser const & src)
 	if (this != &src)
 		this->_servers = src._servers;
 	return (*this);
+}
+
+void	ConfigParser::loadDefaults()
+{
+	Context	server;
+	// default values from NGINX
+	server.port = 80;
+	server.index = "index.html";
+	server.clientMaxBodySize = 1048576; // 1m
+	// server.root = "";
+	// server.host = "localhost";
+	// server.serverName = "";
+}
+
+void	ConfigParser::loadConfigs()
+{
+	if (access(_configFile.c_str(), R_OK))
+	{
+		std::cerr << "Unable to read from: " << _configFile << "\n";
+		// call error function that exits
+		return ;
+	}
+	// loadDefaults();
 }
 
 std::vector<Context>	ConfigParser::getServers(void)
