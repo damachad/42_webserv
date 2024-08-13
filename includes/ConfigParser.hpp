@@ -6,14 +6,14 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/12 15:23:59 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 11:50:40 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONFIGPARSER_HPP
 # define CONFIGPARSER_HPP
 
-# include "defines.hpp"
+# include "Webserv.hpp"
 
 enum Method
 {
@@ -38,6 +38,7 @@ struct Context
 	std::vector<Method>				allowedMethods;
 	std::map<short, std::string>	errorPages;
 	Locations						locations;
+	// Later add redirect and cgi related variables
 };
 
 class ConfigParser
@@ -47,11 +48,15 @@ class ConfigParser
 
 	public:
 		ConfigParser();
+		ConfigParser(const ConfigParser &src);
 		ConfigParser(const std::string &file);
 		~ConfigParser();
+		ConfigParser & operator=(const ConfigParser &src);
 
 		void	loadConfigs(const std::string &file);
-		void	loadDefaults();
+		void	loadDefaults(); // do it on constructor?
+		std::vector<Context>	getServers(void);
+		void	printContexts();
 };
 
 #endif
