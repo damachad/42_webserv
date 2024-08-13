@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 15:27:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 16:22:47 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ class ConfigParser
 		~ConfigParser();
 		ConfigParser & operator=(const ConfigParser &src);
 
-		void	loadConfigs();
+		bool	loadConfigs();
 		void	loadDefaults();
 		void	printConfigs();
 		void	printContext(Context context);

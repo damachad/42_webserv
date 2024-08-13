@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 14:49:03 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 15:10:34 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 16:21:22 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,13 +20,6 @@ int	main(int argc, char **argv)
 		std::cout << "Usage: ./webserv [configuration file]";
 		return (1);
 	}
-	try
-	{
-		ConfigParser parser(argv[1]);
-	}
-	catch (std::exception & e)
-	{
-		std::cerr << e.what() << '\n';
-	}
+	ConfigParser parser(argv[1]);
 	return (0);
 }

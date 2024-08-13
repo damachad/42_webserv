@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 16:04:05 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 16:36:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,15 +44,26 @@ void	ConfigParser::loadDefaults()
 	// server.serverName = "";
 }
 
-void	ConfigParser::loadConfigs()
+bool	ConfigParser::loadConfigs()
 {
-	if (access(_configFile.c_str(), R_OK))
+	// is access() necessary if you have file.is_open() ?
+	
+	// if (access(_configFile.c_str(), R_OK))
+	// {
+	// 	std::cerr << "Unable to read from: " << _configFile << "\n";
+	// 	// call error function that exits
+	// 	return (false);
+	// }
+	// loadDefaults();
+	std::ifstream file;
+	file.open(_configFile);
+	if (!file.is_open())
 	{
 		std::cerr << "Unable to read from: " << _configFile << "\n";
 		// call error function that exits
-		return ;
+		return (false);
 	}
-	// loadDefaults();
+	return (true);
 }
 
 std::vector<Context>	ConfigParser::getServers(void)

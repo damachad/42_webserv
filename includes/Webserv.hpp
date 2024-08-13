@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 12:32:41 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 16:30:39 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define WEBSERV_HPP
 
 # include <iostream> // For cout
+# include <fstream> // For file streams
 # include <unistd.h> // For read
 # include <errno.h>   // For errno
 # include <cstring>   // For memset (?)
