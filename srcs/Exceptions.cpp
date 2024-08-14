@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 13:52:43 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/14 11:39:16 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 FileReadError::FileReadError(const std::string &str) throw()
 {
-	_message = "Unable to read from: " + str;
+	_message = "Unable to read from: " + str + '\n';
 }
 
 const char *FileReadError::what() const throw()
@@ -22,4 +22,16 @@ const char *FileReadError::what() const throw()
 	return (_message.c_str());
 }
 
-FileReadError::~FileReadError() throw(){}
+ConfigError::~ConfigError() throw(){}
+
+ConfigError::ConfigError(const std::string &str) throw()
+{
+	_message = "Error in configuration file: " + str + '\n';
+}
+
+const char *ConfigError::what() const throw()
+{
+	return (_message.c_str());
+}
+
+ConfigError::~ConfigError() throw(){}

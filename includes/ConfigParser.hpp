@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 17:11:01 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/14 12:16:38 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,8 @@ class ConfigParser
 		void	printContext(Context context);
 		void	trimOuterSpaces(std::string &s);
 		void	trimComments(std::string &s);
+		size_t		advanceBlock(std::string content, size_t start);
+		std::vector<std::string>	splitServerBlocks(std::string content);
 		std::vector<Context>	getServers(void);
 };
 

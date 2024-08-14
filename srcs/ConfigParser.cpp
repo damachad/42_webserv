@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 10:57:31 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/14 12:21:03 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,42 @@ void	ConfigParser::trimComments(std::string &s)
 	}
 }
 
+size_t	ConfigParser::advanceBlock(std::string content, size_t start)
+{
+	short scope = 0;
+	while (content[start++])
+	{
+		char c = content[start];
+		if (c == '{')
+			scope++;
+		else if (c == '}')
+		{
+			scope--;
+			if (scope == 0)
+				return (start);
+		}
+	}
+	throw ConfigError("Unmatched '{}'.");
+}
+
+// TODO: loop to extract all server blocks (flexible function for location blocks?)
+std::vector<std::string>	ConfigParser::splitServerBlocks(std::string content)
+{
+	if (content.compare(0, 6, "server"))
+		throw ConfigError("No server block present.");
+	size_t start = 6;
+	while (std::isspace(content[start++])){}
+	if (content.compare(start, start + 1, "{"))
+		throw ConfigError("No '{' at beginning of block.");
+	size_t end = advanceBlock(content, start);
+	std::vector<std::string> servers;
+	servers.push_back(content.substr(start, end));
+	start = end + 1;
+	while (content[start] && std::isspace(content[start++])){}
+	if (!content[start])
+		return (servers);
+}
+
 // TODO: improve error handling
 bool	ConfigParser::loadConfigs()
 {
@@ -106,6 +142,13 @@ bool	ConfigParser::loadConfigs()
 			return (false);
 		}
 		std::cout << fileContents;
+		std::vector<std::string> serverBlocks;
+		try{
+			serverBlocks = splitServerBlocks(fileContents);
+		}
+		catch (std::exception &e){
+			std::cerr << e.what();
+		}
 	}
 	return (true);
 }
