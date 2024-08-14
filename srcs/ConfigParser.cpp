@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 17:24:12 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/14 10:57:31 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 ConfigParser::ConfigParser(void){}
 
-ConfigParser::ConfigParser(ConfigParser const &src)
+ConfigParser::ConfigParser(const ConfigParser &src)
 {
 	*this = src;
 }
@@ -25,7 +25,7 @@ ConfigParser::ConfigParser(const std::string &file) : _configFile(file)
 ConfigParser::~ConfigParser(void)
 {}
 
-ConfigParser &	ConfigParser::operator=(ConfigParser const & src)
+ConfigParser &	ConfigParser::operator=(const ConfigParser & src)
 {
 	if (this != &src)
 		this->_servers = src._servers;
@@ -83,7 +83,7 @@ bool	ConfigParser::loadConfigs()
 	// }
 	
 	// loadDefaults();
-	std::ifstream file(_configFile);
+	std::ifstream file(_configFile.c_str());
 	if (!file.is_open())
 	{
 		std::cerr << "Unable to read from: " << _configFile << "\n";
@@ -105,6 +105,7 @@ bool	ConfigParser::loadConfigs()
 			// call error function that exits
 			return (false);
 		}
+		std::cout << fileContents;
 	}
 	return (true);
 }
@@ -156,10 +157,11 @@ void	ConfigParser::printContext(Context context)
 	{
 		std::cout << "Locations: " << std::endl;
 		Locations::iterator it;
-		for (it = context.locations.begin(); it != context.locations.end(); ++it)
+		for (it = context.locations.begin(); it != context.locations.end(); ++it) {
 			std::cout << it->first << ": ";
 			printContext(it->second);
 			std::cout << std::endl;
+		}
 	}
 }
 
