@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 11:39:16 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/14 12:35:47 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,9 @@ const char *FileReadError::what() const throw()
 	return (_message.c_str());
 }
 
-ConfigError::~ConfigError() throw(){}
+FileReadError::~FileReadError() throw(){}
+
+/* Configuration File Errors */
 
 ConfigError::ConfigError(const std::string &str) throw()
 {
