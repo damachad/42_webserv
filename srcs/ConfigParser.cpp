@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 16:36:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 17:24:12 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,33 @@ void	ConfigParser::loadDefaults()
 	// server.serverName = "";
 }
 
+/* remove leading and trailing whitespaces*/
+void	ConfigParser::trimOuterSpaces(std::string &s)
+{
+	if (s.empty())
+		return ;
+	while (std::isspace(s[0]))
+		s.erase(s.begin());
+	while (std::isspace(s[s.length() - 1]))
+		s.erase(s.end() - 1);
+}
+
+
+/* remove comments */
+void	ConfigParser::trimComments(std::string &s)
+{
+	if (s.empty())
+		return ;
+	size_t comment = s.find('#');
+	while (comment != std::string::npos)
+	{
+		size_t endl = s.find('\n', comment);
+		s.erase(comment, endl - comment);
+		comment = s.find('#');
+	}
+}
+
+// TODO: improve error handling
 bool	ConfigParser::loadConfigs()
 {
 	// is access() necessary if you have file.is_open() ?
@@ -54,14 +81,30 @@ bool	ConfigParser::loadConfigs()
 	// 	// call error function that exits
 	// 	return (false);
 	// }
+	
 	// loadDefaults();
-	std::ifstream file;
-	file.open(_configFile);
+	std::ifstream file(_configFile);
 	if (!file.is_open())
 	{
 		std::cerr << "Unable to read from: " << _configFile << "\n";
 		// call error function that exits
 		return (false);
+	}
+	else
+	{
+		std::string fileContents;
+		// Read file contents into the string
+		fileContents.assign((std::istreambuf_iterator<char>(file)),
+						(std::istreambuf_iterator<char>()));
+		file.close();
+		trimOuterSpaces(fileContents);
+		trimComments(fileContents);
+		if (fileContents.empty())
+		{
+			std::cerr << "Configuration file is empty.\n";
+			// call error function that exits
+			return (false);
+		}
 	}
 	return (true);
 }

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 16:22:47 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/13 17:11:01 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,8 @@ class ConfigParser
 		void	loadDefaults();
 		void	printConfigs();
 		void	printContext(Context context);
+		void	trimOuterSpaces(std::string &s);
+		void	trimComments(std::string &s);
 		std::vector<Context>	getServers(void);
 };
 
