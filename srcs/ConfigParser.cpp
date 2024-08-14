@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 14:15:45 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/14 17:31:11 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 ConfigParser::ConfigParser(void){}
 
+// TODO: Implement
 ConfigParser::ConfigParser(const ConfigParser &src)
 {
 	*this = src;
@@ -27,8 +28,10 @@ ConfigParser::~ConfigParser(void)
 
 ConfigParser &	ConfigParser::operator=(const ConfigParser & src)
 {
-	if (this != &src)
+	if (this != &src){
+		this->_configFile = src._configFile;
 		this->_servers = src._servers;
+	}
 	return (*this);
 }
 
@@ -36,12 +39,11 @@ void	ConfigParser::loadDefaults()
 {
 	Context	server;
 	// default values from NGINX
-	server.port = 80;
+	server.ports.push_back(80);
 	server.index = "index.html";
 	server.clientMaxBodySize = 1048576; // 1m
 	// server.root = "";
-	// server.host = "localhost";
-	// server.serverName = "";
+	// server.serverName = "localhost";
 }
 
 /* remove leading and trailing whitespaces*/
@@ -89,17 +91,17 @@ size_t	ConfigParser::advanceBlock(std::string content, size_t start)
 	throw ConfigError("Unmatched '{}'.");
 }
 
-// TODO: loop to extract all server blocks (flexible function for location blocks?)
+// TODOs: validate if block ID is just 'server' (e.g. 'serverr')
+// 		validate consecutive '{' and '}' here? 
+// 		(flexible function for location blocks?)
 std::vector<std::string>	ConfigParser::splitServerBlocks(std::string content)
 {
 	size_t start = 0;
 	size_t end = 0;
+	size_t endBlockContent = 0;
 	std::vector<std::string> servers;
 	while (content[start])
 	{
-		// std::cout << "start: " << start << "\n";
-		// std::cout << "Block id: " << content.substr(start, 6) << ".\n";
-		// std::cout << "equal to 'server'?: " << content.compare(start, 6, "server") << "\n";
 		if (content.compare(start, 6, "server"))
 			throw ConfigError("No server block present.");
 		start += 6;
@@ -108,8 +110,10 @@ std::vector<std::string>	ConfigParser::splitServerBlocks(std::string content)
 		if (content[start] != '{')
 			throw ConfigError("No '{' at beginning of block.");
 		end = advanceBlock(content, start);
-		// std::cout << "start: " << start << " end: " << end << '\n';
-		servers.push_back(content.substr(start, end - start + 1));
+		while (std::isspace(content[++start])){}
+		endBlockContent = end;
+		while (std::isspace(content[--endBlockContent])){}
+		servers.push_back(content.substr(start, endBlockContent - start + 1));
 		start = end + 1;
 		while (content[start] && std::isspace(content[start]))
 			start++;
@@ -117,19 +121,37 @@ std::vector<std::string>	ConfigParser::splitServerBlocks(std::string content)
 	return (servers);
 }
 
+// TODO: get tokens from line
+std::vector<std::string>	ConfigParser::processLine(std::string line)
+{
+	static int i = 1;
+	std::vector<std::string> tokens;
+	trimOuterSpaces(line);
+	std::cout << "Line " << i << ": " << line << "\n";
+	i++;
+	return (tokens);
+}
+
+// TODO: fix segfault
+void	ConfigParser::loadIntoContext(std::vector<std::string> &blocks)
+{
+	std::vector<std::string> tokens;
+	std::string line;
+	std::vector<std::string>::iterator it;
+	for (it = blocks.begin(); it != blocks.end(); it++){
+		std::istringstream block(*it);
+		while (std::getline(block, line)){
+			// turn each line of server block into vector of tokens
+			tokens = processLine(line);
+			// specific function to parse location blocks
+			// check if directive is one covered by this program
+		}
+	}
+}
+
 // TODO: improve error handling
 bool	ConfigParser::loadConfigs()
-{
-	// is access() necessary if you have file.is_open() ?
-	
-	// if (access(_configFile.c_str(), R_OK))
-	// {
-	// 	std::cerr << "Unable to read from: " << _configFile << "\n";
-	// 	// call error function that exits
-	// 	return (false);
-	// }
-	
-	// loadDefaults();
+{	
 	std::ifstream file(_configFile.c_str());
 	if (!file.is_open())
 	{
@@ -141,8 +163,15 @@ bool	ConfigParser::loadConfigs()
 	{
 		std::string fileContents;
 		// Read file contents into the string
-		fileContents.assign((std::istreambuf_iterator<char>(file)),
+		try{
+			fileContents.assign((std::istreambuf_iterator<char>(file)),
 						(std::istreambuf_iterator<char>()));
+		}
+		catch (std::exception &e){
+			std::cerr << e.what() << std::endl;
+			// call error function that exits
+			return (false);
+		}
 		file.close();
 		trimOuterSpaces(fileContents);
 		trimComments(fileContents);
@@ -159,6 +188,7 @@ bool	ConfigParser::loadConfigs()
 		}
 		catch (std::exception &e){
 			std::cerr << e.what();
+			return (false);
 		}
 		std::cout << "SERVER BLOCKS\n";
 		std::vector<std::string>::iterator it;
@@ -166,6 +196,7 @@ bool	ConfigParser::loadConfigs()
 			std::cout << *it << '\n';
 			std::cout << "----------------------------\n";
 		}
+		loadIntoContext(serverBlocks);
 	}
 	return (true);
 }
@@ -177,9 +208,14 @@ std::vector<Context>	ConfigParser::getServers(void)
 
 void	ConfigParser::printContext(Context context)
 {
-	if (!context.host.empty())
-		std::cout << "Host: " << context.host << std::endl;
-	std::cout << "Port: " << context.port << std::endl;
+	if (!context.ports.empty())
+	{
+		std::cout << "Ports: " << std::endl;
+		std::vector<u_int16_t>::iterator it;
+		for (it = context.ports.begin(); it != context.ports.end(); ++it)
+			std::cout << *it << " ";
+		std::cout << std::endl;
+	}
 	if (!context.serverName.empty())
 		std::cout << "Server Name: " << context.serverName << std::endl;
 	if (!context.root.empty())

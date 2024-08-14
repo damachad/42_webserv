@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 12:16:38 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/14 17:16:37 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,7 @@ typedef std::map<std::string, Context> Locations;
 
 struct Context
 {
-	std::string						host;
-	uint16_t						port; // implement IP/port instead of just port ?
+	std::vector<uint16_t>			ports; // implement IP/port instead of just port ?
 	std::string						serverName;
 	std::string						root;
 	std::string						index;
@@ -62,8 +61,10 @@ class ConfigParser
 		void	printContext(Context context);
 		void	trimOuterSpaces(std::string &s);
 		void	trimComments(std::string &s);
+		void	loadIntoContext(std::vector<std::string> &blocks);
 		size_t		advanceBlock(std::string content, size_t start);
 		std::vector<std::string>	splitServerBlocks(std::string content);
+		std::vector<std::string>	processLine(std::string line);
 		std::vector<Context>	getServers(void);
 };
 

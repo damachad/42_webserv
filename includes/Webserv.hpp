@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/13 16:30:39 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/14 17:28:19 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,9 @@
 # include <sys/socket.h> // For socket functions
 # include <netinet/in.h> // For sockaddr_in
 # include <cstdlib> // For exit() and EXIT_FAILURE
-#include <fcntl.h> // open
+# include <fcntl.h> // open
 # include <sys/types.h>
+# include <sstream>
 
 // STL
 # include <vector>
