@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/16 17:41:46 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/16 18:24:05 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ void	ConfigParser::loadDefaults()
 	Context	server;
 	// default values from NGINX
 	server.ports.push_back(80);
-	server.index = "index.html";
+	server.index.push_back("index.html");
 	server.clientMaxBodySize = 1048576; // 1m
 	// server.root = "";
 	// server.serverName = "localhost";
@@ -138,9 +138,20 @@ std::vector<std::string>	ConfigParser::tokenizeLine(std::string line)
 	return (tokens);
 }
 
-// TODO: improve flow of function
-void	ConfigParser::processLocation(std::string block, size_t start, size_t end)
+// TODO: parse directive unto Context struct
+void	ConfigParser::processDirective(Context &server, std::string line)
 {
+	(void)server;
+	std::vector<std::string> tokens;
+	tokens = tokenizeLine(line);
+	
+}
+
+// TODO: improve flow of function
+// 		parse each directive unto Context struct
+void	ConfigParser::processLocation(Context &server, std::string block, size_t start, size_t end)
+{
+	(void)server;
 	std::string route;
 	std::string line;
 	std::vector<std::string> tokens;
@@ -164,10 +175,10 @@ void	ConfigParser::processLocation(std::string block, size_t start, size_t end)
 
 void	ConfigParser::loadIntoContext(std::vector<std::string> &blocks)
 {
-	std::vector<std::string> tokens;
 	std::string line;
 	std::vector<std::string>::iterator it;
 	std::string firstWord;
+	Context	server;
 	for (it = blocks.begin(); it != blocks.end(); it++){
 		std::istringstream block(*it);
 		std::streampos startPos = block.tellg();
@@ -178,11 +189,11 @@ void	ConfigParser::loadIntoContext(std::vector<std::string> &blocks)
 			firstWord = line.substr(0, 8);
 			if (stringToLower(firstWord) == "location"){
 				size_t endPos = (*it).find("}", startPos);
-				processLocation((*it), startPos, endPos);
+				processLocation(server, (*it), startPos, endPos);
 				std::getline(block, line, '}');
 			}
 			else {
-				tokens = tokenizeLine(line);
+				processDirective(server, line);
 
 			}
 			startPos = block.tellg();
@@ -250,6 +261,7 @@ std::vector<Context>	ConfigParser::getServers(void)
 
 void	ConfigParser::printContext(Context context)
 {
+	std::vector<std::string>::const_iterator it2;
 	if (!context.ports.empty())
 	{
 		std::cout << "Ports: " << std::endl;
@@ -258,18 +270,30 @@ void	ConfigParser::printContext(Context context)
 			std::cout << *it << " ";
 		std::cout << std::endl;
 	}
-	if (!context.serverName.empty())
-		std::cout << "Server Name: " << context.serverName << std::endl;
+	if (!context.serverName.empty()){
+		std::cout << "Server Name: " << std::endl;
+		for (it2 = context.serverName.begin(); it2 != context.serverName.end(); ++it2)
+			std::cout << *it2 << " ";
+		std::cout << std::endl;
+	}
 	if (!context.root.empty())
 		std::cout << "Root: " << context.root << std::endl;
-	if (!context.index.empty())
-		std::cout << "Index: " << context.index << std::endl;
+	if (!context.index.empty()){
+		std::cout << "Index: " << std::endl;
+		for (it2 = context.index.begin(); it2 != context.index.end(); ++it2)
+			std::cout << *it2 << " ";
+		std::cout << std::endl;
+	}
 	std::cout << "Auto Index: " << (context.autoIndex ? "Enabled" : "Disabled") << std::endl;
 	std::cout << "Client Max Body Size: " << context.clientMaxBodySize << std::endl;
 	if (!context.uploadDir.empty())
 		std::cout << "Upload Directory: " << context.uploadDir << std::endl;
-	if (!context.tryFile.empty())
-		std::cout << "Try File: " << context.tryFile << std::endl;
+	if (!context.tryFiles.empty()){
+		std::cout << "Try Files: " << std::endl;
+		for (it2 = context.tryFiles.begin(); it2 != context.tryFiles.end(); ++it2)
+			std::cout << *it2 << " ";
+		std::cout << std::endl;
+	}
 	if (!context.allowedMethods.empty())
 	{
 		std::cout << "Allowed Methods: ";

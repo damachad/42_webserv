@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/16 16:34:12 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/16 18:13:29 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,13 +25,13 @@ enum Method
 struct Context
 {
 	std::vector<uint16_t>			ports;
-	std::string						serverName;
+	std::vector<std::string>		serverName;
 	std::string						root;
-	std::string						index;
+	std::vector<std::string>		index;
 	bool							autoIndex;
 	unsigned long					clientMaxBodySize;
-	std::string						uploadDir;
-	std::string						tryFile;
+	std::string						uploadDir; // Is this necessary ?
+	std::vector<std::string>		tryFiles;
 	std::vector<Method>				allowedMethods;
 	std::map<short, std::string>	errorPages; 
 	std::map<std::string, Context>	locations;
@@ -61,7 +61,8 @@ class ConfigParser
 		size_t						advanceBlock(std::string content, size_t start);
 		std::vector<std::string>	splitServerBlocks(std::string content);
 		std::vector<std::string>	tokenizeLine(std::string line);
-		void						processLocation(std::string block, size_t start, size_t end);
+		void						processLocation(Context &server, std::string block, size_t start, size_t end);
+		void						processDirective(Context &server, std::string line);
 		std::vector<Context>		getServers(void);
 };
 
