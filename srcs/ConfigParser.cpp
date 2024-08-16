@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 17:31:11 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/16 12:38:30 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -252,7 +252,7 @@ void	ConfigParser::printContext(Context context)
 	if (!context.locations.empty())
 	{
 		std::cout << "Locations: " << std::endl;
-		Locations::iterator it;
+		std::map<std::string, Context>::iterator it;
 		for (it = context.locations.begin(); it != context.locations.end(); ++it) {
 			std::cout << it->first << ": ";
 			printContext(it->second);
