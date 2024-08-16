@@ -11,6 +11,9 @@ en.subject.pdf
 # Command table (for nvim LSP)
 compile_commands.json
 
+# Gdb Init
+.gdbinit
+
 # Hidden folders
 .vscode
 .cache
