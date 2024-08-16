@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 17:16:37 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/16 11:30:07 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,10 +22,6 @@ enum Method
 	DELETE
 };
 
-struct Context;
-
-typedef std::map<std::string, Context> Locations;
-
 struct Context
 {
 	std::vector<uint16_t>			ports; // implement IP/port instead of just port ?
@@ -37,8 +33,8 @@ struct Context
 	std::string						uploadDir;
 	std::string						tryFile;
 	std::vector<Method>				allowedMethods;
-	std::map<short, std::string>	errorPages;
-	Locations						locations;
+	std::map<short, std::string>	errorPages; 
+	std::map<std::string, Context>	locations;
 	// Later add redirect and cgi related variables
 };
 
