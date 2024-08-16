@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/16 11:30:07 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/16 16:34:12 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ enum Method
 
 struct Context
 {
-	std::vector<uint16_t>			ports; // implement IP/port instead of just port ?
+	std::vector<uint16_t>			ports;
 	std::string						serverName;
 	std::string						root;
 	std::string						index;
@@ -51,17 +51,22 @@ class ConfigParser
 		~ConfigParser();
 		ConfigParser & operator=(const ConfigParser &src);
 
-		bool	loadConfigs();
-		void	loadDefaults();
-		void	printConfigs();
-		void	printContext(Context context);
-		void	trimOuterSpaces(std::string &s);
-		void	trimComments(std::string &s);
-		void	loadIntoContext(std::vector<std::string> &blocks);
-		size_t		advanceBlock(std::string content, size_t start);
+		bool						loadConfigs();
+		void						loadDefaults();
+		void						printConfigs();
+		void						printContext(Context context);
+		void						trimOuterSpaces(std::string &s);
+		void						trimComments(std::string &s);
+		void						loadIntoContext(std::vector<std::string> &blocks);
+		size_t						advanceBlock(std::string content, size_t start);
 		std::vector<std::string>	splitServerBlocks(std::string content);
-		std::vector<std::string>	processLine(std::string line);
-		std::vector<Context>	getServers(void);
+		std::vector<std::string>	tokenizeLine(std::string line);
+		void						processLocation(std::string block, size_t start, size_t end);
+		std::vector<Context>		getServers(void);
 };
+
+// Utils
+std::string		stringToLower(std::string str);
+std::string		stringToUpper(std::string str);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/16 12:38:30 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/16 17:41:46 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,13 +46,15 @@ void	ConfigParser::loadDefaults()
 	// server.serverName = "localhost";
 }
 
-/* remove leading and trailing whitespaces*/
+/* remove leading and trailing whitespaces */
 void	ConfigParser::trimOuterSpaces(std::string &s)
 {
 	if (s.empty())
 		return ;
 	while (std::isspace(s[0]))
 		s.erase(s.begin());
+	if (s.empty()) // case where line only has WS
+		return ;
 	while (std::isspace(s[s.length() - 1]))
 		s.erase(s.end() - 1);
 }
@@ -91,8 +93,7 @@ size_t	ConfigParser::advanceBlock(std::string content, size_t start)
 	throw ConfigError("Unmatched '{}'.");
 }
 
-// TODOs: validate if block ID is just 'server' (e.g. 'serverr')
-// 		validate consecutive '{' and '}' here? 
+// TODOs: validate consecutive '{' and '}' here? 
 // 		(flexible function for location blocks?)
 std::vector<std::string>	ConfigParser::splitServerBlocks(std::string content)
 {
@@ -100,9 +101,11 @@ std::vector<std::string>	ConfigParser::splitServerBlocks(std::string content)
 	size_t end = 0;
 	size_t endBlockContent = 0;
 	std::vector<std::string> servers;
+	std::string firstWord;
 	while (content[start])
 	{
-		if (content.compare(start, 6, "server"))
+		firstWord = (content.substr(start, 6));
+		if (stringToLower(firstWord) != "server")
 			throw ConfigError("No server block present.");
 		start += 6;
 		while (std::isspace(content[start]))
@@ -121,29 +124,68 @@ std::vector<std::string>	ConfigParser::splitServerBlocks(std::string content)
 	return (servers);
 }
 
-// TODO: get tokens from line
-std::vector<std::string>	ConfigParser::processLine(std::string line)
+// Splits a string into a vector of strings, removing WS
+std::vector<std::string>	ConfigParser::tokenizeLine(std::string line)
 {
-	static int i = 1;
-	std::vector<std::string> tokens;
-	trimOuterSpaces(line);
-	std::cout << "Line " << i << ": " << line << "\n";
-	i++;
+	std::vector<std::string>	tokens;
+	std::string					value;
+	std::stringstream strStream(line);
+
+	while (strStream >> value){
+		trimOuterSpaces(value);
+		tokens.push_back(value);
+	}
 	return (tokens);
 }
 
-// TODO: fix segfault
+// TODO: improve flow of function
+void	ConfigParser::processLocation(std::string block, size_t start, size_t end)
+{
+	std::string route;
+	std::string line;
+	std::vector<std::string> tokens;
+	std::istringstream location(block.substr(start, end - start));
+	location >> route; // discard 'location'
+	location >> route;
+	location >> line; // apply a better approach ? Just discarding the '{'
+	// std::cout << "LOCATION BLOCK\n";
+	// std::cout << "Route: " << route << '\n';
+	while (std::getline(location, line, ';')){
+		trimOuterSpaces(line);
+		if (line.empty())
+			continue ;
+		tokens = tokenizeLine(line);
+		// std::vector<std::string>::const_iterator it2;
+		// for (it2 = tokens.begin(); it2 != tokens.end(); it2++)
+		// 	std::cout << (*it2) << " ";
+		// std::cout << std::endl;
+	}
+}
+
 void	ConfigParser::loadIntoContext(std::vector<std::string> &blocks)
 {
 	std::vector<std::string> tokens;
 	std::string line;
 	std::vector<std::string>::iterator it;
+	std::string firstWord;
 	for (it = blocks.begin(); it != blocks.end(); it++){
 		std::istringstream block(*it);
-		while (std::getline(block, line)){
-			// turn each line of server block into vector of tokens
-			tokens = processLine(line);
-			// specific function to parse location blocks
+		std::streampos startPos = block.tellg();
+		while (std::getline(block, line, ';')){
+			trimOuterSpaces(line);
+			if (line.empty())
+				continue ;
+			firstWord = line.substr(0, 8);
+			if (stringToLower(firstWord) == "location"){
+				size_t endPos = (*it).find("}", startPos);
+				processLocation((*it), startPos, endPos);
+				std::getline(block, line, '}');
+			}
+			else {
+				tokens = tokenizeLine(line);
+
+			}
+			startPos = block.tellg();
 			// check if directive is one covered by this program
 		}
 	}
@@ -190,12 +232,12 @@ bool	ConfigParser::loadConfigs()
 			std::cerr << e.what();
 			return (false);
 		}
-		std::cout << "SERVER BLOCKS\n";
-		std::vector<std::string>::iterator it;
-		for (it = serverBlocks.begin(); it != serverBlocks.end(); it++){
-			std::cout << *it << '\n';
-			std::cout << "----------------------------\n";
-		}
+		// std::cout << "SERVER BLOCKS\n";
+		// std::vector<std::string>::const_iterator it;
+		// for (it = serverBlocks.begin(); it != serverBlocks.end(); it++){
+		// 	std::cout << *it << '\n';
+		// 	std::cout << "----------------------------\n";
+		// }
 		loadIntoContext(serverBlocks);
 	}
 	return (true);
@@ -211,7 +253,7 @@ void	ConfigParser::printContext(Context context)
 	if (!context.ports.empty())
 	{
 		std::cout << "Ports: " << std::endl;
-		std::vector<u_int16_t>::iterator it;
+		std::vector<u_int16_t>::const_iterator it;
 		for (it = context.ports.begin(); it != context.ports.end(); ++it)
 			std::cout << *it << " ";
 		std::cout << std::endl;
@@ -252,7 +294,7 @@ void	ConfigParser::printContext(Context context)
 	if (!context.locations.empty())
 	{
 		std::cout << "Locations: " << std::endl;
-		std::map<std::string, Context>::iterator it;
+		std::map<std::string, Context>::const_iterator it;
 		for (it = context.locations.begin(); it != context.locations.end(); ++it) {
 			std::cout << it->first << ": ";
 			printContext(it->second);
@@ -268,7 +310,7 @@ void	ConfigParser::printConfigs()
 		std::cout << "No configs loaded.\n";
 		return ;
 	}
-	std::vector<Context>::iterator it;
+	std::vector<Context>::const_iterator it;
 	for (it = _servers.begin(); it != _servers.end(); it++)
 		printContext(*it);
 }
