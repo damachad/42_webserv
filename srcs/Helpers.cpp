@@ -3,7 +3,8 @@
 Context get_default_conf(int i) {
 	struct Context default_conf;
 
-	default_conf.ports.push_back(80 + i);
+	default_conf.ports.push_back(
+		1024 + i);	// Ports up to 1024 are privileged and require super user!
 	default_conf.serverName = "localhost";
 	default_conf.index = "index.html";
 	default_conf.autoIndex = false;
