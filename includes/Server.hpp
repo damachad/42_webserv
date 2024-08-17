@@ -31,8 +31,8 @@ class Server {
 
 	// Constructors not to be used
 	Server();
-	// Server(const Server& copy); NOTE: Needed for Cluster[i] access!
 	const Server& operator=(const Server& copy);
+	// Server(const Server& copy); NOTE: Needed for Cluster[i] access!
 };
 
 // Outputs Server's Hostname and Ports

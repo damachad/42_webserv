@@ -1,17 +1,13 @@
 #include "Cluster.hpp"
 
+#include "Exceptions.hpp"
+#include "Helpers.hpp"
 #include "Server.hpp"
 
 // Constructor
 // Create a vector of servers from provided context vector
-// TODO: Throw error if no server list provided
 Cluster::Cluster(std::vector<struct Context> servers)
 	: _servers(), _listening_fd_map(), _connection_fd_map(), _epoll_fd(-1) {
-	if (servers.size() == 0) {
-		std::cout << "Error: No server struct provided";
-		return;
-	}
-
 	for (std::vector<struct Context>::iterator it = servers.begin();
 		 it != servers.end(); it++)
 		_servers.push_back(Server(*it));
@@ -24,12 +20,8 @@ Cluster::~Cluster() {
 }
 
 // Accesses ith server of _server array when asking Cluster[i]
-// TODO: Throw error if index out of bounds
 const Server& Cluster::operator[](unsigned int index) const {
-	if (index >= _servers.size()) {
-		std::cout << "Indexing error!" << std::endl;
-		return _servers[0];	 // Error to fix
-	}
+	if (index >= _servers.size()) throw OutOfBoundsError(int_to_string(index));
 
 	return _servers[index];
 }
@@ -63,17 +55,15 @@ int Cluster::get_epoll_fd() const { return _epoll_fd; }
 
 // Returns respective server from each fd
 Server& Cluster::get_server_from_listening_fd(int listening_fd) {
-	if (_listening_fd_map.find(listening_fd) == _listening_fd_map.end()) {
-		// TODO: Throw error because listening_fd does not exist
-		return _servers[0];
-	}
+	if (_listening_fd_map.find(listening_fd) == _listening_fd_map.end())
+		throw ValueNotFoundError(int_to_string(listening_fd));
+
 	return _servers[_listening_fd_map[listening_fd]];
 }
 
 Server& Cluster::get_server_from_connection_fd(int connection_fd) {
 	if (_connection_fd_map.find(connection_fd) == _connection_fd_map.end()) {
-		// TODO: Throw error because connection_fd does not exist
-		return _servers[0];
+		throw ValueNotFoundError(int_to_string(connection_fd));
 	}
 	return _servers[_connection_fd_map[connection_fd]];
 }

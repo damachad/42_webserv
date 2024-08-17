@@ -1,3 +1,4 @@
+#include "Exceptions.hpp"
 #include "Webserv.hpp"
 
 // Constructor, creates server from configuration file
@@ -25,8 +26,8 @@ void Server::setup_server(void) {
 		 it != ports_listing.end(); it++) {
 		// Create a socket (IPv4, TCP)
 		int sock_fd = socket(AF_INET, SOCK_NONBLOCK,
-							 0);	// TODO: SOCK_STREAM vs SOCK_NONBLOCK??
-		if (sock_fd == -1) return;	// TODO: Throw one error!
+							 0);  // TODO: SOCK_STREAM vs SOCK_NONBLOCK??
+		if (sock_fd == -1) throw SocketSetupError("socket");
 
 		// Listen to connections on socket (port given by *it)
 		struct sockaddr_in sockaddr;
@@ -38,10 +39,10 @@ void Server::setup_server(void) {
 
 		// Binds name to socket
 		if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0)
-			return;	 // TODO: Throw one error!
+			throw SocketSetupError("bind");
 
 		// Starts listening to incoming connections
-		if (listen(sock_fd, SOMAXCONN) < 0) return;	 // TODO: Throw one error!
+		if (listen(sock_fd, SOMAXCONN) < 0) throw SocketSetupError("listen");
 
 		// Adds sock_fd to _listening_sockets
 		_listening_sockets.push_back(sock_fd);

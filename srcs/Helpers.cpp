@@ -37,6 +37,12 @@ std::string methodToString(Method method) {
 	}
 }
 
+std::string int_to_string(int value) {
+	std::stringstream ss;
+	ss << value;
+	return ss.str();
+}
+
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration) {
 	outstream << "Ports: ";
