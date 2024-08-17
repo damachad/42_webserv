@@ -42,9 +42,10 @@ class Cluster {
 	// _epoll_fd for epoll()
 	int _epoll_fd;
 
-	// Copy constructors/Assignment operators: not supposed to be used
-	// const Cluster& operator=(const Cluster& copy);
-	// Cluster(const Cluster& copy);
+	// Constructors not to be used
+	Cluster();
+	Cluster(const Cluster& copy);
+	const Cluster& operator=(const Cluster& copy);
 };
 
 std::ostream& operator<<(std::ostream& outstream, const Cluster& cluster);

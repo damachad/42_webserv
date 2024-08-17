@@ -29,8 +29,9 @@ class Server {
 	// Server's listening fds
 	std::vector<int> _listening_sockets;
 
-	// Default constructor and Assignment operators (not to be used!)
+	// Constructors not to be used
 	Server();
+	// Server(const Server& copy); NOTE: Needed for Cluster[i] access!
 	const Server& operator=(const Server& copy);
 };
 
