@@ -17,18 +17,25 @@
 struct Context get_default_conf(int i);
 
 int main() {
+	// Sample configuration vector, supposed to mimic David's final output
 	std::vector<struct Context> configuration_vector;
-
 	for (int i = 0; i < 10; i++)
 		configuration_vector.push_back(get_default_conf(i));
 
+	// Initializes the Server Cluster
 	Cluster server_cluster(configuration_vector);
 
-	server_cluster.setup_cluster();
+	// Attempts to Setup the Cluster
+	try {
+		server_cluster.setup_cluster();
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
 
 	std::cout << server_cluster;
 
-	return 1;
+	return 0;
 	/*
 		// Grab a connection from the queue
 		socklen_t addrlen = sizeof(sockaddr);

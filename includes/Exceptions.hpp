@@ -65,4 +65,14 @@ class SocketSetupError : public std::exception {
 	virtual ~SocketSetupError() throw();
 };
 
+class ClusterSetupError : public std::exception {
+   private:
+	std::string _message;
+
+   public:
+	ClusterSetupError(const std::string &str) throw();
+	virtual const char *what() const throw();
+	virtual ~ClusterSetupError() throw();
+};
+
 #endif

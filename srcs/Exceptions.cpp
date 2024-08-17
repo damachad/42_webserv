@@ -53,7 +53,8 @@ ValueNotFoundError::~ValueNotFoundError() throw() {}
 
 /* SocketSetup Error for when there are errors with socket / bind / listen */
 SocketSetupError::SocketSetupError(const std::string &str) throw() {
-	_message = "Error: could not run socket setup function " + str + "!\n";
+	_message = "Error: could not run socket setup function " + str +
+			   " (erro: " + strerror(errno) + ")\n";
 }
 
 const char *SocketSetupError::what() const throw() {
@@ -61,3 +62,15 @@ const char *SocketSetupError::what() const throw() {
 }
 
 SocketSetupError::~SocketSetupError() throw() {}
+
+/* Cluster Setup Error for when there are errors with epoll */
+ClusterSetupError::ClusterSetupError(const std::string &str) throw() {
+	_message = "Error: could not run cluster setup function " + str +
+			   " (errno: " + strerror(errno) + ")\n";
+}
+
+const char *ClusterSetupError::what() const throw() {
+	return (_message.c_str());
+}
+
+ClusterSetupError::~ClusterSetupError() throw() {}

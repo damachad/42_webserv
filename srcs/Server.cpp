@@ -5,7 +5,8 @@
 Server::Server(const struct Context& configuration)
 	: _hostname(configuration.serverName),
 	  _ports(configuration.ports),
-	  _listening_sockets() {
+	  _listening_sockets(),
+	  _sockaddr_vector() {
 	std::cout << "Created a server!" << std::endl;
 
 	std::cout << configuration << std::endl;
@@ -25,9 +26,20 @@ void Server::setup_server(void) {
 	for (std::vector<uint16_t>::const_iterator it = ports_listing.begin();
 		 it != ports_listing.end(); it++) {
 		// Create a socket (IPv4, TCP)
-		int sock_fd = socket(AF_INET, SOCK_NONBLOCK,
-							 0);  // TODO: SOCK_STREAM vs SOCK_NONBLOCK??
+		int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock_fd == -1) throw SocketSetupError("socket");
+
+		// Make the socket nonblocking
+		int flags = fcntl(sock_fd, F_GETFL, 0);
+		if (flags == -1) {
+			close(sock_fd);
+			throw SocketSetupError("fcntl: F_GETFL");
+		}
+
+		if (fcntl(sock_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+			close(sock_fd);
+			throw SocketSetupError("fcntl: F_SETFL");
+		}
 
 		// Listen to connections on socket (port given by *it)
 		struct sockaddr_in sockaddr;
@@ -38,14 +50,20 @@ void Server::setup_server(void) {
 			htons(*it);	 // Converts number to network byte order
 
 		// Binds name to socket
-		if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0)
+		if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
+			close(sock_fd);
 			throw SocketSetupError("bind");
+		}
 
 		// Starts listening to incoming connections
-		if (listen(sock_fd, SOMAXCONN) < 0) throw SocketSetupError("listen");
+		if (listen(sock_fd, SOMAXCONN) < 0) {
+			close(sock_fd);
+			throw SocketSetupError("listen");
+		}
 
-		// Adds sock_fd to _listening_sockets
+		// Adds sock_fd to _listening_sockets and sockaddr to the server object
 		_listening_sockets.push_back(sock_fd);
+		_sockaddr_vector.push_back(sockaddr);
 	}
 }
 

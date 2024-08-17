@@ -29,6 +29,9 @@ class Server {
 	// Server's listening fds
 	std::vector<int> _listening_sockets;
 
+	// Server's sockaddr vector
+	std::vector<struct sockaddr_in> _sockaddr_vector;
+
 	// Constructors not to be used
 	Server();
 	const Server& operator=(const Server& copy);
