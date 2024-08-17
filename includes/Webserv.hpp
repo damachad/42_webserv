@@ -16,6 +16,7 @@
 #include <errno.h>		 // For errno
 #include <fcntl.h>		 // open
 #include <netinet/in.h>	 // For sockaddr_in
+#include <sys/epoll.h>	 // For epoll
 #include <sys/socket.h>	 // For socket functions
 #include <sys/types.h>
 #include <unistd.h>	 // For read
@@ -27,6 +28,7 @@
 #include <sstream>
 
 // STL
+#include <algorithm>
 #include <map>
 #include <vector>
 
@@ -35,5 +37,8 @@
 #include "Exceptions.hpp"
 #include "Helpers.hpp"
 #include "Server.hpp"
+
+// Magic numbers
+#define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
 
 #endif

@@ -19,8 +19,15 @@ class Cluster {
 	// Sets up _epoll_fd, fills _listening_fd_map and instructs setup_server()
 	void setup_cluster(void);
 
+	// Adds socket to epoll so they can be monitored
+	void add_sockets_to_epoll(const Server& server);
+
+	// Sets an infinite loop to listen to incoming connections
+	void run();
+
 	// Getters for private member data
 	const std::vector<Server> get_server_list() const;
+	const std::vector<int> get_listening_sockets() const;
 	const std::map<int, int> get_listening_fd_map() const;
 	const std::map<int, int> get_connection_fd_map() const;
 	int get_epoll_fd() const;
@@ -33,6 +40,9 @@ class Cluster {
 	// Vector of available servers
 	std::vector<Server> _servers;
 
+	// Vector of all listening fds;
+	std::vector<int> _listening_sockets;
+
 	// Map that relates listening_fd to respective index on _server
 	std::map<int, int> _listening_fd_map;
 
@@ -41,6 +51,9 @@ class Cluster {
 
 	// _epoll_fd for epoll()
 	int _epoll_fd;
+
+	// epoll_event struct
+	struct epoll_event _event;
 
 	// Constructors not to be used
 	Cluster();

@@ -29,17 +29,8 @@ void Server::setup_server(void) {
 		int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock_fd == -1) throw SocketSetupError("socket");
 
-		// Make the socket nonblocking
-		int flags = fcntl(sock_fd, F_GETFL, 0);
-		if (flags == -1) {
-			close(sock_fd);
-			throw SocketSetupError("fcntl: F_GETFL");
-		}
-
-		if (fcntl(sock_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-			close(sock_fd);
-			throw SocketSetupError("fcntl: F_SETFL");
-		}
+		// Sets sock to non_blocking
+		if (set_to_nonblocking(sock_fd) == -1) throw SocketSetupError("fcntl");
 
 		// Listen to connections on socket (port given by *it)
 		struct sockaddr_in sockaddr;

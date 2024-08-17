@@ -44,6 +44,23 @@ std::string int_to_string(int value) {
 	return ss.str();
 }
 
+int set_to_nonblocking(int sock_fd) {
+	// Gets current sock_fd flags
+	int flags = fcntl(sock_fd, F_GETFL, 0);
+	if (flags == -1) {
+		close(sock_fd);
+		return (-1);
+	}
+
+	// Reapplies flag but also makes the socket non-blocking
+	if (fcntl(sock_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+		close(sock_fd);
+		return (-1);
+	}
+
+	return (0);
+}
+
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration) {
 	outstream << "Ports: ";
