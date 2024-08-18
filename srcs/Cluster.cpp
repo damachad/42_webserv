@@ -39,7 +39,7 @@ void Cluster::setup_cluster(void) {
 	if (_epoll_fd == -1) throw ClusterSetupError("epoll_create");
 
 	for (size_t i = 0; i < _servers.size(); i++) {
-		Server server = _servers[i];
+		Server& server = _servers[i];
 
 		// Sets up every port on each server
 		server.setup_server();
@@ -86,10 +86,6 @@ void Cluster::run(void) {
 				// New connection on listening socket
 				int client_fd = accept(events[i].data.fd, NULL, NULL);
 				if (client_fd == -1) throw ClusterSetupError("accept");
-
-				// Make it non-blocking
-				if (set_to_nonblocking(client_fd) == -1)
-					throw ClusterSetupError("fcntl");
 
 				struct epoll_event client_event;
 				client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;

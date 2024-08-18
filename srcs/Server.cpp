@@ -29,9 +29,6 @@ void Server::setup_server(void) {
 		int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock_fd == -1) throw SocketSetupError("socket");
 
-		// Sets sock to non_blocking
-		if (set_to_nonblocking(sock_fd) == -1) throw SocketSetupError("fcntl");
-
 		// Listen to connections on socket (port given by *it)
 		struct sockaddr_in sockaddr;
 		std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
@@ -52,7 +49,7 @@ void Server::setup_server(void) {
 			throw SocketSetupError("listen");
 		}
 
-		// Adds sock_fd to _listening_sockets and sockaddr to the server object
+		// Adds sock_fd and sockaddr to the server object
 		_listening_sockets.push_back(sock_fd);
 		_sockaddr_vector.push_back(sockaddr);
 	}
