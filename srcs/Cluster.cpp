@@ -85,6 +85,9 @@ void Cluster::setup_cluster(void) {
 	while (true) {
 		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
 		if (n == -1) throw ClusterSetupError("epoll_wait");
+
+		accept(events[0].data.fd, NULL, NULL);
+		std::cout << "Got a connection!" << std::endl;
 	}
 }
 
