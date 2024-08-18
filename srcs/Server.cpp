@@ -33,7 +33,9 @@ void Server::setup_server(void) {
 		struct sockaddr_in sockaddr;
 		std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
 		sockaddr.sin_family = AF_INET;
-		sockaddr.sin_addr.s_addr = INADDR_ANY;
+		sockaddr.sin_addr.s_addr =
+			inet_addr("127.0.0.1");	 // NOTE: INADDR_ANY? htonl host? Get a
+									 // _host var?
 		sockaddr.sin_port =
 			htons(*it);	 // Converts number to network byte order
 

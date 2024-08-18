@@ -52,9 +52,6 @@ class Cluster {
 	// _epoll_fd for epoll()
 	int _epoll_fd;
 
-	// epoll_event struct
-	struct epoll_event _event;
-
 	// Constructors not to be used
 	Cluster();
 	Cluster(const Cluster& copy);

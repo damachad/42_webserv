@@ -19,7 +19,7 @@ struct Context get_default_conf(int i);
 int main() {
 	// Sample configuration vector, supposed to mimic David's final output
 	std::vector<struct Context> configuration_vector;
-	for (int i = 1; i <= 10; i++)
+	for (int i = 1; i <= 3; i++)
 		configuration_vector.push_back(get_default_conf(i));
 
 	// Initializes the Server Cluster

@@ -13,8 +13,10 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-#include <errno.h>		 // For errno
-#include <fcntl.h>		 // open
+#include <arpa/inet.h>	// for inet
+#include <errno.h>		// For errno
+#include <fcntl.h>		// open
+#include <netinet/in.h>
 #include <netinet/in.h>	 // For sockaddr_in
 #include <sys/epoll.h>	 // For epoll
 #include <sys/socket.h>	 // For socket functions

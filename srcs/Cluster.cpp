@@ -10,11 +10,7 @@
 // Constructor
 // Create a vector of servers from provided context vector
 Cluster::Cluster(std::vector<struct Context> servers)
-	: _servers(),
-	  _listening_fd_map(),
-	  _connection_fd_map(),
-	  _epoll_fd(-1),
-	  _event() {
+	: _servers(), _listening_fd_map(), _connection_fd_map(), _epoll_fd(-1) {
 	for (std::vector<struct Context>::iterator it = servers.begin();
 		 it != servers.end(); it++)
 		_servers.push_back(Server(*it));
@@ -52,8 +48,7 @@ void Cluster::setup_cluster(void) {
 		for (std::vector<int>::const_iterator it = socks_listing.begin();
 			 it < socks_listing.end(); it++) {
 			_listening_sockets.push_back(*it);
-			_listening_fd_map[*it] = std::distance(
-				it, socks_listing.begin());	 // NOTE: POSSIBLY UNNEDED?
+			_listening_fd_map[*it] = i;	 // NOTE: POSSIBLY UNNEDED?
 		}
 	}
 }
@@ -65,10 +60,11 @@ void Cluster::add_sockets_to_epoll(const Server& server) {
 	for (std::vector<int>::const_iterator it = socket_list.begin();
 		 it != socket_list.end(); it++) {
 		int listening_socket = *it;
-		_event.events = EPOLLIN;
-		_event.data.fd = listening_socket;
+		epoll_event event;
+		event.events = EPOLLIN;
+		event.data.fd = listening_socket;
 
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, listening_socket, &_event) == 1)
+		if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, listening_socket, &event) == -1)
 			throw ClusterSetupError("epoll_ctl");
 	}
 }
