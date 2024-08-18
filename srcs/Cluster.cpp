@@ -34,7 +34,7 @@ void Cluster::setup_cluster(void) {
 	_epoll_fd = epoll_create(1);
 	if (_epoll_fd == -1) throw ClusterSetupError("epoll_create");
 
-	for (size_t i = 0; i < _servers.size(); i++) {
+	/*for (size_t i = 0; i < _servers.size(); i++) {
 		Server& server = _servers[i];
 
 		// Sets up every port on each server
@@ -50,6 +50,41 @@ void Cluster::setup_cluster(void) {
 			_listening_sockets.push_back(*it);
 			_listening_fd_map[*it] = i;	 // NOTE: POSSIBLY UNNEDED?
 		}
+	}*/
+
+	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock_fd == -1) throw SocketSetupError("socket");
+
+	// Listen to connections on socket (port given by *it)
+	struct sockaddr_in sockaddr;
+	std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
+	sockaddr.sin_family = AF_INET;
+	sockaddr.sin_addr.s_addr = INADDR_ANY;
+	sockaddr.sin_port = htons(1025);  // Converts number to network byte order
+
+	// Binds name to socket
+	if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
+		close(sock_fd);
+		throw SocketSetupError("bind");
+	}
+
+	// Starts listening to incoming connections
+	if (listen(sock_fd, SOMAXCONN) < 0) {
+		close(sock_fd);
+		throw SocketSetupError("listen");
+	}
+
+	epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = sock_fd;
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, sock_fd, &event) == -1)
+		throw ClusterSetupError("epoll_ctl");
+
+	std::vector<struct epoll_event> events(MAX_CONNECTIONS);
+
+	while (true) {
+		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
+		if (n == -1) throw ClusterSetupError("epoll_wait");
 	}
 }
 
