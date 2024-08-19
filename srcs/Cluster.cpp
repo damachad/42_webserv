@@ -60,6 +60,7 @@ void Cluster::setup_cluster(void) {
 	std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
 	sockaddr.sin_family = AF_INET;
 	sockaddr.sin_addr.s_addr = INADDR_ANY;
+	// inet_aton("172.21.187.192", &sockaddr.sin_addr);
 	sockaddr.sin_port = htons(1025);  // Converts number to network byte order
 
 	// Binds name to socket
@@ -80,7 +81,7 @@ void Cluster::setup_cluster(void) {
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, sock_fd, &event) == -1)
 		throw ClusterSetupError("epoll_ctl");
 
-	std::vector<struct epoll_event> events(MAX_CONNECTIONS);
+	/*std::vector<struct epoll_event> events(MAX_CONNECTIONS);
 
 	while (true) {
 		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
@@ -88,7 +89,7 @@ void Cluster::setup_cluster(void) {
 
 		accept(events[0].data.fd, NULL, NULL);
 		std::cout << "Got a connection!" << std::endl;
-	}
+	}*/
 }
 
 // Adds sockets to epoll so they can be monitored
@@ -114,6 +115,10 @@ void Cluster::run(void) {
 		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
 		if (n == -1) throw ClusterSetupError("epoll_wait");
 
+		accept(events[0].data.fd, NULL, NULL);
+		std::cout << "Got a connection!" << std::endl;
+
+		/*
 		for (int i = 0; i < n; ++i) {
 			if (std::find(_listening_sockets.begin(), _listening_sockets.end(),
 						  events[i].data.fd) != _listening_sockets.end()) {
@@ -154,7 +159,7 @@ void Cluster::run(void) {
 					}
 				}
 			}
-		}
+		}*/
 	}
 }
 
