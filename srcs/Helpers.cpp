@@ -18,7 +18,6 @@ std::vector<struct Context> get_default_conf(int i) {
 
 	for (int j = 0; j < i; j++) {
 		struct Context conf;
-		conf.serverName.push_back("example.com");
 		conf.index.push_back("index.html");
 		conf.autoIndex = false;
 		conf.clientMaxBodySize = 200000;
@@ -36,30 +35,35 @@ std::vector<struct Context> get_default_conf(int i) {
 	address[1].IP = "";
 	address[1].port = "8081";
 	default_conf[0].network_address = address;
+	default_conf[0].serverName.push_back("example1.com");
 
 	address[0].IP = "127.0.0.1";
 	address[0].port = "8082";
 	address[1].IP = "127.0.01";
 	address[1].port = "8083";
 	default_conf[1].network_address = address;
+	default_conf[1].serverName.push_back("example2.com");
 
 	address[0].IP = "localhost";
 	address[0].port = "8084";
 	address[1].IP = "localhost";
 	address[1].port = "8085";
 	default_conf[2].network_address = address;
+	default_conf[2].serverName.push_back("example3.com");
 
 	address[0].IP = "0.0.0.0";
 	address[0].port = "8086";
 	address[1].IP = "0.0.0.0";
 	address[1].port = "8087";
 	default_conf[3].network_address = address;
+	default_conf[3].serverName.push_back("example4.com");
 
 	address[0].IP = "172.21.187.192";
 	address[0].port = "8088";
 	address[1].IP = "172.21.187.192";
 	address[1].port = "8089";
 	default_conf[4].network_address = address;
+	default_conf[4].serverName.push_back("example5.com");
 
 	return default_conf;
 }

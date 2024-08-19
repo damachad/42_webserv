@@ -10,10 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Exceptions.hpp"
 #include "Webserv.hpp"
 
-// TODO: Initialize _ports
 // Constructor, creates server from configuration file
 Server::Server(const struct Context& configuration)
 	: _server_names(configuration.serverName),
@@ -25,12 +23,11 @@ Server::Server(const struct Context& configuration)
 	std::cout << configuration << std::endl;
 }
 
-// TODO: Update with Listen struct
 // Destructor, closes all listening sockets
 Server::~Server() {
-	// for (std::vector<Listen>::iterator it = _listening_sockets.begin();
-	// 	 it != _listening_sockets.end(); it++)
-	// close(*it);
+	for (std::vector<int>::iterator it = _listening_sockets.begin();
+		 it != _listening_sockets.end(); it++)
+		close(*it);
 }
 
 // Sets up Server and adds sockets to _listening_sockets
@@ -46,9 +43,10 @@ void Server::setup_server(void) {
 		// Listen to connections on socket (port given by *it)
 		struct sockaddr_in sockaddr;
 		std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
-		sockaddr.sin_family = AF_INET;
+		sockaddr.sin_family = AF_INET;	// IPv4 Internet Protocolos
 		if (it->IP == "")
-			sockaddr.sin_addr.s_addr = INADDR_ANY;
+			sockaddr.sin_addr.s_addr =
+				INADDR_ANY;	 // Binds to all available interfaces
 		else if (it->IP == "localhost") {
 			if (inet_aton("127.0.0.1", &sockaddr.sin_addr) == 0)
 				throw SocketSetupError("inet_addr");
@@ -72,14 +70,13 @@ void Server::setup_server(void) {
 			throw SocketSetupError("listen");
 		}
 
-		// Adds sock_fd and sockaddr to the server object
+		// Adds sock_fd and sockaddr to the server object. NOTE: Unneeded?
 		_listening_sockets.push_back(sock_fd);
 		_sockaddr_vector.push_back(sockaddr);
 	}
 }
 
 // Getters for private member data
-
 const std::vector<std::string> Server::get_server_names(void) const {
 	return _server_names;
 }

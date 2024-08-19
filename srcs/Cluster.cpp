@@ -10,13 +10,6 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Cluster.hpp"
-
-#include <cmath>
-
-#include "Exceptions.hpp"
-#include "Helpers.hpp"
-#include "Server.hpp"
 #include "Webserv.hpp"
 
 // Constructor
