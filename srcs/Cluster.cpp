@@ -16,16 +16,17 @@
 // Create a vector of servers from provided context vector
 Cluster::Cluster(const std::vector<struct Context>& servers)
 	: _servers(), _listening_fd_map(), _connection_fd_map(), _epoll_fd(-1) {
-	std::cout << "Cluster Constructor called" << std::endl;
+	//	std::cout << "Cluster Constructor called" << std::endl;
 	for (std::vector<struct Context>::const_iterator it = servers.begin();
-		 it != servers.end(); it++)
+		 it != servers.end(); it++) {
 		_servers.push_back(*it);
+	}
 }
 
 // Destructor
 // Closes _epoll_fd if it was open
 Cluster::~Cluster() {
-	std::cout << "Cluster Destructor called" << std::endl;
+	//	std::cout << "Cluster Destructor called" << std::endl;
 	if (_epoll_fd >= 0) close(_epoll_fd);
 }
 

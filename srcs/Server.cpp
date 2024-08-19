@@ -18,14 +18,14 @@ Server::Server(const struct Context& configuration)
 	  _network_addresses(configuration.network_address),
 	  _listening_sockets(),
 	  _sockaddr_vector() {
-	std::cout << "Server Constructor called" << std::endl;
+	//	std::cout << "Server Constructor called" << std::endl;
 
 	std::cout << configuration << std::endl;
 }
 
 // Destructor, closes all listening sockets
 Server::~Server() {
-	std::cout << "Server Destructor called" << std::endl;
+	//	std::cout << "Server Destructor called" << std::endl;
 	for (std::vector<int>::iterator it = _listening_sockets.begin();
 		 it != _listening_sockets.end(); it++)
 		close(*it);
