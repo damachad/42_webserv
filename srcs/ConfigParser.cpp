@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 12:53:13 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 14:39:27 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 ConfigParser::ConfigParser(void) {}
 
-// TODO: Implement
 ConfigParser::ConfigParser(const ConfigParser &src) { *this = src; }
 
 ConfigParser::ConfigParser(const std::string &file) : _configFile(file) {
@@ -31,6 +30,7 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &src) {
 	return (*this);
 }
 
+// Necessary?
 void ConfigParser::loadDefaults() {
 	Context server;
 	// default values from NGINX
@@ -216,22 +216,29 @@ void ConfigParser::processLocation(Context &server, std::string block,
 	std::vector<std::string> tokens;
 	std::istringstream location(block.substr(start, end - start));
 	Context locationInfo;
+	bool 		empty = true;
 
 	location >> route;  				// Discard 'location'
 	location >> route;  				// Get the actual route
-	// if (location.str().find(";") == std::string::npos)
-	// 	throw ConfigError("Unparsable location block detected.");
-	std::getline(location, line, '{');  // Discard the opening '{'
+	if (route == "{")
+		throw ConfigError("No location route.");
+	location >> line;  // Discard the opening '{'
+	if (line != "{")
+		throw ConfigError("Location can only support one route.");
 	while (std::getline(location, line, ';')) // change this, there may be no ';'
 	{
 		trimOuterSpaces(line);
+		if ((location.eof() && empty) || (line.empty() && !location.eof()))
+			throw ConfigError("Unparsable location block detected.");
 		if (line.empty())
-			throw ConfigError("Unparsable location block detected.");;
+			continue;
 		firstWord = line.substr(0, 8);
 		if (stringToLower(firstWord) == "location")
 			throw ConfigError("Nested locations not supported.");
-		else
+		else {
 			processDirective(locationInfo, line);
+			empty = false;
+		}
 		if (location.tellg() >= static_cast<std::streampos>(end)) 
 			break;
 	}
@@ -265,58 +272,32 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 }
 
 // TODO: improve error handling
-bool ConfigParser::loadConfigs() {
+void ConfigParser::loadConfigs() {
 	std::ifstream file(_configFile.c_str());
-	if (!file.is_open()) {
-		std::cerr << "Unable to read from: " << _configFile << "\n";
-		// call error function that exits
-		return (false);
-	} else {
-		std::string fileContents;
-		// Read file contents into the string
-		try {
-			fileContents.assign((std::istreambuf_iterator<char>(file)),
-								(std::istreambuf_iterator<char>()));
-		} catch (std::exception &e) {
-			std::cerr << e.what() << std::endl;
-			// call error function that exits
-			return (false);
-		}
-		file.close();
-		trimOuterSpaces(fileContents);
-		trimComments(fileContents);
-		if (fileContents.empty()) {
-			std::cerr << "Configuration file is empty.\n";
-			// call error function that exits
-			return (false);
-		}
-		// std::cout << "CONFIG FILE\n" << fileContents << '\n';
-		std::vector<std::string> serverBlocks;
-		try {
-			serverBlocks = splitServerBlocks(fileContents);
-			loadIntoContext(serverBlocks);
-		} catch (std::exception &e) {
-			std::cerr << e.what();
-			return (false);
-		}
-		// std::cout << "SERVER BLOCKS\n";
-		// std::vector<std::string>::const_iterator it;
-		// for (it = serverBlocks.begin(); it != serverBlocks.end(); it++){
-		// 	std::cout << *it << '\n';
-		// 	std::cout << "----------------------------\n";
-		// }
-	}
-	return (true);
+	if (!file.is_open())
+		throw ConfigError("Unable to read from: " + _configFile);
+	std::string fileContents;
+	// Read file contents into the string
+	fileContents.assign((std::istreambuf_iterator<char>(file)),
+							(std::istreambuf_iterator<char>()));
+	file.close();
+	trimOuterSpaces(fileContents);
+	trimComments(fileContents);
+	if (fileContents.empty())
+		throw ConfigError("Configuration file is empty.");
+	std::vector<std::string> serverBlocks;
+	serverBlocks = splitServerBlocks(fileContents);
+	loadIntoContext(serverBlocks);
 }
 
 std::vector<Context> ConfigParser::getServers(void) { return (this->_servers); }
 
 void ConfigParser::printContext(Context context) {
 	std::vector<std::string>::const_iterator it2;
-	if (!context.ports.empty()) {
-		std::cout << "Ports: " << std::endl;
+	if (!context.networkAddress.empty()) {
+		std::cout << "Network Address: " << std::endl;
 		std::vector<Listen>::const_iterator it;
-		for (it = context.ports.begin(); it != context.ports.end(); ++it){
+		for (it = context.networkAddress.begin(); it != context.networkAddress.end(); ++it){
 			std::cout << "IP: " << (*it).IP << " Port: " << (*it).port << '\n';
 		}
 	}

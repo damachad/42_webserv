@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 12:51:53 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 14:39:41 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ struct Listen
 
 struct Context
 {
-	std::vector<Listen>				ports;
+	std::vector<Listen>				networkAddress;
 	std::vector<std::string>		serverName;
 	std::string						root;
 	std::vector<std::string>		index;
@@ -56,7 +56,7 @@ class ConfigParser {
 	~ConfigParser();
 	ConfigParser &operator=(const ConfigParser &src);
 
-	bool loadConfigs();
+	void loadConfigs();
 	void loadDefaults();
 	void printConfigs();
 	void printContext(Context context);

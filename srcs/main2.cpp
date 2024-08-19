@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   main2.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 14:49:03 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 10:51:43 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 14:40:22 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,11 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 	ConfigParser parser(argv[1]);
-	parser.loadConfigs();
+	try{
+		parser.loadConfigs();
+	} catch (std::exception & e)
+	{
+		std::cerr << e.what();
+	}
 	return (0);
 }
