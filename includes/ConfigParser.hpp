@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 11:43:27 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 12:34:12 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,15 @@ enum Method
 	DELETE
 };
 
+struct Listen
+{
+	std::string IP;
+	std::string port;
+};
+
 struct Context
 {
-	std::vector<uint16_t>			ports;
+	std::vector<Listen>				ports;
 	std::vector<std::string>		serverName;
 	std::string						root;
 	std::vector<std::string>		index;

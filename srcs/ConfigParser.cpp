@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 11:58:17 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 12:44:22 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,8 @@ void	ConfigParser::loadDefaults()
 {
 	Context	server;
 	// default values from NGINX
-	server.ports.push_back(80);
-	server.index.push_back("index.html");
+	// server.ports.push_back(80);
+	// server.index.push_back("index.html");
 	server.clientMaxBodySize = 1048576; // 1m
 	// server.root = "";
 	// server.serverName = "localhost";
@@ -230,8 +230,7 @@ void	ConfigParser::processDirective(Context &server, std::string &line)
 		throw ConfigError("Unkown directive: " + tokens[0]);
 }
 
-// TODO: improve flow of function
-// 		parse each directive unto Context struct
+// TODO: fix unparsable block detection
 void ConfigParser::processLocation(Context &server, std::string block, size_t start, size_t end) 
 {
 	std::string route;
@@ -243,16 +242,18 @@ void ConfigParser::processLocation(Context &server, std::string block, size_t st
 
 	location >> route;  // Discard 'location'
 	location >> route;  // Get the actual route
+	if (location.str().find(";") == std::string::npos)
+		throw ConfigError("Unparsable location block detected.");
 	std::getline(location, line, '{');  // Discard the opening '{'
 	while (std::getline(location, line, ';')) // change this, there may be no ';'
 	{
 		trimOuterSpaces(line);
 		if (line.empty())
-			continue;
+			throw ConfigError("Unparsable location block detected.");;
 		firstWord = line.substr(0, 8);
-		if (stringToLower(firstWord) == "location") {
+		if (stringToLower(firstWord) == "location")
 			throw ConfigError("Nested locations not supported.");
-		} else
+		else
 			processDirective(locationInfo, line);
 		if (location.tellg() >= static_cast<std::streampos>(end))
 			break;
@@ -272,7 +273,7 @@ void	ConfigParser::loadIntoContext(std::vector<std::string> &blocks)
 		while (std::getline(block, line, ';')){ // change this, there may be no ';'
 			trimOuterSpaces(line);
 			if (line.empty())
-				continue ;
+				throw ConfigError("Unparsable block detected."); ;
 			firstWord = line.substr(0, 8);
 			if (stringToLower(firstWord) == "location"){
 				size_t endPos = (*it).find("}", startPos);
@@ -350,10 +351,10 @@ void	ConfigParser::printContext(Context context)
 	if (!context.ports.empty())
 	{
 		std::cout << "Ports: " << std::endl;
-		std::vector<u_int16_t>::const_iterator it;
-		for (it = context.ports.begin(); it != context.ports.end(); ++it)
-			std::cout << *it << " ";
-		std::cout << std::endl;
+		std::vector<Listen>::const_iterator it;
+		for (it = context.ports.begin(); it != context.ports.end(); ++it){
+			std::cout << "IP: " << (*it).IP << " Port: " << (*it).port << '\n';
+		}
 	}
 	if (!context.serverName.empty()){
 		std::cout << "Server Name: " << std::endl;
