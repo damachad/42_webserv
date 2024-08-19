@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 14:39:27 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 14:50:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,63 +77,118 @@ void ConfigParser::initializeDirectiveMap(void) {
 
 void ConfigParser::handleListen(Context &context,
 								const std::vector<std::string> &tokens) {
-	std::cout << "Handling: listen\n";
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 	(void)context;
-	(void)tokens;
 }
 
 void ConfigParser::handleServerName(Context &context,
 									const std::vector<std::string> &tokens) {
-	std::cout << "Handling: server_name\n";
 	(void)context;
-	(void)tokens;
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 }
 
 void ConfigParser::handleRoot(Context &context,
 							  const std::vector<std::string> &tokens) {
-	std::cout << "Handling: root\n";
 	context.root = tokens[1];
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 }
 
 void ConfigParser::handleIndex(Context &context,
 							   const std::vector<std::string> &tokens) {
-	std::cout << "Handling: index\n";
 	(void)context;
-	(void)tokens;
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 }
 void ConfigParser::handleLimitExcept(Context &context,
 									 const std::vector<std::string> &tokens) {
-	std::cout << "Handling: limit_except\n";
 	(void)context;
-	(void)tokens;
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 }
 
 void ConfigParser::handleTryFiles(Context &context,
 								  const std::vector<std::string> &tokens) {
-	std::cout << "Handling: try_files\n";
 	(void)context;
-	(void)tokens;
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 }
 
 void ConfigParser::handleErrorPage(Context &context,
 								   const std::vector<std::string> &tokens) {
-	std::cout << "Handling: error_page\n";
 	(void)context;
-	(void)tokens;
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 }
 
 void ConfigParser::handleCliMaxSize(Context &context,
 									const std::vector<std::string> &tokens) {
-	std::cout << "Handling: client_max_body_size\n";
 	(void)context;
-	(void)tokens;
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 }
 
 void ConfigParser::handleAutoIndex(Context &context,
 								   const std::vector<std::string> &tokens) {
-	std::cout << "Handling: autoindex\n";
 	(void)context;
-	(void)tokens;
+	if (tokens.empty())
+		std::cout << "No tokens passed to handler function\n";
+	std::vector<std::string>::const_iterator it;
+	std::cout << "Handling: ";
+	for (it = tokens.begin(); it != tokens.end(); it++){
+		std::cout << (*it) << " ";
+	}
+	std::cout << std::endl;
 }
 
 size_t ConfigParser::advanceBlock(std::string content, size_t start) {
