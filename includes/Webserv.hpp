@@ -11,25 +11,36 @@
 /* ************************************************************************** */
 
 #ifndef WEBSERV_HPP
-# define WEBSERV_HPP
+#define WEBSERV_HPP
 
-# include <iostream> // For cout
-# include <fstream> // For file streams
-# include <unistd.h> // For read
-# include <errno.h>   // For errno
-# include <cstring>   // For memset (?)
-# include <sys/socket.h> // For socket functions
-# include <netinet/in.h> // For sockaddr_in
-# include <cstdlib> // For exit() and EXIT_FAILURE
-# include <fcntl.h> // open
-# include <sys/types.h>
-# include <sstream>
+#include <arpa/inet.h>	// for inet
+#include <errno.h>		// For errno
+#include <fcntl.h>		// open
+#include <netinet/in.h>
+#include <netinet/in.h>	 // For sockaddr_in
+#include <sys/epoll.h>	 // For epoll
+#include <sys/socket.h>	 // For socket functions
+#include <sys/types.h>
+#include <unistd.h>	 // For read
+
+#include <cstdlib>	 // For exit() and EXIT_FAILURE
+#include <cstring>	 // For memset (?)
+#include <fstream>	 // For file streams
+#include <iostream>	 // For cout
+#include <sstream>
 
 // STL
-# include <vector>
-# include <map>
+#include <algorithm>
+#include <map>
+#include <vector>
 
-# include "ConfigParser.hpp"
-# include "Exceptions.hpp"
+#include "Cluster.hpp"
+#include "ConfigParser.hpp"
+#include "Exceptions.hpp"
+#include "Helpers.hpp"
+#include "Server.hpp"
+
+// Magic numbers
+#define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
 
 #endif
