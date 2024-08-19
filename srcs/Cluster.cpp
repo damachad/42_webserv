@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Cluster.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
+/*   Updated: 2024/08/19 14:44:21 by mde-sa--         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Cluster.hpp"
 
 #include <cmath>
@@ -94,11 +106,11 @@ void Cluster::setup_cluster(void) {
 
 // Adds sockets to epoll so they can be monitored
 void Cluster::add_sockets_to_epoll(const Server& server) {
-	std::vector<Listen> socket_list = server.get_listening_sockets();
+	std::vector<int> socket_list = server.get_listening_sockets();
 
-	for (std::vector<Listen>::const_iterator it = socket_list.begin();
+	for (std::vector<int>::const_iterator it = socket_list.begin();
 		 it != socket_list.end(); it++) {
-		int listening_socket = *it;
+		int listening_socket = 3;  // TODO: CHANGE to Network Address
 		epoll_event event;
 		event.events = EPOLLIN;
 		event.data.fd = listening_socket;

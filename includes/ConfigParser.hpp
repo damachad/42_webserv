@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 14:39:41 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 14:54:39 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,25 +17,23 @@
 
 enum Method { GET = 1, POST, DELETE };
 
-struct Listen
-{
+struct Listen {
 	std::string IP;
 	std::string port;
 };
 
-struct Context
-{
-	std::vector<Listen>				networkAddress;
-	std::vector<std::string>		serverName;
-	std::string						root;
-	std::vector<std::string>		index;
-	bool							autoIndex;
-	unsigned long					clientMaxBodySize;
-	std::string						uploadDir; // Is this necessary ?
-	std::vector<std::string>		tryFiles;
-	std::vector<Method>				allowedMethods;
-	std::map<short, std::string>	errorPages; 
-	std::map<std::string, Context>	locations;
+struct Context {
+	std::vector<Listen> network_address;
+	std::vector<std::string> serverName;
+	std::string root;
+	std::vector<std::string> index;
+	bool autoIndex;
+	unsigned long clientMaxBodySize;
+	std::string uploadDir;	// Is this necessary ?
+	std::vector<std::string> tryFiles;
+	std::vector<Method> allowedMethods;
+	std::map<short, std::string> errorPages;
+	std::map<std::string, Context> locations;
 
 	// Later add redirect and cgi related variables
 };

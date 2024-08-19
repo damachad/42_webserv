@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 14:50:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 14:55:18 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,11 +34,11 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &src) {
 void ConfigParser::loadDefaults() {
 	Context server;
 	// default values from NGINX
-	// server.ports.push_back(80);
+	// server.networkaddress.push_back(80);
 	// server.index.push_back("index.html");
 	server.clientMaxBodySize = 1048576;	 // 1m
-	//  server.root = "";
-	//  server.serverName = "localhost";
+										 //  server.root = "";
+										 //  server.serverName = "localhost";
 }
 
 /* remove leading and trailing whitespaces */
@@ -311,8 +311,8 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 		while (std::getline(block, line,
 							';')) {	 // change this, there may be no ';'
 			trimOuterSpaces(line);
-			if (line.empty())
-				throw ConfigError("Unparsable block detected."); ;
+			if (line.empty()) throw ConfigError("Unparsable block detected.");
+			;
 			firstWord = line.substr(0, 8);
 			if (stringToLower(firstWord) == "location") {
 				size_t endPos = (*it).find("}", startPos);
@@ -349,10 +349,10 @@ std::vector<Context> ConfigParser::getServers(void) { return (this->_servers); }
 
 void ConfigParser::printContext(Context context) {
 	std::vector<std::string>::const_iterator it2;
-	if (!context.networkAddress.empty()) {
-		std::cout << "Network Address: " << std::endl;
+	if (!context.network_address.empty()) {
+		std::cout << "Network Addresses: " << std::endl;
 		std::vector<Listen>::const_iterator it;
-		for (it = context.networkAddress.begin(); it != context.networkAddress.end(); ++it){
+		for (it = context.network_address.begin(); it != context.network_address.end(); ++it){
 			std::cout << "IP: " << (*it).IP << " Port: " << (*it).port << '\n';
 		}
 	}

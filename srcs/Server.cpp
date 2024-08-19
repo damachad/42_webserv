@@ -1,10 +1,23 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/08/19 14:38:07 by mde-sa--          #+#    #+#             */
+/*   Updated: 2024/08/19 14:43:07 by mde-sa--         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Exceptions.hpp"
 #include "Webserv.hpp"
 
 // TODO: Initialize _ports
 // Constructor, creates server from configuration file
 Server::Server(const struct Context& configuration)
-	: _hostname(configuration.serverName.front()),
+	: _server_names(configuration.serverName),
+	  _network_addresses(configuration.network_address),
 	  _listening_sockets(),
 	  _sockaddr_vector() {
 	std::cout << "Created a server!" << std::endl;
@@ -17,15 +30,15 @@ Server::Server(const struct Context& configuration)
 Server::~Server() {
 	// for (std::vector<Listen>::iterator it = _listening_sockets.begin();
 	// 	 it != _listening_sockets.end(); it++)
-		// close(*it);
+	// close(*it);
 }
 
 // Sets up Server and adds sockets to _listening_sockets
 void Server::setup_server(void) {
-	const std::vector<int> ports_listing = get_ports();
+	const std::vector<Listen> network_addresses = get_network_addresses();
 
-	for (std::vector<int>::const_iterator it = ports_listing.begin();
-		 it != ports_listing.end(); it++) {
+	for (std::vector<Listen>::const_iterator it = network_addresses.begin();
+		 it != network_addresses.end(); it++) {
 		// Create a socket (IPv4, TCP)
 		int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock_fd == -1) throw SocketSetupError("socket");
@@ -36,9 +49,9 @@ void Server::setup_server(void) {
 		sockaddr.sin_family = AF_INET;
 		sockaddr.sin_addr.s_addr = INADDR_ANY;
 		//	inet_addr("127.0.0.1");	 // NOTE: INADDR_ANY? htonl host? Get a
-		// _host var?
+		// _host var? Adapt from Listen struct!!
 		sockaddr.sin_port =
-			htons(*it);	 // Converts number to network byte order
+			htons(1025);  // Converts number to network byte order
 
 		// Binds name to socket
 		if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
@@ -60,23 +73,30 @@ void Server::setup_server(void) {
 
 // Getters for private member data
 
-const std::string Server::get_hostname(void) const { return _hostname; }
-const std::vector<int> Server::get_ports(void) const { return _ports; }
-const std::vector<Listen> Server::get_listening_sockets(void) const {
+const std::vector<std::string> Server::get_server_names(void) const {
+	return _server_names;
+}
+const std::vector<Listen> Server::get_network_addresses(void) const {
+	return _network_addresses;
+}
+const std::vector<int> Server::get_listening_sockets(void) const {
 	return _listening_sockets;
 }
 
 // Outputs Server's Hostname and Ports
 std::ostream& operator<<(std::ostream& outstream, const Server& server) {
-	outstream << "Server [" << server.get_hostname()
-			  << "] is listening to ports: [ ";
+	std::vector<std::string> server_names = server.get_server_names();
 
-	const std::vector<int> server_ports = server.get_ports();
-	for (std::vector<int>::const_iterator it = server_ports.begin();
-		 it != server_ports.end(); it++)
-		outstream << *it << " ";
+	outstream << "Server [" << server_names[0]
+			  << "] is listening to addresses:";
 
-	outstream << "]." << std::endl;
+	const std::vector<Listen> network_addresses =
+		server.get_network_addresses();
+	for (std::vector<Listen>::const_iterator it = network_addresses.begin();
+		 it != network_addresses.end(); it++)
+		outstream << "[" << (*it).IP << ":" << (*it).port << "]" << std::endl;
+
+	outstream << std::endl;
 
 	return (outstream);
 }
