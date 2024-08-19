@@ -6,26 +6,42 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:02 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 14:45:09 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:06:22 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
 
-Context get_default_conf(int i) {
-	struct Context default_conf;
+std::vector<struct Context> get_default_conf(int i) {
+	std::vector<struct Context> default_conf(0);
 
-	(void)i;
-	// default_conf.ports.push_back( // Update with Listen
-	// 1024 + i);	// Ports up to 1024 are privileged and require super user!
-	default_conf.serverName.push_back("localhost");
-	default_conf.index.push_back("index.html");
-	default_conf.autoIndex = false;
-	default_conf.clientMaxBodySize = 200000;
-	default_conf.uploadDir = "None";
-	default_conf.allowedMethods.push_back(GET);
-	default_conf.allowedMethods.push_back(POST);
-	default_conf.allowedMethods.push_back(DELETE);
+	for (int j = 0; j < i; j++) {
+		struct Listen listen;
+		listen.port = "8080";
+		listen.IP = "";
+
+		struct Context conf;
+		conf.network_address.push_back(listen);
+		conf.serverName.push_back("example.com");
+		conf.index.push_back("index.html");
+		conf.autoIndex = false;
+		conf.clientMaxBodySize = 200000;
+		conf.uploadDir = "None";
+		conf.allowedMethods.push_back(GET);
+		conf.allowedMethods.push_back(POST);
+		conf.allowedMethods.push_back(DELETE);
+
+		default_conf.push_back(conf);
+	}
+
+	default_conf[1].network_address[0].IP = "localhost";
+	default_conf[1].network_address[0].port = "8081";
+
+	default_conf[2].network_address[0].IP = "0.0.0.0";
+	default_conf[2].network_address[0].port = "8082";
+
+	default_conf[3].network_address[0].IP = "172.21.187.192";
+	default_conf[3].network_address[0].port = "8083";
 
 	return default_conf;
 }
@@ -56,14 +72,23 @@ std::string int_to_string(int value) {
 	return ss.str();
 }
 
+int string_to_int(const std::string& value) {
+	int result;
+
+	std::stringstream ss(value);
+
+	ss >> result;
+	return result;
+}
+
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration) {
 	outstream << "Network Addresses: ";
 	for (std::vector<Listen>::const_iterator it =
 			 configuration.network_address.begin();
 		 it != configuration.network_address.end(); it++)
-		// outstream << *it << " "; // Update with Listen
-		outstream << std::endl;
+		outstream << (*it).IP << ":" << (*it).port;
+	outstream << std::endl;
 	outstream << "Server Name: " << configuration.serverName[0] << std::endl;
 	outstream << "Index: " << configuration.index[0] << std::endl;
 	outstream << "AutoIndex: " << boolToString(configuration.autoIndex)

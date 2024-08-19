@@ -6,21 +6,15 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/16 15:51:29 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:04:17 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <netinet/in.h>
-
 #include "Webserv.hpp"
-
-struct Context get_default_conf(int i);
 
 int main() {
 	// Sample configuration vector, supposed to mimic David's final output
-	std::vector<struct Context> configuration_vector;
-	for (int i = 1; i <= 3; i++)
-		configuration_vector.push_back(get_default_conf(i));
+	std::vector<struct Context> configuration_vector = get_default_conf(4);
 
 	// Initializes the Server Cluster
 	Cluster server_cluster(configuration_vector);

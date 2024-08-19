@@ -6,7 +6,7 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:38:07 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 14:43:07 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:30:40 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,11 +47,18 @@ void Server::setup_server(void) {
 		struct sockaddr_in sockaddr;
 		std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
 		sockaddr.sin_family = AF_INET;
-		sockaddr.sin_addr.s_addr = INADDR_ANY;
-		//	inet_addr("127.0.0.1");	 // NOTE: INADDR_ANY? htonl host? Get a
-		// _host var? Adapt from Listen struct!!
-		sockaddr.sin_port =
-			htons(1025);  // Converts number to network byte order
+		if (it->IP == "")
+			sockaddr.sin_addr.s_addr = INADDR_ANY;
+		else if (it->IP == "localhost") {
+			if (inet_aton("127.0.0.1", &sockaddr.sin_addr) == 0)
+				throw SocketSetupError("inet_addr");
+
+		} else {
+			if (inet_aton(it->IP.c_str(), &sockaddr.sin_addr) == 0)
+				throw SocketSetupError("inet_addr");
+		}
+		sockaddr.sin_port = htons(
+			string_to_int(it->port));  // Converts number to network byte order
 
 		// Binds name to socket
 		if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
@@ -66,7 +73,7 @@ void Server::setup_server(void) {
 		}
 
 		// Adds sock_fd and sockaddr to the server object
-		// _listening_sockets.push_back(sock_fd); Update with Listen
+		_listening_sockets.push_back(sock_fd);
 		_sockaddr_vector.push_back(sockaddr);
 	}
 }

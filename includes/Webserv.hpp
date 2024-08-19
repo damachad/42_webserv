@@ -6,14 +6,14 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 17:28:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:27:27 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-#include <arpa/inet.h>	// for inet
+#include <arpa/inet.h>	// for inet.aton()
 #include <errno.h>		// For errno
 #include <fcntl.h>		// open
 #include <netinet/in.h>
