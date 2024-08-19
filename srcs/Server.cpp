@@ -25,9 +25,9 @@ Server::Server(const struct Context& configuration)
 
 // Destructor, closes all listening sockets
 Server::~Server() {
-	for (std::vector<int>::iterator it = _listening_sockets.begin();
+	/*for (std::vector<int>::iterator it = _listening_sockets.begin();
 		 it != _listening_sockets.end(); it++)
-		close(*it);
+		close(*it);*/
 }
 
 // Sets up Server and adds sockets to _listening_sockets
