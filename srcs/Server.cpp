@@ -3,7 +3,7 @@
 
 // Constructor, creates server from configuration file
 Server::Server(const struct Context& configuration)
-	: _hostname(configuration.serverName),
+	: _hostname(configuration.serverName.front()),
 	  _ports(configuration.ports),
 	  _listening_sockets(),
 	  _sockaddr_vector() {
@@ -21,9 +21,9 @@ Server::~Server() {
 
 // Sets up Server and adds sockets to _listening_sockets
 void Server::setup_server(void) {
-	const std::vector<uint16_t> ports_listing = get_ports();
+	const std::vector<int> ports_listing = get_ports();
 
-	for (std::vector<uint16_t>::const_iterator it = ports_listing.begin();
+	for (std::vector<int>::const_iterator it = ports_listing.begin();
 		 it != ports_listing.end(); it++) {
 		// Create a socket (IPv4, TCP)
 		int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -33,9 +33,9 @@ void Server::setup_server(void) {
 		struct sockaddr_in sockaddr;
 		std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
 		sockaddr.sin_family = AF_INET;
-		sockaddr.sin_addr.s_addr =
-			inet_addr("127.0.0.1");	 // NOTE: INADDR_ANY? htonl host? Get a
-									 // _host var?
+		sockaddr.sin_addr.s_addr = INADDR_ANY;
+		//	inet_addr("127.0.0.1");	 // NOTE: INADDR_ANY? htonl host? Get a
+		// _host var?
 		sockaddr.sin_port =
 			htons(*it);	 // Converts number to network byte order
 
@@ -58,19 +58,19 @@ void Server::setup_server(void) {
 }
 
 // Getters for private member data
-const std::string Server::get_hostname(void) const { return _hostname; }
-const std::vector<uint16_t> Server::get_ports(void) const { return _ports; }
+
+const std::vector<int> Server::get_ports(void) const { return _ports; }
 const std::vector<int> Server::get_listening_sockets(void) const {
 	return _listening_sockets;
 }
 
 // Outputs Server's Hostname and Ports
 std::ostream& operator<<(std::ostream& outstream, const Server& server) {
-	outstream << "Server [" << server.get_hostname()
+	outstream << "Server [X"
 			  << "] is listening to ports: [ ";
 
-	const std::vector<uint16_t> server_ports = server.get_ports();
-	for (std::vector<uint16_t>::const_iterator it = server_ports.begin();
+	const std::vector<int> server_ports = server.get_ports();
+	for (std::vector<int>::const_iterator it = server_ports.begin();
 		 it != server_ports.end(); it++)
 		outstream << *it << " ";
 

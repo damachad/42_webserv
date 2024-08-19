@@ -16,7 +16,7 @@ class Server {
 
 	// Getters for private member data
 	const std::string get_hostname() const;
-	const std::vector<uint16_t> get_ports() const;
+	const std::vector<int> get_ports() const;
 	const std::vector<int> get_listening_sockets() const;
 
    private:
@@ -24,7 +24,7 @@ class Server {
 	const std::string _hostname;
 
 	// Server's ports
-	const std::vector<uint16_t> _ports;
+	const std::vector<int> _ports;
 
 	// Server's listening fds
 	std::vector<int> _listening_sockets;
