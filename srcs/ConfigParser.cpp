@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 14:55:18 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 16:12:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,120 +75,95 @@ void ConfigParser::initializeDirectiveMap(void) {
 	// _directiveMap["redirect"] = &ConfigParser::handleRedirect;
 }
 
+// TODO: Divide into IP and Port, use default IP if not provided
 void ConfigParser::handleListen(Context &context,
-								const std::vector<std::string> &tokens) {
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
-	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
-	}
-	std::cout << std::endl;
+								std::vector<std::string> &tokens) {
 	(void)context;
+	(void)tokens;
+	// std::vector<std::string>::const_iterator it;
+	// std::cout << "Handling: ";
+	// for (it = tokens.begin(); it != tokens.end(); it++){
+	// 	std::cout << (*it) << " ";
+	// }
+	// std::cout << std::endl;
 }
 
 void ConfigParser::handleServerName(Context &context,
-									const std::vector<std::string> &tokens) {
-	(void)context;
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
-	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
-	}
-	std::cout << std::endl;
+									std::vector<std::string> &tokens) {
+	tokens.erase(tokens.begin());
+	context.serverName = tokens;
 }
 
 void ConfigParser::handleRoot(Context &context,
-							  const std::vector<std::string> &tokens) {
+							  std::vector<std::string> &tokens) {
+	if (tokens.size() > 2)
+		throw ConfigError("Invalid root directive.");
 	context.root = tokens[1];
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
-	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
-	}
-	std::cout << std::endl;
 }
 
 void ConfigParser::handleIndex(Context &context,
-							   const std::vector<std::string> &tokens) {
-	(void)context;
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
-	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
-	}
-	std::cout << std::endl;
+							   std::vector<std::string> &tokens) {
+	tokens.erase(tokens.begin());
+	context.index = tokens;
 }
+
 void ConfigParser::handleLimitExcept(Context &context,
-									 const std::vector<std::string> &tokens) {
-	(void)context;
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
+									 std::vector<std::string> &tokens) {
 	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
+	for (it = tokens.begin() + 1; it != tokens.end(); it++){
+		if ((*it) == "GET")
+			context.allowedMethods.push_back(GET);
+		else if ((*it) == "DELETE")
+			context.allowedMethods.push_back(DELETE);
+		else if ((*it) == "POST")
+			context.allowedMethods.push_back(POST);
+		else
+			throw ConfigError("Unsupported method detected.");
 	}
-	std::cout << std::endl;
 }
 
 void ConfigParser::handleTryFiles(Context &context,
-								  const std::vector<std::string> &tokens) {
-	(void)context;
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
-	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
-	}
-	std::cout << std::endl;
+								  std::vector<std::string> &tokens) {
+	tokens.erase(tokens.begin());
+	context.tryFiles = tokens;
 }
 
+// TODO: parse errors unto the map (str to short) and pair with last arg (file)
 void ConfigParser::handleErrorPage(Context &context,
-								   const std::vector<std::string> &tokens) {
+								   std::vector<std::string> &tokens) {
 	(void)context;
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
-	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
-	}
-	std::cout << std::endl;
+	(void)tokens;
+	// std::vector<std::string>::const_iterator it;
+	// std::cout << "Handling: ";
+	// for (it = tokens.begin(); it != tokens.end(); it++){
+	// 	std::cout << (*it) << " ";
+	// }
+	// std::cout << std::endl;
 }
 
+// TODO: parse string to unsigned long based on the unit
 void ConfigParser::handleCliMaxSize(Context &context,
-									const std::vector<std::string> &tokens) {
+									std::vector<std::string> &tokens) {
 	(void)context;
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
-	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
-	}
-	std::cout << std::endl;
+	(void)tokens;
+	// if (tokens.empty())
+	// 	std::cout << "No tokens passed to handler function\n";
+	// std::vector<std::string>::const_iterator it;
+	// std::cout << "Handling: ";
+	// for (it = tokens.begin(); it != tokens.end(); it++){
+	// 	std::cout << (*it) << " ";
+	// }
+	// std::cout << std::endl;
 }
 
 void ConfigParser::handleAutoIndex(Context &context,
-								   const std::vector<std::string> &tokens) {
-	(void)context;
-	if (tokens.empty())
-		std::cout << "No tokens passed to handler function\n";
-	std::vector<std::string>::const_iterator it;
-	std::cout << "Handling: ";
-	for (it = tokens.begin(); it != tokens.end(); it++){
-		std::cout << (*it) << " ";
-	}
-	std::cout << std::endl;
+								   std::vector<std::string> &tokens) {
+	if (tokens[1] == "on")
+		context.autoIndex = true;
+	else if (tokens[1] == "off")
+		context.autoIndex = false;
+	else
+		throw ConfigError("Invalid syntax.");
 }
 
 size_t ConfigParser::advanceBlock(std::string content, size_t start) {
@@ -300,11 +275,13 @@ void ConfigParser::processLocation(Context &server, std::string block,
 	server.locations[route] = locationInfo;
 }
 
+// TODO: Fix content loading (clear struct ?)
 void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	std::string line;
 	std::vector<std::string>::iterator it;
 	std::string firstWord;
 	Context server;
+
 	for (it = blocks.begin(); it != blocks.end(); it++) {
 		std::istringstream block(*it);
 		std::streampos startPos = block.tellg();
@@ -312,7 +289,6 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 							';')) {	 // change this, there may be no ';'
 			trimOuterSpaces(line);
 			if (line.empty()) throw ConfigError("Unparsable block detected.");
-			;
 			firstWord = line.substr(0, 8);
 			if (stringToLower(firstWord) == "location") {
 				size_t endPos = (*it).find("}", startPos);
@@ -323,6 +299,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 			}
 			startPos = block.tellg();
 		}
+		_servers.push_back(server);
 	}
 }
 
@@ -357,7 +334,7 @@ void ConfigParser::printContext(Context context) {
 		}
 	}
 	if (!context.serverName.empty()) {
-		std::cout << "Server Name: " << std::endl;
+		std::cout << "Server Name: ";
 		for (it2 = context.serverName.begin(); it2 != context.serverName.end();
 			 ++it2)
 			std::cout << *it2 << " ";
@@ -366,7 +343,7 @@ void ConfigParser::printContext(Context context) {
 	if (!context.root.empty())
 		std::cout << "Root: " << context.root << std::endl;
 	if (!context.index.empty()) {
-		std::cout << "Index: " << std::endl;
+		std::cout << "Index: ";
 		for (it2 = context.index.begin(); it2 != context.index.end(); ++it2)
 			std::cout << *it2 << " ";
 		std::cout << std::endl;
@@ -378,7 +355,7 @@ void ConfigParser::printContext(Context context) {
 	if (!context.uploadDir.empty())
 		std::cout << "Upload Directory: " << context.uploadDir << std::endl;
 	if (!context.tryFiles.empty()) {
-		std::cout << "Try Files: " << std::endl;
+		std::cout << "Try Files: ";
 		for (it2 = context.tryFiles.begin(); it2 != context.tryFiles.end();
 			 ++it2)
 			std::cout << *it2 << " ";
@@ -386,10 +363,10 @@ void ConfigParser::printContext(Context context) {
 	}
 	if (!context.allowedMethods.empty()) {
 		std::cout << "Allowed Methods: ";
-		std::vector<Method>::const_iterator it;
-		for (it = context.allowedMethods.begin();
-			 it != context.allowedMethods.end(); it++) {
-			switch (*it) {
+		std::vector<Method>::const_iterator it3;
+		for (it3 = context.allowedMethods.begin();
+			 it3 != context.allowedMethods.end(); it3++) {
+			switch (*it3) {
 				case GET:
 					std::cout << "GET ";
 					break;
@@ -420,7 +397,6 @@ void ConfigParser::printContext(Context context) {
 			 ++it) {
 			std::cout << it->first << ": ";
 			printContext(it->second);
-			std::cout << std::endl;
 		}
 	}
 }
@@ -431,5 +407,8 @@ void ConfigParser::printConfigs() {
 		return;
 	}
 	std::vector<Context>::const_iterator it;
-	for (it = _servers.begin(); it != _servers.end(); it++) printContext(*it);
+	for (it = _servers.begin(); it != _servers.end(); it++) {
+		printContext(*it);
+		std::cout << std::endl;
+	}
 }

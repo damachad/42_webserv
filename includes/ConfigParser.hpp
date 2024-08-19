@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 14:54:39 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:16:24 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ class ConfigParser {
    private:
 	// Function pointer type for handlers
 	typedef void (ConfigParser::*DirectiveHandler)(
-		Context &, const std::vector<std::string> &);
+		Context &, std::vector<std::string> &);
 	std::string _configFile;
 	std::vector<Context> _servers;
 	std::map<std::string, DirectiveHandler> _directiveMap;
@@ -70,21 +70,21 @@ class ConfigParser {
 	void processDirective(Context &server, std::string &line);
 	std::vector<Context> getServers(void);
 
-	void handleListen(Context &context, const std::vector<std::string> &tokens);
+	void handleListen(Context &context, std::vector<std::string> &tokens);
 	void handleServerName(Context &context,
-						  const std::vector<std::string> &tokens);
-	void handleRoot(Context &context, const std::vector<std::string> &tokens);
-	void handleIndex(Context &context, const std::vector<std::string> &tokens);
+						  std::vector<std::string> &tokens);
+	void handleRoot(Context &context, std::vector<std::string> &tokens);
+	void handleIndex(Context &context, std::vector<std::string> &tokens);
 	void handleLimitExcept(Context &context,
-						   const std::vector<std::string> &tokens);
+						   std::vector<std::string> &tokens);
 	void handleTryFiles(Context &context,
-						const std::vector<std::string> &tokens);
+						std::vector<std::string> &tokens);
 	void handleErrorPage(Context &context,
-						 const std::vector<std::string> &tokens);
+						 std::vector<std::string> &tokens);
 	void handleCliMaxSize(Context &context,
-						  const std::vector<std::string> &tokens);
+						  std::vector<std::string> &tokens);
 	void handleAutoIndex(Context &context,
-						 const std::vector<std::string> &tokens);
+						 std::vector<std::string> &tokens);
 };
 
 // Utils

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 14:49:03 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 14:40:22 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:44:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,5 +27,6 @@ int	main(int argc, char **argv)
 	{
 		std::cerr << e.what();
 	}
+	parser.printConfigs();
 	return (0);
 }
