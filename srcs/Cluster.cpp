@@ -116,6 +116,8 @@ void Cluster::run(void) {
 		if (n == -1) throw ClusterSetupError("epoll_wait");
 
 		accept(events[0].data.fd, NULL, NULL);
+		accept(events[1].data.fd, NULL, NULL);
+		accept(events[2].data.fd, NULL, NULL);
 		std::cout << "Got a connection!" << std::endl;
 
 		/*

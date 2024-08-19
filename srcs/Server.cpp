@@ -59,6 +59,7 @@ void Server::setup_server(void) {
 
 // Getters for private member data
 
+const std::string Server::get_hostname(void) const { return _hostname; }
 const std::vector<int> Server::get_ports(void) const { return _ports; }
 const std::vector<int> Server::get_listening_sockets(void) const {
 	return _listening_sockets;
@@ -66,7 +67,7 @@ const std::vector<int> Server::get_listening_sockets(void) const {
 
 // Outputs Server's Hostname and Ports
 std::ostream& operator<<(std::ostream& outstream, const Server& server) {
-	outstream << "Server [X"
+	outstream << "Server [" << server.get_hostname()
 			  << "] is listening to ports: [ ";
 
 	const std::vector<int> server_ports = server.get_ports();
