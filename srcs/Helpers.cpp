@@ -12,16 +12,12 @@
 
 #include "Webserv.hpp"
 
+// Gets a vector of i servers, with two network configurations each
 std::vector<struct Context> get_default_conf(int i) {
 	std::vector<struct Context> default_conf(0);
 
 	for (int j = 0; j < i; j++) {
-		struct Listen listen;
-		listen.port = "8080";
-		listen.IP = "";
-
 		struct Context conf;
-		conf.network_address.push_back(listen);
 		conf.serverName.push_back("example.com");
 		conf.index.push_back("index.html");
 		conf.autoIndex = false;
@@ -34,14 +30,36 @@ std::vector<struct Context> get_default_conf(int i) {
 		default_conf.push_back(conf);
 	}
 
-	default_conf[1].network_address[0].IP = "localhost";
-	default_conf[1].network_address[0].port = "8081";
+	std::vector<Listen> address(2);
+	address[0].IP = "";
+	address[0].port = "8080";
+	address[1].IP = "";
+	address[1].port = "8081";
+	default_conf[0].network_address = address;
 
-	default_conf[2].network_address[0].IP = "0.0.0.0";
-	default_conf[2].network_address[0].port = "8082";
+	address[0].IP = "127.0.0.1";
+	address[0].port = "8082";
+	address[1].IP = "127.0.01";
+	address[1].port = "8083";
+	default_conf[1].network_address = address;
 
-	default_conf[3].network_address[0].IP = "172.21.187.192";
-	default_conf[3].network_address[0].port = "8083";
+	address[0].IP = "localhost";
+	address[0].port = "8084";
+	address[1].IP = "localhost";
+	address[1].port = "8085";
+	default_conf[2].network_address = address;
+
+	address[0].IP = "0.0.0.0";
+	address[0].port = "8086";
+	address[1].IP = "0.0.0.0";
+	address[1].port = "8087";
+	default_conf[3].network_address = address;
+
+	address[0].IP = "172.21.187.192";
+	address[0].port = "8088";
+	address[1].IP = "172.21.187.192";
+	address[1].port = "8089";
+	default_conf[4].network_address = address;
 
 	return default_conf;
 }
@@ -87,7 +105,7 @@ std::ostream& operator<<(std::ostream& outstream,
 	for (std::vector<Listen>::const_iterator it =
 			 configuration.network_address.begin();
 		 it != configuration.network_address.end(); it++)
-		outstream << (*it).IP << ":" << (*it).port;
+		outstream << (*it).IP << ":" << (*it).port << "\t";
 	outstream << std::endl;
 	outstream << "Server Name: " << configuration.serverName[0] << std::endl;
 	outstream << "Index: " << configuration.index[0] << std::endl;
