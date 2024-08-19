@@ -1,10 +1,10 @@
 #include "Exceptions.hpp"
 #include "Webserv.hpp"
 
+// TODO: Initialize _ports
 // Constructor, creates server from configuration file
 Server::Server(const struct Context& configuration)
 	: _hostname(configuration.serverName.front()),
-	  _ports(configuration.ports),
 	  _listening_sockets(),
 	  _sockaddr_vector() {
 	std::cout << "Created a server!" << std::endl;
@@ -12,11 +12,12 @@ Server::Server(const struct Context& configuration)
 	std::cout << configuration << std::endl;
 }
 
+// TODO: Update with Listen struct
 // Destructor, closes all listening sockets
 Server::~Server() {
-	for (std::vector<int>::iterator it = _listening_sockets.begin();
-		 it != _listening_sockets.end(); it++)
-		close(*it);
+	// for (std::vector<Listen>::iterator it = _listening_sockets.begin();
+	// 	 it != _listening_sockets.end(); it++)
+		// close(*it);
 }
 
 // Sets up Server and adds sockets to _listening_sockets
@@ -52,7 +53,7 @@ void Server::setup_server(void) {
 		}
 
 		// Adds sock_fd and sockaddr to the server object
-		_listening_sockets.push_back(sock_fd);
+		// _listening_sockets.push_back(sock_fd); Update with Listen
 		_sockaddr_vector.push_back(sockaddr);
 	}
 }
@@ -61,7 +62,7 @@ void Server::setup_server(void) {
 
 const std::string Server::get_hostname(void) const { return _hostname; }
 const std::vector<int> Server::get_ports(void) const { return _ports; }
-const std::vector<int> Server::get_listening_sockets(void) const {
+const std::vector<Listen> Server::get_listening_sockets(void) const {
 	return _listening_sockets;
 }
 

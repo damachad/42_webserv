@@ -3,8 +3,9 @@
 Context get_default_conf(int i) {
 	struct Context default_conf;
 
-	default_conf.ports.push_back(
-		1024 + i);	// Ports up to 1024 are privileged and require super user!
+	(void)i;
+	// default_conf.ports.push_back( // Update with Listen
+		// 1024 + i);	// Ports up to 1024 are privileged and require super user!
 	default_conf.serverName.push_back("localhost");
 	default_conf.index.push_back("index.html");
 	default_conf.autoIndex = false;
@@ -46,9 +47,9 @@ std::string int_to_string(int value) {
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration) {
 	outstream << "Ports: ";
-	for (std::vector<int>::const_iterator it = configuration.ports.begin();
+	for (std::vector<Listen>::const_iterator it = configuration.ports.begin();
 		 it != configuration.ports.end(); it++)
-		outstream << *it << " ";
+		// outstream << *it << " "; // Update with Listen
 	outstream << std::endl;
 	outstream << "Server Name: " << configuration.serverName[0] << std::endl;
 	outstream << "Index: " << configuration.index[0] << std::endl;

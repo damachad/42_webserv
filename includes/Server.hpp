@@ -17,7 +17,7 @@ class Server {
 	// Getters for private member data
 	const std::string get_hostname() const;
 	const std::vector<int> get_ports() const;
-	const std::vector<int> get_listening_sockets() const;
+	const std::vector<Listen> get_listening_sockets() const;
 
    private:
 	// Server's hostname
@@ -27,7 +27,7 @@ class Server {
 	const std::vector<int> _ports;
 
 	// Server's listening fds
-	std::vector<int> _listening_sockets;
+	std::vector<Listen> _listening_sockets;
 
 	// Server's sockaddr vector
 	std::vector<struct sockaddr_in> _sockaddr_vector;

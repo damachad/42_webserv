@@ -94,9 +94,9 @@ void Cluster::setup_cluster(void) {
 
 // Adds sockets to epoll so they can be monitored
 void Cluster::add_sockets_to_epoll(const Server& server) {
-	std::vector<int> socket_list = server.get_listening_sockets();
+	std::vector<Listen> socket_list = server.get_listening_sockets();
 
-	for (std::vector<int>::const_iterator it = socket_list.begin();
+	for (std::vector<Listen>::const_iterator it = socket_list.begin();
 		 it != socket_list.end(); it++) {
 		int listening_socket = *it;
 		epoll_event event;
