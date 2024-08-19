@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/16 18:24:05 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 11:58:17 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,9 @@ ConfigParser::ConfigParser(const ConfigParser &src)
 }
 
 ConfigParser::ConfigParser(const std::string &file) : _configFile(file)
-{}
+{
+	initializeDirectiveMap();
+}
 
 ConfigParser::~ConfigParser(void)
 {}
@@ -72,6 +74,82 @@ void	ConfigParser::trimComments(std::string &s)
 		s.erase(comment, endl - comment);
 		comment = s.find('#');
 	}
+}
+
+// Function to initialize the map
+void ConfigParser::initializeDirectiveMap(void)
+{
+	_directiveMap["listen"] = &ConfigParser::handleListen;
+	_directiveMap["server_name"] = &ConfigParser::handleServerName;
+	_directiveMap["root"] = &ConfigParser::handleRoot;
+	_directiveMap["index"] = &ConfigParser::handleIndex;
+	_directiveMap["limit_except"] = &ConfigParser::handleLimitExcept;
+	_directiveMap["try_files"] = &ConfigParser::handleTryFiles;
+	_directiveMap["error_page"] = &ConfigParser::handleErrorPage;
+	_directiveMap["client_max_body_size"] = &ConfigParser::handleCliMaxSize;
+	_directiveMap["autoindex"] = &ConfigParser::handleAutoIndex;
+	// _directiveMap["redirect"] = &ConfigParser::handleRedirect;
+}
+
+void	ConfigParser::handleListen(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: listen\n";
+	(void)context;
+	(void)tokens;
+}
+
+void	ConfigParser::handleServerName(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: server_name\n";
+	(void)context;
+	(void)tokens;
+}
+
+void	ConfigParser::handleRoot(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: root\n";
+	context.root = tokens[1];
+}
+
+void	ConfigParser::handleIndex(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: index\n";
+	(void)context;
+	(void)tokens;
+}
+void	ConfigParser::handleLimitExcept(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: limit_except\n";
+	(void)context;
+	(void)tokens;
+}
+
+void	ConfigParser::handleTryFiles(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: try_files\n";
+	(void)context;
+	(void)tokens;
+}
+
+void	ConfigParser::handleErrorPage(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: error_page\n";
+	(void)context;
+	(void)tokens;
+}
+
+void	ConfigParser::handleCliMaxSize(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: client_max_body_size\n";
+	(void)context;
+	(void)tokens;
+}
+
+void	ConfigParser::handleAutoIndex(Context &context, const std::vector<std::string> & tokens)
+{
+	std::cout << "Handling: autoindex\n";
+	(void)context;
+	(void)tokens;
 }
 
 size_t	ConfigParser::advanceBlock(std::string content, size_t start)
@@ -138,39 +216,48 @@ std::vector<std::string>	ConfigParser::tokenizeLine(std::string line)
 	return (tokens);
 }
 
-// TODO: parse directive unto Context struct
-void	ConfigParser::processDirective(Context &server, std::string line)
+void	ConfigParser::processDirective(Context &server, std::string &line)
 {
-	(void)server;
 	std::vector<std::string> tokens;
 	tokens = tokenizeLine(line);
-	
+	if (tokens.size() < 2)
+		throw ConfigError("No value for directive: " + tokens[0]);
+	std::map<std::string, DirectiveHandler>::const_iterator it;
+	it = _directiveMap.find(tokens[0]);
+	if (it != _directiveMap.end())
+		(this->*(it->second))(server, tokens);
+	else
+		throw ConfigError("Unkown directive: " + tokens[0]);
 }
 
 // TODO: improve flow of function
 // 		parse each directive unto Context struct
-void	ConfigParser::processLocation(Context &server, std::string block, size_t start, size_t end)
+void ConfigParser::processLocation(Context &server, std::string block, size_t start, size_t end) 
 {
-	(void)server;
 	std::string route;
 	std::string line;
+	std::string firstWord;
 	std::vector<std::string> tokens;
 	std::istringstream location(block.substr(start, end - start));
-	location >> route; // discard 'location'
-	location >> route;
-	location >> line; // apply a better approach ? Just discarding the '{'
-	// std::cout << "LOCATION BLOCK\n";
-	// std::cout << "Route: " << route << '\n';
-	while (std::getline(location, line, ';')){
+	Context		locationInfo;
+
+	location >> route;  // Discard 'location'
+	location >> route;  // Get the actual route
+	std::getline(location, line, '{');  // Discard the opening '{'
+	while (std::getline(location, line, ';')) // change this, there may be no ';'
+	{
 		trimOuterSpaces(line);
 		if (line.empty())
-			continue ;
-		tokens = tokenizeLine(line);
-		// std::vector<std::string>::const_iterator it2;
-		// for (it2 = tokens.begin(); it2 != tokens.end(); it2++)
-		// 	std::cout << (*it2) << " ";
-		// std::cout << std::endl;
+			continue;
+		firstWord = line.substr(0, 8);
+		if (stringToLower(firstWord) == "location") {
+			throw ConfigError("Nested locations not supported.");
+		} else
+			processDirective(locationInfo, line);
+		if (location.tellg() >= static_cast<std::streampos>(end))
+			break;
 	}
+	server.locations[route] = locationInfo;
 }
 
 void	ConfigParser::loadIntoContext(std::vector<std::string> &blocks)
@@ -182,7 +269,7 @@ void	ConfigParser::loadIntoContext(std::vector<std::string> &blocks)
 	for (it = blocks.begin(); it != blocks.end(); it++){
 		std::istringstream block(*it);
 		std::streampos startPos = block.tellg();
-		while (std::getline(block, line, ';')){
+		while (std::getline(block, line, ';')){ // change this, there may be no ';'
 			trimOuterSpaces(line);
 			if (line.empty())
 				continue ;
@@ -194,10 +281,8 @@ void	ConfigParser::loadIntoContext(std::vector<std::string> &blocks)
 			}
 			else {
 				processDirective(server, line);
-
 			}
 			startPos = block.tellg();
-			// check if directive is one covered by this program
 		}
 	}
 }
@@ -238,6 +323,7 @@ bool	ConfigParser::loadConfigs()
 		std::vector<std::string> serverBlocks;
 		try{
 			serverBlocks = splitServerBlocks(fileContents);
+			loadIntoContext(serverBlocks);
 		}
 		catch (std::exception &e){
 			std::cerr << e.what();
@@ -249,7 +335,6 @@ bool	ConfigParser::loadConfigs()
 		// 	std::cout << *it << '\n';
 		// 	std::cout << "----------------------------\n";
 		// }
-		loadIntoContext(serverBlocks);
 	}
 	return (true);
 }

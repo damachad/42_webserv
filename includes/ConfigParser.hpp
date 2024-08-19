@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/16 18:13:29 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/19 11:43:27 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,11 +38,15 @@ struct Context
 	// Later add redirect and cgi related variables
 };
 
+
 class ConfigParser
 {
 	private:
-		std::string					_configFile;
-		std::vector<Context>		_servers;
+		// Function pointer type for handlers
+		typedef void (ConfigParser::*DirectiveHandler)(Context &, const std::vector<std::string> &);
+		std::string								_configFile;
+		std::vector<Context>					_servers;
+		std::map<std::string, DirectiveHandler>	_directiveMap;
 
 	public:
 		ConfigParser();
@@ -55,6 +59,7 @@ class ConfigParser
 		void						loadDefaults();
 		void						printConfigs();
 		void						printContext(Context context);
+		void 						initializeDirectiveMap();
 		void						trimOuterSpaces(std::string &s);
 		void						trimComments(std::string &s);
 		void						loadIntoContext(std::vector<std::string> &blocks);
@@ -62,8 +67,18 @@ class ConfigParser
 		std::vector<std::string>	splitServerBlocks(std::string content);
 		std::vector<std::string>	tokenizeLine(std::string line);
 		void						processLocation(Context &server, std::string block, size_t start, size_t end);
-		void						processDirective(Context &server, std::string line);
+		void						processDirective(Context &server, std::string &line);
 		std::vector<Context>		getServers(void);
+		
+		void						handleListen(Context &context, const std::vector<std::string> & tokens);
+		void						handleServerName(Context &context, const std::vector<std::string> & tokens);
+		void						handleRoot(Context &context, const std::vector<std::string> & tokens);
+		void						handleIndex(Context &context, const std::vector<std::string> & tokens);
+		void						handleLimitExcept(Context &context, const std::vector<std::string> & tokens);
+		void						handleTryFiles(Context &context, const std::vector<std::string> & tokens);
+		void						handleErrorPage(Context &context, const std::vector<std::string> & tokens);
+		void						handleCliMaxSize(Context &context, const std::vector<std::string> & tokens);
+		void						handleAutoIndex(Context &context, const std::vector<std::string> & tokens);
 };
 
 // Utils
