@@ -18,16 +18,17 @@ Server::Server(const struct Context& configuration)
 	  _network_addresses(configuration.network_address),
 	  _listening_sockets(),
 	  _sockaddr_vector() {
-	std::cout << "Created a server!" << std::endl;
+	std::cout << "Server Constructor called" << std::endl;
 
 	std::cout << configuration << std::endl;
 }
 
 // Destructor, closes all listening sockets
 Server::~Server() {
-	/*for (std::vector<int>::iterator it = _listening_sockets.begin();
+	std::cout << "Server Destructor called" << std::endl;
+	for (std::vector<int>::iterator it = _listening_sockets.begin();
 		 it != _listening_sockets.end(); it++)
-		close(*it);*/
+		close(*it);
 }
 
 // Sets up Server and adds sockets to _listening_sockets
@@ -77,13 +78,13 @@ void Server::setup_server(void) {
 }
 
 // Getters for private member data
-const std::vector<std::string> Server::get_server_names(void) const {
+const std::vector<std::string>& Server::get_server_names(void) const {
 	return _server_names;
 }
-const std::vector<Listen> Server::get_network_addresses(void) const {
+const std::vector<Listen>& Server::get_network_addresses(void) const {
 	return _network_addresses;
 }
-const std::vector<int> Server::get_listening_sockets(void) const {
+const std::vector<int>& Server::get_listening_sockets(void) const {
 	return _listening_sockets;
 }
 

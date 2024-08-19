@@ -20,7 +20,7 @@ class Server;
 class Cluster {
    public:
 	// Constructor; create a vector of servers from provided context vector
-	Cluster(std::vector<struct Context> servers);
+	Cluster(const std::vector<struct Context>& servers);
 
 	// Destructor, closes _epoll_fd if it opened
 	~Cluster();
@@ -38,10 +38,10 @@ class Cluster {
 	void run();
 
 	// Getters for private member data
-	const std::vector<Server> get_server_list() const;
-	const std::vector<int> get_listening_sockets() const;
-	const std::map<int, int> get_listening_fd_map() const;
-	const std::map<int, int> get_connection_fd_map() const;
+	const std::vector<Server>& get_server_list() const;
+	const std::vector<int>& get_listening_sockets() const;
+	const std::map<int, int>& get_listening_fd_map() const;
+	const std::map<int, int>& get_connection_fd_map() const;
 	int get_epoll_fd() const;
 
 	// Returns respective server from each fd

@@ -27,9 +27,9 @@ class Server {
 	void setup_server(void);
 
 	// Getters for private member data
-	const std::vector<std::string> get_server_names() const;
-	const std::vector<Listen> get_network_addresses() const;
-	const std::vector<int> get_listening_sockets() const;
+	const std::vector<std::string>& get_server_names() const;
+	const std::vector<Listen>& get_network_addresses() const;
+	const std::vector<int>& get_listening_sockets() const;
 
    private:
 	// Server's names in config

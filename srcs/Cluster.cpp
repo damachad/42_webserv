@@ -14,16 +14,18 @@
 
 // Constructor
 // Create a vector of servers from provided context vector
-Cluster::Cluster(std::vector<struct Context> servers)
+Cluster::Cluster(const std::vector<struct Context>& servers)
 	: _servers(), _listening_fd_map(), _connection_fd_map(), _epoll_fd(-1) {
-	for (std::vector<struct Context>::iterator it = servers.begin();
+	std::cout << "Cluster Constructor called" << std::endl;
+	for (std::vector<struct Context>::const_iterator it = servers.begin();
 		 it != servers.end(); it++)
-		_servers.push_back(Server(*it));
+		_servers.push_back(*it);
 }
 
 // Destructor
 // Closes _epoll_fd if it was open
 Cluster::~Cluster() {
+	std::cout << "Cluster Destructor called" << std::endl;
 	if (_epoll_fd >= 0) close(_epoll_fd);
 }
 
@@ -36,7 +38,7 @@ const Server& Cluster::operator[](unsigned int index) const {
 
 // Sets up _epoll_fd, fills _listening_fd_map and instructs setup_server()
 void Cluster::setup_cluster(void) {
-	_epoll_fd = epoll_create(1);
+	_epoll_fd = epoll_create(1);  // Int is ignored in newer implementations
 	if (_epoll_fd == -1) throw ClusterSetupError("epoll_create");
 
 	for (size_t i = 0; i < _servers.size(); i++) {
@@ -56,6 +58,7 @@ void Cluster::setup_cluster(void) {
 			_listening_fd_map[*it] = i;	 // NOTE: POSSIBLY UNNEDED?
 		}
 	}
+	// std::cerr << "Here it goes?" << std::endl;
 }
 
 // Adds sockets to epoll so they can be monitored
@@ -131,14 +134,14 @@ void Cluster::run(void) {
 }
 
 // Getters for private member data
-const std::vector<Server> Cluster::get_server_list() const { return _servers; }
-const std::vector<int> Cluster::get_listening_sockets() const {
+const std::vector<Server>& Cluster::get_server_list() const { return _servers; }
+const std::vector<int>& Cluster::get_listening_sockets() const {
 	return _listening_sockets;
 }
-const std::map<int, int> Cluster::get_listening_fd_map() const {
+const std::map<int, int>& Cluster::get_listening_fd_map() const {
 	return _listening_fd_map;
 }
-const std::map<int, int> Cluster::get_connection_fd_map() const {
+const std::map<int, int>& Cluster::get_connection_fd_map() const {
 	return _connection_fd_map;
 }
 int Cluster::get_epoll_fd() const { return _epoll_fd; }
@@ -160,7 +163,7 @@ Server& Cluster::get_server_from_connection_fd(int connection_fd) {
 
 // Outputs Cluster data (epoll_fd, plus all the servers)
 std::ostream& operator<<(std::ostream& outstream, const Cluster& cluster) {
-	std::vector<Server> server_list = cluster.get_server_list();
+	const std::vector<Server>& server_list = cluster.get_server_list();
 
 	outstream << "The Cluster has an epoll_fd of [" << cluster.get_epoll_fd()
 			  << "] and " << server_list.size() << " servers:" << std::endl;
