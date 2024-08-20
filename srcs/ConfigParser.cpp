@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 11:50:34 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 12:22:19 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,17 +75,36 @@ void ConfigParser::initializeDirectiveMap(void) {
 	// _directiveMap["redirect"] = &ConfigParser::handleRedirect;
 }
 
-// TODO: Divide into IP and Port, use default IP if not provided
+// Not called yet
+// static bool isValidPort(const std::string& port) {
+// 	if (port.empty()) return false;
+// 	for (size_t i = 0; i < port.size(); i++)
+// 		if (!std::isdigit(port[i])) return false;
+// 	int portNumber = std::atoi(port.c_str());
+// 	return (portNumber >= 0 && portNumber <= 65535);
+// }
+
+// TODO: implement IPv6? default_server ?
 void ConfigParser::handleListen(Context &context,
 								std::vector<std::string> &tokens) {
-	(void)context;
-	(void)tokens;
-	// std::vector<std::string>::const_iterator it;
-	// std::cout << "Handling: ";
-	// for (it = tokens.begin(); it != tokens.end(); it++){
-	// 	std::cout << (*it) << " ";
-	// }
-	// std::cout << std::endl;
+	std::vector<std::string>::const_iterator it;
+	for (it = tokens.begin() + 1; it != tokens.end(); it++){
+		Listen listening;
+		size_t colonPos = (*it).find(':');
+		if (colonPos != std::string::npos) {
+			listening.IP = (*it).substr(0, colonPos);
+			listening.port = (*it).substr(colonPos + 1);
+		} else {
+			if ((*it).find_first_not_of("0123456789") == std::string::npos) {
+				listening.port = (*it);
+				listening.IP = "localhost"; // default
+			} else {
+				listening.IP = (*it);
+				listening.port = "80"; // default
+			}
+		}
+		context.network_address.push_back(listening);
+	}
 }
 
 void ConfigParser::handleServerName(Context &context,
