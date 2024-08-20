@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 13:18:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 13:50:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,15 +30,12 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &src) {
 	return (*this);
 }
 
-// Necessary?
-void ConfigParser::loadDefaults() {
-	Context server;
+void ConfigParser::loadDefaults(Context &context) {
 	// default values from NGINX
-	// server.networkaddress.push_back(80);
-	// server.index.push_back("index.html");
-	server.clientMaxBodySize = 1048576;	 // 1m
-										 //  server.root = "";
-										 //  server.serverName = "localhost";
+	context.autoIndex = false;
+	context.clientMaxBodySize = 1048576; // 1m
+	context.index.push_back("index.html");
+	context.index.push_back("index.htm");
 }
 
 /* remove leading and trailing whitespaces */
@@ -160,7 +157,6 @@ void ConfigParser::handleCliMaxSize(Context &context,
 									std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
 		throw ConfigError("Invalid client_max_body_size directive.");
-	context.clientMaxBodySize = 1048576; // default
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
 	maxSize.resize(maxSize.size() - 1);
@@ -203,7 +199,7 @@ void ConfigParser::handleCliMaxSize(Context &context,
 
 void ConfigParser::handleAutoIndex(Context &context,
 								   std::vector<std::string> &tokens) {
-	context.autoIndex = false; //default
+	context.autoIndex = false;
 	if (tokens[1] == "on")
 		context.autoIndex = true;
 	else if (tokens[1] != "off")
@@ -266,7 +262,6 @@ std::vector<std::string> ConfigParser::tokenizeLine(std::string line) {
 	return (tokens);
 }
 
-// TODO: Load defaults
 void ConfigParser::processDirective(Context &server, std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = tokenizeLine(line);
@@ -326,6 +321,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 
 	for (it = blocks.begin(); it != blocks.end(); it++) {
 		Context server;
+		loadDefaults(server);
 		std::istringstream block(*it);
 		std::streampos startPos = block.tellg();
 		while (std::getline(block, line,

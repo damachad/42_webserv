@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 15:16:24 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 13:44:27 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ class ConfigParser {
 	ConfigParser &operator=(const ConfigParser &src);
 
 	void loadConfigs();
-	void loadDefaults();
+	void loadDefaults(Context &context);
 	void printConfigs();
 	void printContext(Context context);
 	void initializeDirectiveMap();
