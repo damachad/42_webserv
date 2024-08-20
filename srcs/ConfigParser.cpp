@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 13:50:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 14:16:19 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -301,13 +301,14 @@ void ConfigParser::processLocation(Context &server, std::string block,
 			throw ConfigError("Unparsable location block detected.");
 		if (line.empty())
 			continue;
-		firstWord = line.substr(0, 8);
+		std::istringstream readLine(line);
+		readLine >> firstWord;
 		if (stringToLower(firstWord) == "location")
 			throw ConfigError("Nested locations not supported.");
-		else {
-			processDirective(locationInfo, line);
-			empty = false;
-		}
+		if (stringToLower(firstWord) == "server_name" || stringToLower(firstWord) == "listen")
+			throw ConfigError("Directive " + firstWord + " not supported in location context.");
+		processDirective(locationInfo, line);
+		empty = false;
 		if (location.tellg() >= static_cast<std::streampos>(end)) 
 			break;
 	}
@@ -328,14 +329,16 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 							';')) {	 // change this, there may be no ';'
 			trimOuterSpaces(line);
 			if (line.empty()) throw ConfigError("Unparsable block detected.");
-			firstWord = line.substr(0, 8);
+			std::istringstream readLine(line);
+			readLine >> firstWord;
 			if (stringToLower(firstWord) == "location") {
 				size_t endPos = (*it).find("}", startPos);
 				processLocation(server, (*it), startPos, endPos);
 				std::getline(block, line, '}');
-			} else {
+			} else if (stringToLower(firstWord) == "limit_except")
+				throw ConfigError("limit_except not allowed in server context.");
+			else
 				processDirective(server, line);
-			}
 			startPos = block.tellg();
 		}
 		_servers.push_back(server);
