@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 14:16:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 14:28:17 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -294,6 +294,8 @@ void ConfigParser::processLocation(Context &server, std::string block,
 	location >> line;  // Discard the opening '{'
 	if (line != "{")
 		throw ConfigError("Location can only support one route.");
+	if (location.str().find(';') == std::string::npos)
+		throw ConfigError("Empty location block.");
 	while (std::getline(location, line, ';')) // change this, there may be no ';'
 	{
 		trimOuterSpaces(line);
@@ -326,7 +328,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 		std::istringstream block(*it);
 		std::streampos startPos = block.tellg();
 		while (std::getline(block, line,
-							';')) {	 // change this, there may be no ';'
+							';')) {
 			trimOuterSpaces(line);
 			if (line.empty()) throw ConfigError("Unparsable block detected.");
 			std::istringstream readLine(line);
@@ -337,6 +339,8 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 				std::getline(block, line, '}');
 			} else if (stringToLower(firstWord) == "limit_except")
 				throw ConfigError("limit_except not allowed in server context.");
+			else if (stringToLower(firstWord) == "}")
+				throw ConfigError("Empty server block.");
 			else
 				processDirective(server, line);
 			startPos = block.tellg();
