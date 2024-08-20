@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 14:28:17 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 14:46:09 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -221,7 +221,6 @@ size_t ConfigParser::advanceBlock(std::string content, size_t start) {
 	throw ConfigError("Unmatched '{}'.");
 }
 
-// TODOs: validate consecutive '{' and '}' here?
 std::vector<std::string> ConfigParser::splitServerBlocks(std::string content) {
 	size_t start = 0;
 	size_t end = 0;
