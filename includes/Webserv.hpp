@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 17:28:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 11:42:44 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@
 #include <fstream>	 // For file streams
 #include <iostream>	 // For cout
 #include <sstream>
+#include <limits.h>
 
 // STL
 #include <algorithm>

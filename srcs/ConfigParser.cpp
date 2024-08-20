@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 16:12:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 11:50:34 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,28 +141,57 @@ void ConfigParser::handleErrorPage(Context &context,
 	// std::cout << std::endl;
 }
 
-// TODO: parse string to unsigned long based on the unit
 void ConfigParser::handleCliMaxSize(Context &context,
 									std::vector<std::string> &tokens) {
-	(void)context;
-	(void)tokens;
-	// if (tokens.empty())
-	// 	std::cout << "No tokens passed to handler function\n";
-	// std::vector<std::string>::const_iterator it;
-	// std::cout << "Handling: ";
-	// for (it = tokens.begin(); it != tokens.end(); it++){
-	// 	std::cout << (*it) << " ";
-	// }
-	// std::cout << std::endl;
+	if (tokens.size() != 2)
+		throw ConfigError("Invalid syntax for client_max_body_size.");
+	context.clientMaxBodySize = 1048576; // default
+	std::string maxSize = tokens[1];
+	char unit = maxSize[maxSize.size() - 1];
+	maxSize.resize(maxSize.size() - 1);
+	
+	// check if there is overflow
+	char *endPtr = NULL;
+	unsigned long size = std::strtoul(maxSize.c_str(), &endPtr, 10);
+	if (*endPtr != '\0')
+		throw ConfigError("Invalid numeric value for client_max_body_size.");
+	// check for overflow during multiplication
+	const unsigned long maxLimit = ULONG_MAX;
+	switch (unit)
+	{
+	case 'b':
+	case 'B':
+		context.clientMaxBodySize = size;
+		break;
+	case 'k':
+	case 'K':
+		if (size > maxLimit / 1024)
+			throw ConfigError("client_max_body_size value overflow.");
+		context.clientMaxBodySize = size * 1024;
+		break;
+	case 'm':
+	case 'M':
+		if (size > maxLimit / 1048576)
+			throw ConfigError("client_max_body_size value overflow.");
+		context.clientMaxBodySize = size * 1048576;
+		break;
+	case 'g':
+	case 'G':
+		if (size > maxLimit / 1073741824)
+			throw ConfigError("client_max_body_size value overflow.");
+		context.clientMaxBodySize = size * 1073741824;
+		break;
+	default:
+		throw ConfigError("Invalid unit for client_max_body_size.");
+	}
 }
 
 void ConfigParser::handleAutoIndex(Context &context,
 								   std::vector<std::string> &tokens) {
+	context.autoIndex = false; //default
 	if (tokens[1] == "on")
 		context.autoIndex = true;
-	else if (tokens[1] == "off")
-		context.autoIndex = false;
-	else
+	else if (tokens[1] != "off")
 		throw ConfigError("Invalid syntax.");
 }
 
@@ -182,7 +211,6 @@ size_t ConfigParser::advanceBlock(std::string content, size_t start) {
 }
 
 // TODOs: validate consecutive '{' and '}' here?
-// 		(flexible function for location blocks?)
 std::vector<std::string> ConfigParser::splitServerBlocks(std::string content) {
 	size_t start = 0;
 	size_t end = 0;
@@ -223,6 +251,7 @@ std::vector<std::string> ConfigParser::tokenizeLine(std::string line) {
 	return (tokens);
 }
 
+// TODO: Load defaults
 void ConfigParser::processDirective(Context &server, std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = tokenizeLine(line);
@@ -237,7 +266,7 @@ void ConfigParser::processDirective(Context &server, std::string &line) {
 }
 
 // TODO: improve flow of function
-// 		parse each directive unto Context struct
+//		load inherited values?
 void ConfigParser::processLocation(Context &server, std::string block,
 								   size_t start, size_t end) {
 	std::string route;
@@ -275,14 +304,13 @@ void ConfigParser::processLocation(Context &server, std::string block,
 	server.locations[route] = locationInfo;
 }
 
-// TODO: Fix content loading (clear struct ?)
 void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	std::string line;
 	std::vector<std::string>::iterator it;
 	std::string firstWord;
-	Context server;
 
 	for (it = blocks.begin(); it != blocks.end(); it++) {
+		Context server;
 		std::istringstream block(*it);
 		std::streampos startPos = block.tellg();
 		while (std::getline(block, line,
@@ -303,7 +331,6 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	}
 }
 
-// TODO: improve error handling
 void ConfigParser::loadConfigs() {
 	std::ifstream file(_configFile.c_str());
 	if (!file.is_open())
@@ -395,7 +422,7 @@ void ConfigParser::printContext(Context context) {
 		std::map<std::string, Context>::const_iterator it;
 		for (it = context.locations.begin(); it != context.locations.end();
 			 ++it) {
-			std::cout << it->first << ": ";
+			std::cout << it->first << ": \n";
 			printContext(it->second);
 		}
 	}
