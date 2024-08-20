@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 12:22:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/20 13:18:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,16 +75,9 @@ void ConfigParser::initializeDirectiveMap(void) {
 	// _directiveMap["redirect"] = &ConfigParser::handleRedirect;
 }
 
-// Not called yet
-// static bool isValidPort(const std::string& port) {
-// 	if (port.empty()) return false;
-// 	for (size_t i = 0; i < port.size(); i++)
-// 		if (!std::isdigit(port[i])) return false;
-// 	int portNumber = std::atoi(port.c_str());
-// 	return (portNumber >= 0 && portNumber <= 65535);
-// }
-
 // TODO: implement IPv6? default_server ?
+// test what happens in NGINX address:<nothing> or <nothing>:port, 
+// is it the same as not including that parameter?
 void ConfigParser::handleListen(Context &context,
 								std::vector<std::string> &tokens) {
 	std::vector<std::string>::const_iterator it;
@@ -95,14 +88,15 @@ void ConfigParser::handleListen(Context &context,
 			listening.IP = (*it).substr(0, colonPos);
 			listening.port = (*it).substr(colonPos + 1);
 		} else {
-			if ((*it).find_first_not_of("0123456789") == std::string::npos) {
+			if ((*it).find_first_not_of("0123456789") == std::string::npos)
 				listening.port = (*it);
-				listening.IP = "localhost"; // default
-			} else {
+			else
 				listening.IP = (*it);
-				listening.port = "80"; // default
-			}
 		}
+		if (listening.IP.empty())
+			listening.IP = "localhost"; // default
+		if (listening.port.empty())
+			listening.port = "80"; // default
 		context.network_address.push_back(listening);
 	}
 }
@@ -147,23 +141,25 @@ void ConfigParser::handleTryFiles(Context &context,
 	context.tryFiles = tokens;
 }
 
-// TODO: parse errors unto the map (str to short) and pair with last arg (file)
 void ConfigParser::handleErrorPage(Context &context,
 								   std::vector<std::string> &tokens) {
-	(void)context;
-	(void)tokens;
-	// std::vector<std::string>::const_iterator it;
-	// std::cout << "Handling: ";
-	// for (it = tokens.begin(); it != tokens.end(); it++){
-	// 	std::cout << (*it) << " ";
-	// }
-	// std::cout << std::endl;
+	if (tokens.size() < 3)
+		throw ConfigError("Invalid error_page directive.");
+	std::string page = tokens.back();
+	for (size_t i = 1; i < tokens.size() - 1; i++){
+		char *end;
+		long statusCodeLong = std::strtol(tokens[i].c_str(), &end, 10);
+		if (*end != '\0' || statusCodeLong < 100 || statusCodeLong > 599 \
+		|| statusCodeLong != static_cast<short>(statusCodeLong))
+                throw ConfigError("Invalid status code in error_page directive.");
+		context.errorPages[static_cast<short>(statusCodeLong)] = page;
+	}
 }
 
 void ConfigParser::handleCliMaxSize(Context &context,
 									std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
-		throw ConfigError("Invalid syntax for client_max_body_size.");
+		throw ConfigError("Invalid client_max_body_size directive.");
 	context.clientMaxBodySize = 1048576; // default
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
