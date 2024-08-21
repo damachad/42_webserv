@@ -15,7 +15,7 @@
 
 #include "Webserv.hpp"
 
-enum Method { GET = 1, POST, DELETE };
+typedef enum Method { GET = 1, POST, DELETE, INVALID_METHOD } Method;
 
 struct Listen {
 	std::string IP;
@@ -41,8 +41,8 @@ struct Context {
 class ConfigParser {
    private:
 	// Function pointer type for handlers
-	typedef void (ConfigParser::*DirectiveHandler)(
-		Context &, std::vector<std::string> &);
+	typedef void (ConfigParser::*DirectiveHandler)(Context &,
+												   std::vector<std::string> &);
 	std::string _configFile;
 	std::vector<Context> _servers;
 	std::map<std::string, DirectiveHandler> _directiveMap;
@@ -71,20 +71,14 @@ class ConfigParser {
 	std::vector<Context> getServers(void);
 
 	void handleListen(Context &context, std::vector<std::string> &tokens);
-	void handleServerName(Context &context,
-						  std::vector<std::string> &tokens);
+	void handleServerName(Context &context, std::vector<std::string> &tokens);
 	void handleRoot(Context &context, std::vector<std::string> &tokens);
 	void handleIndex(Context &context, std::vector<std::string> &tokens);
-	void handleLimitExcept(Context &context,
-						   std::vector<std::string> &tokens);
-	void handleTryFiles(Context &context,
-						std::vector<std::string> &tokens);
-	void handleErrorPage(Context &context,
-						 std::vector<std::string> &tokens);
-	void handleCliMaxSize(Context &context,
-						  std::vector<std::string> &tokens);
-	void handleAutoIndex(Context &context,
-						 std::vector<std::string> &tokens);
+	void handleLimitExcept(Context &context, std::vector<std::string> &tokens);
+	void handleTryFiles(Context &context, std::vector<std::string> &tokens);
+	void handleErrorPage(Context &context, std::vector<std::string> &tokens);
+	void handleCliMaxSize(Context &context, std::vector<std::string> &tokens);
+	void handleAutoIndex(Context &context, std::vector<std::string> &tokens);
 };
 
 // Utils

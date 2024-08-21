@@ -38,6 +38,7 @@
 #include "Cluster.hpp"
 #include "ConfigParser.hpp"
 #include "Exceptions.hpp"
+#include "HTTP_request_parser.hpp"
 #include "Helpers.hpp"
 #include "Server.hpp"
 

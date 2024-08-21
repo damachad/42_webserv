@@ -6,11 +6,11 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:02 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 15:06:22 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:15:09 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Helpers.hpp"
 
 // Gets a vector of i servers, with two network configurations each
 std::vector<struct Context> get_default_conf(int i) {

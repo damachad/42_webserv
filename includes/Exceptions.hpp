@@ -85,4 +85,14 @@ class ClusterRunError : public std::exception {
 	virtual ~ClusterRunError() throw();
 };
 
+class HTTPHeaderError : public std::exception {
+   private:
+	std::string _message;
+
+   public:
+	HTTPHeaderError(const std::string &str) throw();
+	virtual const char *what() const throw();
+	virtual ~HTTPHeaderError() throw();
+};
+
 #endif

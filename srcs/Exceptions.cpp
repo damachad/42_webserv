@@ -6,11 +6,11 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 12:35:47 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:15:31 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Exceptions.hpp"
 
 FileReadError::FileReadError(const std::string &str) throw() {
 	_message = "Unable to read from: " + str + '\n';
@@ -84,3 +84,12 @@ ClusterRunError::ClusterRunError(const std::string &str) throw() {
 const char *ClusterRunError::what() const throw() { return (_message.c_str()); }
 
 ClusterRunError::~ClusterRunError() throw() {}
+
+/* HTTP Header error for when there are errors during its parsing */
+HTTPHeaderError::HTTPHeaderError(const std::string &str) throw() {
+	_message = "Wrong HTTP Header (" + str + ")\n";
+}
+
+const char *HTTPHeaderError::what() const throw() { return (_message.c_str()); }
+
+HTTPHeaderError::~HTTPHeaderError() throw() {}

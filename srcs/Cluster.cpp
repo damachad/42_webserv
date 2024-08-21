@@ -6,16 +6,11 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 15:24:30 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:14:51 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
-
-#include <fcntl.h>
-
-#include "Helpers.hpp"
-#include "Webserv.hpp"
 
 // Constructor
 // Create a vector of servers from provided context vector
@@ -127,7 +122,9 @@ void Cluster::run(void) {
 					close_and_remove_socket(events[i].data.fd, _epoll_fd);
 				// TODO: Remove from client_to_fd map ??
 				else {
-					// Echo the data back (for example purposes)
+					HTTP_Request request =
+						HTTP_Request_Parser::parse_HTTP_request(buffer_request);
+					//  Echo the data back (for example purposes)
 					std::string buffer_response = get_response(
 						buffer_request,
 						_servers[_connection_fd_map[events[i].data.fd]]);

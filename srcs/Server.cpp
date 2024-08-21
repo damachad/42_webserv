@@ -6,11 +6,11 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:38:07 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 15:30:40 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:16:33 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Server.hpp"
 
 // Constructor, creates server from configuration file
 Server::Server(const struct Context& configuration)
