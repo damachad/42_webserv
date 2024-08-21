@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 15:27:27 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/20 11:42:44 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <arpa/inet.h>	// for inet.aton()
 #include <errno.h>		// For errno
 #include <fcntl.h>		// open
+#include <limits.h>
 #include <netinet/in.h>
 #include <netinet/in.h>	 // For sockaddr_in
 #include <sys/epoll.h>	 // For epoll
