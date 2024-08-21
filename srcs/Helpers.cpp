@@ -58,12 +58,12 @@ std::vector<struct Context> get_default_conf(int i) {
 	default_conf[3].network_address = address;
 	default_conf[3].serverName.push_back("example4.com");
 
-	address[0].IP = "172.21.187.192";
+	/*address[0].IP = "172.21.187.192";
 	address[0].port = "8088";
 	address[1].IP = "172.21.187.192";
 	address[1].port = "8089";
 	default_conf[4].network_address = address;
-	default_conf[4].serverName.push_back("example5.com");
+	default_conf[4].serverName.push_back("example5.com");*/
 
 	return default_conf;
 }

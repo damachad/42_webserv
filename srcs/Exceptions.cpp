@@ -63,9 +63,9 @@ const char *SocketSetupError::what() const throw() {
 
 SocketSetupError::~SocketSetupError() throw() {}
 
-/* Cluster Setup Error for when there are errors with epoll */
+/* Cluster Setup Error for when there are errors with its setup */
 ClusterSetupError::ClusterSetupError(const std::string &str) throw() {
-	_message = "Error: could not run cluster setup function " + str +
+	_message = "Error: could not execute cluster_setup function " + str +
 			   " (errno: " + strerror(errno) + ")\n";
 }
 
@@ -74,3 +74,13 @@ const char *ClusterSetupError::what() const throw() {
 }
 
 ClusterSetupError::~ClusterSetupError() throw() {}
+
+/* Cluster Run Error for when there are errors during its runtime */
+ClusterRunError::ClusterRunError(const std::string &str) throw() {
+	_message = "Error: could not run cluster_run function " + str +
+			   " (errno: " + strerror(errno) + ")\n";
+}
+
+const char *ClusterRunError::what() const throw() { return (_message.c_str()); }
+
+ClusterRunError::~ClusterRunError() throw() {}

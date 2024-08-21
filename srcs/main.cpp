@@ -14,7 +14,7 @@
 
 int main() {
 	// Sample configuration vector, supposed to mimic David's final output
-	std::vector<struct Context> configuration_vector = get_default_conf(5);
+	std::vector<struct Context> configuration_vector = get_default_conf(4);
 
 	// Initializes the Server Cluster
 	Cluster server_cluster(configuration_vector);

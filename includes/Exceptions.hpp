@@ -75,4 +75,14 @@ class ClusterSetupError : public std::exception {
 	virtual ~ClusterSetupError() throw();
 };
 
+class ClusterRunError : public std::exception {
+   private:
+	std::string _message;
+
+   public:
+	ClusterRunError(const std::string &str) throw();
+	virtual const char *what() const throw();
+	virtual ~ClusterRunError() throw();
+};
+
 #endif

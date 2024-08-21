@@ -10,6 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "Cluster.hpp"
+
+#include <fcntl.h>
+
+#include "Helpers.hpp"
 #include "Webserv.hpp"
 
 // Constructor
@@ -56,7 +61,7 @@ void Cluster::setup_cluster(void) {
 		for (std::vector<int>::const_iterator it = socks_listing.begin();
 			 it < socks_listing.end(); it++) {
 			_listening_sockets.push_back(*it);
-			_listening_fd_map[*it] = i;	 // NOTE: POSSIBLY UNNEDED?
+			_listening_fd_map[*it] = i;
 		}
 	}
 	// std::cerr << "Here it goes?" << std::endl;
@@ -85,11 +90,6 @@ void Cluster::run(void) {
 		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
 		if (n == -1) throw ClusterSetupError("epoll_wait");
 
-		for (size_t i = 0; i < _listening_sockets.size(); i++)
-			accept(events[i].data.fd, NULL, NULL);
-		std::cout << "Got a connection!" << std::endl;
-
-		/*
 		for (int i = 0; i < n; ++i) {
 			if (std::find(_listening_sockets.begin(), _listening_sockets.end(),
 						  events[i].data.fd) != _listening_sockets.end()) {
@@ -97,41 +97,87 @@ void Cluster::run(void) {
 				int client_fd = accept(events[i].data.fd, NULL, NULL);
 				if (client_fd == -1) throw ClusterSetupError("accept");
 
+				// Sets connection as non_blocking
+				set_socket_to_non_blocking(client_fd);
+
+				// Adds to client_fd -> server map
+				_connection_fd_map[client_fd] =
+					_listening_fd_map[events[i].data.fd];
+
 				struct epoll_event client_event;
-				client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+				client_event.events =
+					EPOLLIN | EPOLLOUT | EPOLLET;  // Ready for input, output,
+												   // and in Edge-Triggered-Mode
 				client_event.data.fd = client_fd;
 				if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd,
 							  &client_event) == -1)
-					throw ClusterSetupError("epoll_ctl");
+					throw ClusterRunError("epoll_ctl");
 			} else {
 				// Handle I/O on connected socket
-				char buffer[1024];
-				ssize_t count = read(events[i].data.fd, buffer, sizeof(buffer));
+				char buffer_request[BUFFER_SIZE];
+				ssize_t count = read(events[i].data.fd, buffer_request,
+									 sizeof(buffer_request));
 				if (count == -1) {
 					if (errno != EAGAIN) {
-						perror("read failed");
-						close(events[i].data.fd);
-						epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, events[i].data.fd,
-								  NULL);
+						close_and_remove_socket(events[i].data.fd, _epoll_fd);
+						throw ClusterRunError("read failed");
 					}
-				} else if (count == 0) {
+				} else if (count == 0)
 					// Connection closed
-					close(events[i].data.fd);
-					epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, events[i].data.fd,
-							  NULL);
-				} else {
+					close_and_remove_socket(events[i].data.fd, _epoll_fd);
+				// TODO: Remove from client_to_fd map ??
+				else {
 					// Echo the data back (for example purposes)
-					ssize_t sent = send(events[i].data.fd, buffer, count, 0);
+					std::string buffer_response = get_response(
+						buffer_request,
+						_servers[_connection_fd_map[events[i].data.fd]]);
+					ssize_t sent =
+						send(events[i].data.fd, buffer_response.c_str(),
+							 buffer_response.size(), 0);
+					// ssize_t sent = send(events[i].data.fd, buffer, count, 0);
 					if (sent == -1 && errno != EAGAIN) {
-						perror("send failed");
-						close(events[i].data.fd);
-						epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, events[i].data.fd,
-								  NULL);
+						close_and_remove_socket(events[i].data.fd, _epoll_fd);
+						throw ClusterRunError("send failed");
 					}
 				}
 			}
-		}*/
+		}
 	}
+}
+
+// Sets sockets to non-blocking-mode
+void Cluster::set_socket_to_non_blocking(int socket_fd) {
+	int flags = fcntl(socket_fd, F_GETFL, 0);
+	if (flags == -1 || fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		throw ClusterSetupError("fcntl");
+}
+
+// Closes socket and removes it from epoll
+void Cluster::close_and_remove_socket(int connecting_socket_fd, int epoll_fd) {
+	close(connecting_socket_fd);
+	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, connecting_socket_fd, NULL);
+}
+
+// Placeholder function to get responde
+const std::string Cluster::get_response(const std::string& buffer_request,
+										const Server& server) {
+	std::vector<std::string> server_name = server.get_server_names();
+
+	std::string body = "Hi mom!\nThis is " + server_name[0] +
+					   " speaking.\nThe request was:\n" + buffer_request;
+
+	std::string body_len = int_to_string(static_cast<int>(body.size()));
+
+	std::string response =
+		"HTTP/1.1 200 OK\r\n"  // HTP 1.1 Header
+		"Content-Type: text/plain\r\n"
+		"Content-Length: " +
+		body_len +	// Body Length
+		"\r\n"
+		"\r\n" +
+		body;  // Body content;
+
+	return response;
 }
 
 // Getters for private member data

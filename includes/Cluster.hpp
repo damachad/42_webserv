@@ -15,6 +15,8 @@
 
 #include "Webserv.hpp"
 
+#define BUFFER_SIZE 8096
+
 class Server;
 
 class Cluster {
@@ -49,6 +51,16 @@ class Cluster {
 	Server& get_server_from_connection_fd(int connection_fd);
 
    private:
+	// Sets sockets to non-blocking-mode
+	static void set_socket_to_non_blocking(int socket_fd);
+
+	// Closes socket and removes it from epoll
+	static void close_and_remove_socket(int connecting_socket_fd, int epoll_fd);
+
+	// Placeholder function to get response
+	const std::string get_response(const std::string& buffer_request,
+								   const Server& server);
+
 	// Vector of available servers
 	std::vector<Server> _servers;
 
