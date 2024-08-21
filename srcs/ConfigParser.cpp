@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 11:13:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 11:22:11 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,6 +110,8 @@ void ConfigParser::handleListen(Context &context,
 		if (colonPos != std::string::npos) {
 			listening.IP = (*it).substr(0, colonPos);
 			listening.port = (*it).substr(colonPos + 1);
+			if (listening.IP.empty() || listening.port.empty())
+				throw ConfigError("Invalid IP:Port.");
 		} else {
 			if ((*it).find_first_not_of("0123456789") == std::string::npos)
 				listening.port = (*it);
