@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 13:44:27 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 11:08:48 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include "Webserv.hpp"
 
 enum Method { GET = 1, POST, DELETE };
+
+enum State {FALSE, TRUE, UNSET};
 
 struct Listen {
 	std::string IP;
@@ -27,8 +29,8 @@ struct Context {
 	std::vector<std::string> serverName;
 	std::string root;
 	std::vector<std::string> index;
-	bool autoIndex;
-	unsigned long clientMaxBodySize;
+	State autoIndex;
+	long clientMaxBodySize;
 	std::string uploadDir;	// Is this necessary ?
 	std::vector<std::string> tryFiles;
 	std::vector<Method> allowedMethods;

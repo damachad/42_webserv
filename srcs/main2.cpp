@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 14:49:03 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 15:44:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 10:39:52 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,10 @@ int	main(int argc, char **argv)
 	ConfigParser parser(argv[1]);
 	try{
 		parser.loadConfigs();
+		parser.printConfigs();
 	} catch (std::exception & e)
 	{
 		std::cerr << e.what();
 	}
-	parser.printConfigs();
 	return (0);
 }

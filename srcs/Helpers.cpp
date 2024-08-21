@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Helpers.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:02 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 14:45:09 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/21 10:55:04 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ Context get_default_conf(int i) {
 	// 1024 + i);	// Ports up to 1024 are privileged and require super user!
 	default_conf.serverName.push_back("localhost");
 	default_conf.index.push_back("index.html");
-	default_conf.autoIndex = false;
+	default_conf.autoIndex = FALSE;
 	default_conf.clientMaxBodySize = 200000;
 	default_conf.uploadDir = "None";
 	default_conf.allowedMethods.push_back(GET);

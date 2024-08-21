@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 14:46:09 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 11:13:57 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &src) {
 
 void ConfigParser::loadDefaults(Context &context) {
 	// default values from NGINX
-	context.autoIndex = false;
+	context.autoIndex = FALSE;
 	context.clientMaxBodySize = 1048576; // 1m
 	context.index.push_back("index.html");
 	context.index.push_back("index.htm");
@@ -72,6 +72,32 @@ void ConfigParser::initializeDirectiveMap(void) {
 	// _directiveMap["redirect"] = &ConfigParser::handleRedirect;
 }
 
+static bool isValidPort(const std::string& port) {
+	for (std::string::size_type i = 0; i < port.size(); ++i) {
+		if (!std::isdigit(port[i])) return false;
+	}
+	int portNumber = std::atoi(port.c_str());
+	return (portNumber >= 0 && portNumber <= 65535);
+}
+
+static bool isValidIp(const std::string& ip) {
+	if (ip.empty()) return true;
+	int numDots = 0;
+	std::string segment;
+	std::istringstream ipStream(ip);
+
+	while (std::getline(ipStream, segment, '.'))
+	{
+		if (segment.empty() || segment.size() > 3) return false;
+		for (std::string::size_type i = 0; i < segment.size(); i++)
+			if (!std::isdigit(segment[i])) return false;
+		int num = std::atoi(segment.c_str());
+		if (num < 0 || num > 255) return false;
+		numDots++;
+	}
+	return (numDots == 4);
+}
+
 // TODO: implement IPv6? default_server ?
 // test what happens in NGINX address:<nothing> or <nothing>:port, 
 // is it the same as not including that parameter?
@@ -91,9 +117,11 @@ void ConfigParser::handleListen(Context &context,
 				listening.IP = (*it);
 		}
 		if (listening.IP.empty())
-			listening.IP = "localhost"; // default
+			listening.IP = ""; // default
 		if (listening.port.empty())
 			listening.port = "80"; // default
+		if (!isValidIp(listening.IP) || !isValidPort(listening.port))
+			throw ConfigError("Invalid IP:Port.");
 		context.network_address.push_back(listening);
 	}
 }
@@ -148,7 +176,7 @@ void ConfigParser::handleErrorPage(Context &context,
 		long statusCodeLong = std::strtol(tokens[i].c_str(), &end, 10);
 		if (*end != '\0' || statusCodeLong < 100 || statusCodeLong > 599 \
 		|| statusCodeLong != static_cast<short>(statusCodeLong))
-                throw ConfigError("Invalid status code in error_page directive.");
+				throw ConfigError("Invalid status code in error_page directive.");
 		context.errorPages[static_cast<short>(statusCodeLong)] = page;
 	}
 }
@@ -163,11 +191,11 @@ void ConfigParser::handleCliMaxSize(Context &context,
 	
 	// check if there is overflow
 	char *endPtr = NULL;
-	unsigned long size = std::strtoul(maxSize.c_str(), &endPtr, 10);
+	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
 	if (*endPtr != '\0')
 		throw ConfigError("Invalid numeric value for client_max_body_size.");
 	// check for overflow during multiplication
-	const unsigned long maxLimit = ULONG_MAX;
+	const long maxLimit = LONG_MAX;
 	switch (unit)
 	{
 	case 'b':
@@ -199,9 +227,9 @@ void ConfigParser::handleCliMaxSize(Context &context,
 
 void ConfigParser::handleAutoIndex(Context &context,
 								   std::vector<std::string> &tokens) {
-	context.autoIndex = false;
+	context.autoIndex = FALSE;
 	if (tokens[1] == "on")
-		context.autoIndex = true;
+		context.autoIndex = TRUE;
 	else if (tokens[1] != "off")
 		throw ConfigError("Invalid syntax.");
 }
@@ -284,7 +312,6 @@ void ConfigParser::processLocation(Context &server, std::string block,
 	std::vector<std::string> tokens;
 	std::istringstream location(block.substr(start, end - start));
 	Context locationInfo;
-	bool 		empty = true;
 
 	location >> route;  				// Discard 'location'
 	location >> route;  				// Get the actual route
@@ -293,12 +320,10 @@ void ConfigParser::processLocation(Context &server, std::string block,
 	location >> line;  // Discard the opening '{'
 	if (line != "{")
 		throw ConfigError("Location can only support one route.");
-	if (location.str().find(';') == std::string::npos)
-		throw ConfigError("Empty location block.");
-	while (std::getline(location, line, ';')) // change this, there may be no ';'
+	while (std::getline(location, line, ';'))
 	{
 		trimOuterSpaces(line);
-		if ((location.eof() && empty) || (line.empty() && !location.eof()))
+		if ((line.empty() && !location.eof()))
 			throw ConfigError("Unparsable location block detected.");
 		if (line.empty())
 			continue;
@@ -309,7 +334,6 @@ void ConfigParser::processLocation(Context &server, std::string block,
 		if (stringToLower(firstWord) == "server_name" || stringToLower(firstWord) == "listen")
 			throw ConfigError("Directive " + firstWord + " not supported in location context.");
 		processDirective(locationInfo, line);
-		empty = false;
 		if (location.tellg() >= static_cast<std::streampos>(end)) 
 			break;
 	}
@@ -339,7 +363,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 			} else if (stringToLower(firstWord) == "limit_except")
 				throw ConfigError("limit_except not allowed in server context.");
 			else if (stringToLower(firstWord) == "}")
-				throw ConfigError("Empty server block.");
+				break ;
 			else
 				processDirective(server, line);
 			startPos = block.tellg();
