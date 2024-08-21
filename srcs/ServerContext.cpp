@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 14:48:40 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:14:21 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,11 @@ ServerContext::ServerContext() : _autoIndex(FALSE), _clientMaxBodySize(1048576) 
 	_index.push_back("index.html");
 	_index.push_back("index.htm");
 	initializeDirectiveMap();
+	std::vector<Method> methods;
+	methods.push_back(GET);
+	methods.push_back(POST);
+	methods.push_back(DELETE);
+	_allowedMethods = methods;
 }
 
 ServerContext::ServerContext(const ServerContext & src) : \
@@ -27,6 +32,7 @@ _index(src.getIndex()), \
 _autoIndex(src.getAutoIndex()), \
 _clientMaxBodySize(src.getClientMaxBodySize()), \
 _tryFiles(src.getTryFiles()), \
+_allowedMethods(src.getAllowedMethods()), \
 _errorPages(src.getErrorPages()), \
 _locations(src.getLocations()) {}
 
@@ -38,6 +44,7 @@ ServerContext & ServerContext::operator=(const ServerContext & src) {
 	_autoIndex = src.getAutoIndex();
 	_clientMaxBodySize = src.getClientMaxBodySize();
 	_tryFiles = src.getTryFiles();
+	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
 	_locations = src.getLocations();
 	return (*this);
@@ -240,10 +247,6 @@ void ServerContext::processLocation(std::string block, size_t start, size_t end)
 			continue;
 		std::istringstream readLine(line);
 		readLine >> firstWord;
-		if (stringToLower(firstWord) == "location")
-			throw ConfigError("Nested locations not supported.");
-		if (stringToLower(firstWord) == "server_name" || stringToLower(firstWord) == "listen")
-			throw ConfigError("Directive " + firstWord + " not supported in location context.");
 		locationInfo.processDirective(line);
 		if (location.tellg() >= static_cast<std::streampos>(end)) 
 			break;
@@ -280,6 +283,10 @@ std::vector<std::string> ServerContext::getTryFiles() const {
 	return _tryFiles;
 }
 
+std::vector<Method> ServerContext::getAllowedMethods() const {
+	return _allowedMethods;
+}
+
 std::map<short, std::string> ServerContext::getErrorPages() const {
 	return _errorPages;
 }
@@ -288,66 +295,68 @@ std::map<std::string, LocationContext> ServerContext::getLocations() const {
 	return _locations;
 }
 
-// Setters
-void ServerContext::setNetworkAddress(const std::vector<Listen>& network_address) {
-	this->_network_address = network_address;
+std::string ServerContext::getRoot(const std::string &route) const {
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getRoot().empty())
+		return _root;
+	else
+		return it->second.getRoot();
 }
 
-void ServerContext::setServerName(const std::vector<std::string>& serverName) {
-	this->_serverName = serverName;
+std::vector<std::string> ServerContext::getIndex(const std::string &route) const {
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getIndex().empty())
+		return _index;
+	else
+		return it->second.getIndex();
 }
 
-void ServerContext::setRoot(const std::string& root) {
-	this->_root = root;
+State ServerContext::getAutoIndex(const std::string &route) const {
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getAutoIndex() == UNSET)
+		return _autoIndex;
+	else
+		return it->second.getAutoIndex();
 }
 
-void ServerContext::setIndex(const std::vector<std::string>& index) {
-	this->_index = index;
+long ServerContext::getClientMaxBodySize(const std::string &route) const {
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getClientMaxBodySize() == -1)
+		return _clientMaxBodySize;
+	else
+		return it->second.getClientMaxBodySize();
 }
 
-void ServerContext::setAutoIndex(State autoIndex) {
-	this->_autoIndex = autoIndex;
+std::vector<std::string> ServerContext::getTryFiles(const std::string &route) const {
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getTryFiles().empty())
+		return _tryFiles;
+	else
+		return it->second.getTryFiles();
 }
 
-void ServerContext::setClientMaxBodySize(long clientMaxBodySize) {
-	this->_clientMaxBodySize = clientMaxBodySize;
+std::map<short, std::string> ServerContext::getErrorPages(const std::string &route) const {
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getErrorPages().empty())
+		return _errorPages;
+	else
+		return it->second.getErrorPages();
 }
 
-void ServerContext::setTryFiles(const std::vector<std::string>& tryFiles) {
-	this->_tryFiles = tryFiles;
-}
-
-void ServerContext::setErrorPages(const std::map<short, std::string>& errorPages) {
-	this->_errorPages = errorPages;
-}
-
-void ServerContext::setLocations(const std::map<std::string, LocationContext>& locations) {
-	this->_locations = locations;
-}
-
-// Methods to add elements
-void ServerContext::addNetworkAddress(const Listen& address) {
-	_network_address.push_back(address);
-}
-
-void ServerContext::addServerName(const std::string& name) {
-	_serverName.push_back(name);
-}
-
-void ServerContext::addIndex(const std::string& index) {
-	this->_index.push_back(index);
-}
-
-void ServerContext::addTryFile(const std::string& tryFile) {
-	_tryFiles.push_back(tryFile);
-}
-
-void ServerContext::addErrorPage(short code, const std::string& page) {
-	_errorPages[code] = page;
-}
-
-void ServerContext::addLocation(const std::string& path, const LocationContext& context) {
-	_locations[path] = context;
+std::vector<Method> ServerContext::getAllowedMethods(const std::string &route) const {
+	
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getAllowedMethods().empty())
+		return _allowedMethods;
+	else
+		return it->second.getAllowedMethods();
 }
 
 std::ostream& operator<<(std::ostream& os, const ServerContext& context) {

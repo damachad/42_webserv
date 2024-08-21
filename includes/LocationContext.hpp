@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:37:41 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 14:32:17 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 15:44:22 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,21 +47,6 @@ class LocationContext
 		std::vector<std::string> getTryFiles() const;
 		std::vector<Method> getAllowedMethods() const;
 		std::map<short, std::string> getErrorPages() const;
-
-		// Setters
-		void setRoot(const std::string& root);
-		void setIndex(const std::vector<std::string>& index);
-		void setAutoIndex(State autoIndex);
-		void setClientMaxBodySize(long clientMaxBodySize);
-		void setTryFiles(const std::vector<std::string>& tryFiles);
-		void setAllowedMethods(const std::vector<Method>& allowedMethods);
-		void setErrorPages(const std::map<short, std::string>& errorPages);
-
-		// Methods to add elements
-		void addIndex(const std::string& index);
-		void addTryFile(const std::string& tryFile);
-		void addAllowedMethod(const Method& method);
-		void addErrorPage(short code, const std::string& page);
 		
 		// Handlers for directives
 		void handleRoot(std::vector<std::string> &tokens);

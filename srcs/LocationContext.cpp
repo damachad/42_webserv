@@ -12,15 +12,7 @@
 
 #include "Webserv.hpp"
 
-LocationContext::LocationContext() : _autoIndex(FALSE), _clientMaxBodySize(1048576) {
-	// NGINX defaults
-	_index.push_back("index.html");
-	_index.push_back("index.htm");
-	std::vector<Method> methods;
-	methods.push_back(GET);
-	methods.push_back(POST);
-	methods.push_back(DELETE);
-	setAllowedMethods(methods);
+LocationContext::LocationContext() : _autoIndex(UNSET), _clientMaxBodySize(-1) {
 	initializeDirectiveMap();
 }
 
@@ -73,17 +65,19 @@ void LocationContext::handleIndex(std::vector<std::string> &tokens) {
 
 // TODO: review logic
 void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
+	std::vector<Method> methods;
 	std::vector<std::string>::const_iterator it;
 	for (it = tokens.begin() + 1; it != tokens.end(); it++){
 		if ((*it) == "GET")
-			_allowedMethods.push_back(GET);
+			methods.push_back(GET);
 		else if ((*it) == "DELETE")
-			_allowedMethods.push_back(DELETE);
+			methods.push_back(DELETE);
 		else if ((*it) == "POST")
-			_allowedMethods.push_back(POST);
+			methods.push_back(POST);
 		else
 			throw ConfigError("Unsupported method detected.");
 	}
+	_allowedMethods = methods;
 }
 
 void LocationContext::handleTryFiles(std::vector<std::string> &tokens) {
@@ -149,10 +143,11 @@ void LocationContext::handleCliMaxSize(std::vector<std::string> &tokens) {
 }
 
 void LocationContext::handleAutoIndex(std::vector<std::string> &tokens) {
-	_autoIndex = FALSE; // review
 	if (tokens[1] == "on")
 		_autoIndex = TRUE;
-	else if (tokens[1] != "off")
+	else if (tokens[1] == "off")
+		_autoIndex = FALSE;
+	else
 		throw ConfigError("Invalid syntax.");
 }
 
@@ -198,52 +193,6 @@ std::map<short, std::string> LocationContext::getErrorPages() const {
 	return _errorPages;
 }
 
-// Setters
-void LocationContext::setRoot(const std::string& root) {
-	this->_root = root;
-}
-
-void LocationContext::setIndex(const std::vector<std::string>& index) {
-	this->_index = index;
-}
-
-void LocationContext::setAutoIndex(State autoIndex) {
-	this->_autoIndex = autoIndex;
-}
-
-void LocationContext::setClientMaxBodySize(long clientMaxBodySize) {
-	this->_clientMaxBodySize = clientMaxBodySize;
-}
-
-void LocationContext::setTryFiles(const std::vector<std::string>& tryFiles) {
-	this->_tryFiles = tryFiles;
-}
-
-void LocationContext::setAllowedMethods(const std::vector<Method>& allowedMethods) {
-	this->_allowedMethods = allowedMethods;
-}
-
-void LocationContext::setErrorPages(const std::map<short, std::string>& errorPages) {
-	this->_errorPages = errorPages;
-}
-
-// Methods to add elements
-void LocationContext::addIndex(const std::string& index) {
-	this->_index.push_back(index);
-}
-
-void LocationContext::addTryFile(const std::string& tryFile) {
-	_tryFiles.push_back(tryFile);
-}
-
-void LocationContext::addAllowedMethod(const Method& method) {
-	_allowedMethods.push_back(method);
-}
-
-void LocationContext::addErrorPage(short code, const std::string& page) {
-	_errorPages[code] = page;
-}
-
 std::ostream& operator<<(std::ostream& os, const LocationContext& context) {
 	os << "  Root: " << context.getRoot() << "\n";
 
@@ -263,7 +212,7 @@ std::ostream& operator<<(std::ostream& os, const LocationContext& context) {
 		os << "    " << *it << "\n";
 	}
 
-	os << "  Allowed Methods:\n";
+	os << "  Allowed Methods: ";
 	std::vector<Method> methods = context.getAllowedMethods();
 	for (std::vector<Method>::const_iterator it = methods.begin(); it != methods.end(); ++it) {
 		switch (*it) {
@@ -279,8 +228,8 @@ std::ostream& operator<<(std::ostream& os, const LocationContext& context) {
 				default:
 					os << "UNKNOWN ";
 		}
-		os << "\n";
 	}
+	os << "\n";
 
 	os << "  Error Pages:\n";
 	std::map<short, std::string> errorPages = context.getErrorPages();

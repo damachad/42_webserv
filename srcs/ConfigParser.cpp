@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 15:00:13 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 15:08:47 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,8 +122,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 				size_t endPos = (*it).find("}", startPos);
 				server.processLocation((*it), startPos, endPos);
 				std::getline(block, line, '}');
-			} else if (stringToLower(firstWord) == "limit_except")
-				throw ConfigError("limit_except not allowed in server context.");
+			}
 			else if (stringToLower(firstWord) == "}")
 				break ;
 			else
