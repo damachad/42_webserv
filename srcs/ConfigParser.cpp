@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 15:08:47 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:59:19 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,3 +152,44 @@ void ConfigParser::loadConfigs() {
 }
 
 std::vector<ServerContext> ConfigParser::getServers(void) { return (this->_servers); }
+
+void ConfigParser::printLocationValues(unsigned int serverNum, const std::string &route)
+{
+	std::cout << "Getting diretive values from location '" << route;
+	std::cout << "' in server[" << serverNum << "]:\n";
+	std::cout << "(If not present in location, tries to get from server)\n\n";
+	std::cout << "Root: " << _servers[serverNum].getRoot(route) << '\n';
+	std::cout << "Index:\n";
+	std::vector<std::string> indexFiles = _servers[serverNum].getIndex(route);
+	for (std::vector<std::string>::const_iterator it = indexFiles.begin(); it != indexFiles.end(); ++it)
+		std::cout << "  " << *it << "\n";
+	std::cout << "AutoIndex: " << (_servers[serverNum].getAutoIndex(route) == TRUE ? "TRUE" : \
+	_servers[serverNum].getAutoIndex(route) == FALSE ? "FALSE" : "UNSET") << "\n";
+	std::cout << "Client Max Body Size: " << _servers[serverNum].getClientMaxBodySize(route) << '\n';
+	std::cout << "Try Files:\n";
+	std::vector<std::string> tryFiles = _servers[serverNum].getTryFiles(route);
+	for (std::vector<std::string>::const_iterator it = tryFiles.begin(); it != tryFiles.end(); ++it)
+		std::cout << "  " << *it << "\n";
+	std::cout << "Error Pages:\n";
+	std::map<short, std::string> errorPages = _servers[serverNum].getErrorPages(route);
+	for (std::map<short, std::string>::const_iterator it = errorPages.begin(); it != errorPages.end(); ++it)
+		std::cout << "  " << it->first << " : " << it->second << "\n";
+	std::cout << "Allowed Methods: ";
+	std::vector<Method> methods = _servers[serverNum].getAllowedMethods(route);
+	for (std::vector<Method>::const_iterator it = methods.begin(); it != methods.end(); ++it) {
+		switch (*it) {
+			case GET:
+				std::cout << "GET ";
+				break;
+			case POST:
+				std::cout << "POST ";
+				break;
+			case DELETE:
+				std::cout << "DELETE ";
+				break;
+			default:
+				std::cout << "UNKNOWN ";
+		}
+	}
+	std::cout << std::endl;
+}

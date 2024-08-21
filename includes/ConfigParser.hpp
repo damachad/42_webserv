@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 14:46:16 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:48:41 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ class ConfigParser {
 	void processDirective(Context &server, std::string &line);
 	std::vector<ServerContext> getServers(void);
 	
+	void printLocationValues(unsigned int serverNumconst, const std::string &route);
 	static std::vector<std::string> tokenizeLine(std::string line);
 	static void trimOuterSpaces(std::string &s);
 };
