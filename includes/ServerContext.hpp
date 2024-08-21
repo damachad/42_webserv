@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:37:41 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 12:28:30 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 14:21:27 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,17 @@
 # define SERVERCONTEXT_HPP
 
 # include "Webserv.hpp"
+
+enum Method { GET = 1, POST, DELETE };
+
+enum State {FALSE, TRUE, UNSET};
+
+struct Listen {
+	std::string IP;
+	std::string port;
+};
+
+class LocationContext;
 
 class ServerContext
 {
@@ -29,6 +40,9 @@ class ServerContext
 		std::map<std::string, LocationContext> _locations;
 		// std::string _uploadDir;	// Is this necessary ?
 		// Later add redirect and cgi related variables
+		typedef void (ServerContext::*DirectiveHandler)(
+			std::vector<std::string> &);
+		std::map<std::string, DirectiveHandler> _directiveMap;
 	
 	public:
 
@@ -67,6 +81,22 @@ class ServerContext
 		void addTryFile(const std::string& tryFile);
 		void addErrorPage(short code, const std::string& page);
 		void addLocation(const std::string& path, const LocationContext& context);
+
+		// Handlers for directives
+		void handleListen(std::vector<std::string> &tokens);
+		void handleServerName(std::vector<std::string> &tokens);
+		void handleRoot(std::vector<std::string> &tokens);
+		void handleIndex(std::vector<std::string> &tokens);
+		void handleTryFiles(std::vector<std::string> &tokens);
+		void handleErrorPage(std::vector<std::string> &tokens);
+		void handleCliMaxSize(std::vector<std::string> &tokens);
+		void handleAutoIndex(std::vector<std::string> &tokens);
+
+		void initializeDirectiveMap();
+		void processDirective(std::string &line);
+		void processLocation(std::string block, size_t start, size_t end);
 };
+
+std::ostream& operator<<(std::ostream& os, const ServerContext& context);
 
 #endif

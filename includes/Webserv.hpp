@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 12:35:42 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 14:31:32 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,10 +38,10 @@
 #include "Cluster.hpp"
 #include "ConfigParser.hpp"
 #include "Exceptions.hpp"
-#include "Helpers.hpp"
-#include "Server.hpp"
 #include "ServerContext.hpp"
 #include "LocationContext.hpp"
+#include "Server.hpp"
+#include "Helpers.hpp"
 
 // Magic numbers
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max

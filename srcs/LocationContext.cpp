@@ -16,6 +16,12 @@ LocationContext::LocationContext() : _autoIndex(FALSE), _clientMaxBodySize(10485
 	// NGINX defaults
 	_index.push_back("index.html");
 	_index.push_back("index.htm");
+	std::vector<Method> methods;
+	methods.push_back(GET);
+	methods.push_back(POST);
+	methods.push_back(DELETE);
+	setAllowedMethods(methods);
+	initializeDirectiveMap();
 }
 
 LocationContext::LocationContext(const LocationContext & src) : \
@@ -24,6 +30,7 @@ _index(src.getIndex()), \
 _autoIndex(src.getAutoIndex()), \
 _clientMaxBodySize(src.getClientMaxBodySize()), \
 _tryFiles(src.getTryFiles()), \
+_allowedMethods(src.getAllowedMethods()), \
 _errorPages(src.getErrorPages()) {}
 
 LocationContext & LocationContext::operator=(const LocationContext & src) {
@@ -32,10 +39,135 @@ LocationContext & LocationContext::operator=(const LocationContext & src) {
 	_autoIndex = src.getAutoIndex();
 	_clientMaxBodySize = src.getClientMaxBodySize();
 	_tryFiles = src.getTryFiles();
+	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
+	return (*this);
 }
 
 LocationContext::~LocationContext() {}
+
+// Function to initialize the map
+void LocationContext::initializeDirectiveMap(void) {
+	_directiveMap["root"] = &LocationContext::handleRoot;
+	_directiveMap["index"] = &LocationContext::handleIndex;
+	_directiveMap["limit_except"] = &LocationContext::handleLimitExcept;
+	_directiveMap["try_files"] = &LocationContext::handleTryFiles;
+	_directiveMap["error_page"] = &LocationContext::handleErrorPage;
+	_directiveMap["client_max_body_size"] = &LocationContext::handleCliMaxSize;
+	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
+	// _directiveMap["redirect"] = &LocationContext::handleRedirect;
+}
+
+//Handlers
+
+void LocationContext::handleRoot(std::vector<std::string> &tokens) {
+	if (tokens.size() > 2)
+		throw ConfigError("Invalid root directive.");
+	_root = tokens[1];
+}
+
+void LocationContext::handleIndex(std::vector<std::string> &tokens) {
+	tokens.erase(tokens.begin());
+	_index = tokens;
+}
+
+// TODO: review logic
+void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
+	std::vector<std::string>::const_iterator it;
+	for (it = tokens.begin() + 1; it != tokens.end(); it++){
+		if ((*it) == "GET")
+			_allowedMethods.push_back(GET);
+		else if ((*it) == "DELETE")
+			_allowedMethods.push_back(DELETE);
+		else if ((*it) == "POST")
+			_allowedMethods.push_back(POST);
+		else
+			throw ConfigError("Unsupported method detected.");
+	}
+}
+
+void LocationContext::handleTryFiles(std::vector<std::string> &tokens) {
+	tokens.erase(tokens.begin());
+	_tryFiles = tokens;
+}
+
+void LocationContext::handleErrorPage(std::vector<std::string> &tokens) {
+	if (tokens.size() < 3)
+		throw ConfigError("Invalid error_page directive.");
+	std::string page = tokens.back();
+	for (size_t i = 1; i < tokens.size() - 1; i++){
+		char *end;
+		long statusCodeLong = std::strtol(tokens[i].c_str(), &end, 10);
+		if (*end != '\0' || statusCodeLong < 100 || statusCodeLong > 599 \
+		|| statusCodeLong != static_cast<short>(statusCodeLong))
+				throw ConfigError("Invalid status code in error_page directive.");
+		_errorPages[static_cast<short>(statusCodeLong)] = page;
+	}
+}
+
+void LocationContext::handleCliMaxSize(std::vector<std::string> &tokens) {
+	if (tokens.size() != 2)
+		throw ConfigError("Invalid client_max_body_size directive.");
+	std::string maxSize = tokens[1];
+	char unit = maxSize[maxSize.size() - 1];
+	maxSize.resize(maxSize.size() - 1);
+	
+	// check if there is overflow
+	char *endPtr = NULL;
+	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
+	if (*endPtr != '\0')
+		throw ConfigError("Invalid numeric value for client_max_body_size.");
+	// check for overflow during multiplication
+	const long maxLimit = LONG_MAX;
+	switch (unit)
+	{
+	case 'b':
+	case 'B':
+		_clientMaxBodySize = size;
+		break;
+	case 'k':
+	case 'K':
+		if (size > maxLimit / 1024)
+			throw ConfigError("client_max_body_size value overflow.");
+		_clientMaxBodySize = size * 1024;
+		break;
+	case 'm':
+	case 'M':
+		if (size > maxLimit / 1048576)
+			throw ConfigError("client_max_body_size value overflow.");
+		_clientMaxBodySize = size * 1048576;
+		break;
+	case 'g':
+	case 'G':
+		if (size > maxLimit / 1073741824)
+			throw ConfigError("client_max_body_size value overflow.");
+		_clientMaxBodySize = size * 1073741824;
+		break;
+	default:
+		throw ConfigError("Invalid unit for client_max_body_size.");
+	}
+}
+
+void LocationContext::handleAutoIndex(std::vector<std::string> &tokens) {
+	_autoIndex = FALSE; // review
+	if (tokens[1] == "on")
+		_autoIndex = TRUE;
+	else if (tokens[1] != "off")
+		throw ConfigError("Invalid syntax.");
+}
+
+void LocationContext::processDirective(std::string &line) {
+	std::vector<std::string> tokens;
+	tokens = ConfigParser::tokenizeLine(line);
+	if (tokens.size() < 2)
+		throw ConfigError("No value for directive: " + tokens[0]);
+	std::map<std::string, DirectiveHandler>::const_iterator it;
+	it = _directiveMap.find(tokens[0]);
+	if (it != _directiveMap.end())
+		(this->*(it->second))(tokens);
+	else
+		throw ConfigError("Unkown directive: " + tokens[0]);
+}
 
 // Getters
 std::string LocationContext::getRoot() const {
@@ -110,4 +242,51 @@ void LocationContext::addAllowedMethod(const Method& method) {
 
 void LocationContext::addErrorPage(short code, const std::string& page) {
 	_errorPages[code] = page;
+}
+
+std::ostream& operator<<(std::ostream& os, const LocationContext& context) {
+	os << "  Root: " << context.getRoot() << "\n";
+
+	os << "  Index Files:\n";
+	std::vector<std::string> indexFiles = context.getIndex();
+	for (std::vector<std::string>::const_iterator it = indexFiles.begin(); it != indexFiles.end(); ++it) {
+		os << "    " << *it << "\n";
+	}
+
+	os << "  AutoIndex: " << (context.getAutoIndex() == TRUE ? "TRUE" : context.getAutoIndex() == FALSE ? "FALSE" : "UNSET") << "\n";
+
+	os << "  Client Max Body Size: " << context.getClientMaxBodySize() << "\n";
+
+	os << "  Try Files:\n";
+	std::vector<std::string> tryFiles = context.getTryFiles();
+	for (std::vector<std::string>::const_iterator it = tryFiles.begin(); it != tryFiles.end(); ++it) {
+		os << "    " << *it << "\n";
+	}
+
+	os << "  Allowed Methods:\n";
+	std::vector<Method> methods = context.getAllowedMethods();
+	for (std::vector<Method>::const_iterator it = methods.begin(); it != methods.end(); ++it) {
+		switch (*it) {
+				case GET:
+					os << "GET ";
+					break;
+				case POST:
+					os << "POST ";
+					break;
+				case DELETE:
+					os << "DELETE ";
+					break;
+				default:
+					os << "UNKNOWN ";
+		}
+		os << "\n";
+	}
+
+	os << "  Error Pages:\n";
+	std::map<short, std::string> errorPages = context.getErrorPages();
+	for (std::map<short, std::string>::const_iterator it = errorPages.begin(); it != errorPages.end(); ++it) {
+		os << "    " << it->first << " : " << it->second << "\n";
+	}
+
+	return os;
 }
