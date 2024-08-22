@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 16:14:21 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/22 17:08:55 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ static bool isValidPort(const std::string& port) {
 }
 
 static bool isValidIp(const std::string& ip) {
-	if (ip.empty()) return true;
+	if (ip.empty() || ip == "localhost") return true;
 	int numDots = 0;
 	std::string segment;
 	std::istringstream ipStream(ip);
@@ -97,20 +97,23 @@ static bool isValidIp(const std::string& ip) {
 // test what happens in NGINX address:<nothing> or <nothing>:port, 
 // is it the same as not including that parameter?
 void ServerContext::handleListen(std::vector<std::string> &tokens) {
-	std::vector<std::string>::const_iterator it;
+	if (tokens.size() > 2)
+		throw ConfigError("Too many arguments in listen directive.");
+	std::vector<std::string>::const_iterator it; // check if accept just one token (if not implementing default_server)
 	for (it = tokens.begin() + 1; it != tokens.end(); it++){
 		Listen listening;
-		size_t colonPos = (*it).find(':');
+		std::string value = (*it);
+		size_t colonPos = value.find(':');
 		if (colonPos != std::string::npos) {
-			listening.IP = (*it).substr(0, colonPos);
-			listening.port = (*it).substr(colonPos + 1);
+			listening.IP = value.substr(0, colonPos);
+			listening.port = value.substr(colonPos + 1);
 			if (listening.IP.empty() || listening.port.empty())
 				throw ConfigError("Invalid IP:Port.");
 		} else {
 			if ((*it).find_first_not_of("0123456789") == std::string::npos)
-				listening.port = (*it);
+				listening.port = value;
 			else
-				listening.IP = (*it);
+				listening.IP = value;
 		}
 		if (listening.IP.empty())
 			listening.IP = ""; // default
@@ -129,7 +132,7 @@ void ServerContext::handleServerName(std::vector<std::string> &tokens) {
 
 void ServerContext::handleRoot(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
-		throw ConfigError("Invalid root directive.");
+		throw ConfigError("Too many arguments in root directive.");
 	_root = tokens[1];
 }
 
