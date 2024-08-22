@@ -12,12 +12,31 @@
 
 #include "Webserv.hpp"
 
-int main() {
-	// Sample configuration vector, supposed to mimic David's final output
-	std::vector<ServerContext> configuration_vector = get_default_conf(4);
+int main(int argc, char** argv) {
+	// Get default.config
+	if (argc != 2) {
+		// load default conf file ?
+		std::cout << "Usage: ./webserv [configuration file]";
+		return (1);
+	}
+	ConfigParser parser(argv[1]);
+	std::vector<ServerContext> servers;
+
+	try {
+		parser.loadConfigs();
+		servers = parser.getServers();
+		for (std::vector<ServerContext>::const_iterator it = servers.begin();
+			 it != servers.end(); ++it)
+			std::cout << (*it) << "\n";
+		std::string route = "/test";
+		unsigned int serverNum = 0;
+		parser.printLocationValues(serverNum, route);
+	} catch (std::exception& e) {
+		std::cerr << e.what();
+	}
 
 	// Initializes the Server Cluster
-	Cluster server_cluster(configuration_vector);
+	Cluster server_cluster(servers);
 
 	// Attempts to Setup the Cluster
 	try {
