@@ -34,7 +34,7 @@ class ConfigParser {
 	void loadIntoContext(std::vector<std::string> &blocks);
 	size_t advanceBlock(std::string content, size_t start);
 	std::vector<std::string> splitServerBlocks(std::string content);
-	void processDirective(Context &server, std::string &line);
+	void processDirective(ServerContext &server, std::string &line);
 	std::vector<ServerContext> getServers(void);
 
 	void printLocationValues(unsigned int serverNumconst,

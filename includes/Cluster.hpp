@@ -17,12 +17,13 @@
 
 #define BUFFER_SIZE 8096
 
+class ServerContext;
 class Server;
 
 class Cluster {
    public:
 	// Constructor; create a vector of servers from provided context vector
-	Cluster(const std::vector<struct Context>& servers);
+	Cluster(const std::vector<ServerContext>& servers);
 
 	// Destructor, closes _epoll_fd if it opened
 	~Cluster();

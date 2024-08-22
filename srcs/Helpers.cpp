@@ -10,13 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Helpers.hpp"
+#include "Webserv.hpp"
 
 // Gets a vector of i servers, with two network configurations each
-std::vector<struct Context> get_default_conf(int i) {
-	std::vector<struct Context> default_conf(0);
+std::vector<ServerContext> get_default_conf(int i) {
+	std::vector<ServerContext> default_conf(i);
 
-	for (int j = 0; j < i; j++) {
+	/*for (int j = 0; j < i; j++) {
 		struct Context conf;
 		conf.index.push_back("index.html");
 		conf.autoIndex = false;
@@ -58,7 +58,7 @@ std::vector<struct Context> get_default_conf(int i) {
 	default_conf[3].network_address = address;
 	default_conf[3].serverName.push_back("example4.com");
 
-	/*address[0].IP = "172.21.187.192";
+	address[0].IP = "172.21.187.192";
 	address[0].port = "8088";
 	address[1].IP = "172.21.187.192";
 	address[1].port = "8089";
@@ -75,7 +75,7 @@ std::string boolToString(bool value) {
 		return "False";
 }
 
-std::string methodToString(Method method) {
+std::string methodToString(enum Method method) {
 	switch (method) {
 		case GET:
 			return "GET";
@@ -104,26 +104,29 @@ int string_to_int(const std::string& value) {
 }
 
 std::ostream& operator<<(std::ostream& outstream,
-						 const struct Context configuration) {
-	outstream << "Network Addresses: ";
-	for (std::vector<Listen>::const_iterator it =
-			 configuration.network_address.begin();
-		 it != configuration.network_address.end(); it++)
-		outstream << (*it).IP << ":" << (*it).port << "\t";
-	outstream << std::endl;
-	outstream << "Server Name: " << configuration.serverName[0] << std::endl;
-	outstream << "Index: " << configuration.index[0] << std::endl;
-	outstream << "AutoIndex: " << boolToString(configuration.autoIndex)
-			  << std::endl;
-	outstream << "Client Max Body Size: " << configuration.clientMaxBodySize
-			  << std::endl;
-	outstream << "Upload Directory: " << configuration.uploadDir << std::endl;
-	outstream << "Allowed methods: ";
-	for (std::vector<Method>::const_iterator it =
-			 configuration.allowedMethods.begin();
-		 it != configuration.allowedMethods.end(); it++)
-		outstream << methodToString(*it) << " ";
-	outstream << std::endl;
+						 const ServerContext configuration) {
+	/*	outstream << "Network Addresses: ";
+		for (std::vector<Listen>::const_iterator it =
+				 configuration._network_address.begin();
+			 it != configuration._network_address.end(); it++)
+			outstream << (*it).IP << ":" << (*it).port << "\t";
+		outstream << std::endl;
+		outstream << "Server Name: " << configuration._serverName[0] <<
+	   std::endl; outstream << "Index: " << configuration._index[0] <<
+	   std::endl; outstream << "AutoIndex: " <<
+	   boolToString(configuration._autoIndex)
+				  << std::endl;
+		outstream << "Client Max Body Size: " <<
+	   configuration._clientMaxBodySize
+				  << std::endl;
+		outstream << "Upload Directory: " << configuration._uploadDir <<
+	   std::endl; outstream << "Allowed methods: "; for
+	   (std::vector<Method>::const_iterator it =
+				 configuration._allowedMethods.begin();
+			 it != configuration._allowedMethods.end(); it++)
+			outstream << methodToString(*it) << " ";
+		outstream << std::endl;*/
 
+	(void)configuration;
 	return outstream;
 }

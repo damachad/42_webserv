@@ -10,14 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Cluster.hpp"
+#include "Webserv.hpp"
 
 // Constructor
 // Create a vector of servers from provided context vector
-Cluster::Cluster(const std::vector<struct Context>& servers)
+Cluster::Cluster(const std::vector<ServerContext>& servers)
 	: _servers(), _listening_fd_map(), _connection_fd_map(), _epoll_fd(-1) {
 	//	std::cout << "Cluster Constructor called" << std::endl;
-	for (std::vector<struct Context>::const_iterator it = servers.begin();
+	for (std::vector<ServerContext>::const_iterator it = servers.begin();
 		 it != servers.end(); it++) {
 		_servers.push_back(*it);
 	}

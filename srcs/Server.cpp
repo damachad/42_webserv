@@ -10,12 +10,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
+#include "Webserv.hpp"
 
 // Constructor, creates server from configuration file
-Server::Server(const struct Context& configuration)
-	: _server_names(configuration.serverName),
-	  _network_addresses(configuration.network_address),
+Server::Server(const ServerContext& configuration)
+	: _server_names(configuration.getServerName()),
+	  _network_addresses(configuration.getNetworkAddress()),
 	  _listening_sockets(),
 	  _sockaddr_vector() {
 	//	std::cout << "Server Constructor called" << std::endl;

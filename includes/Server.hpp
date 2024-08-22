@@ -18,7 +18,7 @@
 class Server {
    public:
 	// Constructor, creates server from configuration file
-	Server(const struct Context& configuration);
+	Server(const ServerContext& configuration);
 
 	// Destructor, closes all listening sockets
 	~Server();
