@@ -20,7 +20,7 @@ Server::Server(const ServerContext& configuration)
 	  _sockaddr_vector() {
 	//	std::cout << "Server Constructor called" << std::endl;
 
-	std::cout << configuration << std::endl;
+	// std::cout << configuration << std::endl;
 }
 
 // Destructor, closes all listening sockets

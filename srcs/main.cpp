@@ -13,14 +13,16 @@
 #include "Webserv.hpp"
 
 int main(int argc, char** argv) {
-	// Get default.config
+	// Get config
 	if (argc != 2) {
 		// load default conf file ?
 		std::cout << "Usage: ./webserv [configuration file]";
 		return (1);
 	}
 	ConfigParser parser(argv[1]);
-	std::vector<ServerContext> servers;
+
+	std::vector<ServerContext>
+		servers;  // Defined outside the try block so it can be used later
 
 	try {
 		parser.loadConfigs();
@@ -29,8 +31,8 @@ int main(int argc, char** argv) {
 			 it != servers.end(); ++it)
 			std::cout << (*it) << "\n";
 		std::string route = "/test";
-		unsigned int serverNum = 0;
-		parser.printLocationValues(serverNum, route);
+		// unsigned int serverNum = 0;
+		//  parser.printLocationValues(serverNum, route);
 	} catch (std::exception& e) {
 		std::cerr << e.what();
 	}
