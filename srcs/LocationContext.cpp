@@ -104,41 +104,41 @@ void LocationContext::handleCliMaxSize(std::vector<std::string> &tokens) {
 		throw ConfigError("Invalid client_max_body_size directive.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
-	maxSize.resize(maxSize.size() - 1);
+	if (!std::isdigit(unit))
+		maxSize.resize(maxSize.size() - 1);
 	
 	// check if there is overflow
 	char *endPtr = NULL;
 	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
 	if (*endPtr != '\0')
 		throw ConfigError("Invalid numeric value for client_max_body_size.");
-	// check for overflow during multiplication
-	const long maxLimit = LONG_MAX;
-	switch (unit)
-	{
-	case 'b':
-	case 'B':
-		_clientMaxBodySize = size;
-		break;
-	case 'k':
-	case 'K':
-		if (size > maxLimit / 1024)
-			throw ConfigError("client_max_body_size value overflow.");
-		_clientMaxBodySize = size * 1024;
-		break;
-	case 'm':
-	case 'M':
-		if (size > maxLimit / 1048576)
-			throw ConfigError("client_max_body_size value overflow.");
-		_clientMaxBodySize = size * 1048576;
-		break;
-	case 'g':
-	case 'G':
-		if (size > maxLimit / 1073741824)
-			throw ConfigError("client_max_body_size value overflow.");
-		_clientMaxBodySize = size * 1073741824;
-		break;
-	default:
-		throw ConfigError("Invalid unit for client_max_body_size.");
+	_clientMaxBodySize = size;
+	if (!std::isdigit(unit)){
+		// check for overflow during multiplication
+		const long maxLimit = LONG_MAX;
+		switch (unit)
+		{
+			case 'k':
+			case 'K':
+				if (size > maxLimit / 1024)
+					throw ConfigError("client_max_body_size value overflow.");
+				_clientMaxBodySize = size * 1024;
+				break;
+			case 'm':
+			case 'M':
+				if (size > maxLimit / 1048576)
+					throw ConfigError("client_max_body_size value overflow.");
+				_clientMaxBodySize = size * 1048576;
+				break;
+			case 'g':
+			case 'G':
+				if (size > maxLimit / 1073741824)
+					throw ConfigError("client_max_body_size value overflow.");
+				_clientMaxBodySize = size * 1073741824;
+				break;
+			default:
+				throw ConfigError("Invalid unit for client_max_body_size.");
+		}
 	}
 }
 
