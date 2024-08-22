@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/20 13:44:27 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:48:41 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,37 +15,12 @@
 
 #include "Webserv.hpp"
 
-typedef enum Method { GET = 1, POST, DELETE, INVALID_METHOD } Method;
-
-struct Listen {
-	std::string IP;
-	std::string port;
-};
-
-struct Context {
-	std::vector<Listen> network_address;
-	std::vector<std::string> serverName;
-	std::string root;
-	std::vector<std::string> index;
-	bool autoIndex;
-	unsigned long clientMaxBodySize;
-	std::string uploadDir;	// Is this necessary ?
-	std::vector<std::string> tryFiles;
-	std::vector<Method> allowedMethods;
-	std::map<short, std::string> errorPages;
-	std::map<std::string, Context> locations;
-
-	// Later add redirect and cgi related variables
-};
+class ServerContext;
 
 class ConfigParser {
    private:
-	// Function pointer type for handlers
-	typedef void (ConfigParser::*DirectiveHandler)(Context &,
-												   std::vector<std::string> &);
 	std::string _configFile;
-	std::vector<Context> _servers;
-	std::map<std::string, DirectiveHandler> _directiveMap;
+	std::vector<ServerContext> _servers;
 
    public:
 	ConfigParser();
@@ -55,30 +30,17 @@ class ConfigParser {
 	ConfigParser &operator=(const ConfigParser &src);
 
 	void loadConfigs();
-	void loadDefaults(Context &context);
-	void printConfigs();
-	void printContext(Context context);
-	void initializeDirectiveMap();
-	void trimOuterSpaces(std::string &s);
 	void trimComments(std::string &s);
 	void loadIntoContext(std::vector<std::string> &blocks);
 	size_t advanceBlock(std::string content, size_t start);
 	std::vector<std::string> splitServerBlocks(std::string content);
-	std::vector<std::string> tokenizeLine(std::string line);
-	void processLocation(Context &server, std::string block, size_t start,
-						 size_t end);
 	void processDirective(Context &server, std::string &line);
-	std::vector<Context> getServers(void);
+	std::vector<ServerContext> getServers(void);
 
-	void handleListen(Context &context, std::vector<std::string> &tokens);
-	void handleServerName(Context &context, std::vector<std::string> &tokens);
-	void handleRoot(Context &context, std::vector<std::string> &tokens);
-	void handleIndex(Context &context, std::vector<std::string> &tokens);
-	void handleLimitExcept(Context &context, std::vector<std::string> &tokens);
-	void handleTryFiles(Context &context, std::vector<std::string> &tokens);
-	void handleErrorPage(Context &context, std::vector<std::string> &tokens);
-	void handleCliMaxSize(Context &context, std::vector<std::string> &tokens);
-	void handleAutoIndex(Context &context, std::vector<std::string> &tokens);
+	void printLocationValues(unsigned int serverNumconst,
+							 const std::string &route);
+	static std::vector<std::string> tokenizeLine(std::string line);
+	static void trimOuterSpaces(std::string &s);
 };
 
 // Utils

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 14:49:03 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 15:44:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:57:19 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,15 @@ int	main(int argc, char **argv)
 	ConfigParser parser(argv[1]);
 	try{
 		parser.loadConfigs();
+		std::vector<ServerContext> servers = parser.getServers();
+		for (std::vector<ServerContext>::const_iterator it = servers.begin(); it != servers.end(); ++it)
+			std::cout << (*it) << "\n";
+		std::string route = "/test";
+		unsigned int serverNum = 0;
+		parser.printLocationValues(serverNum, route);
 	} catch (std::exception & e)
 	{
 		std::cerr << e.what();
 	}
-	parser.printConfigs();
 	return (0);
 }

@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   Helpers.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:02 by mde-sa--          #+#    #+#             */
 /*   Updated: 2024/08/21 16:15:09 by mde-sa--         ###   ########.fr       */
