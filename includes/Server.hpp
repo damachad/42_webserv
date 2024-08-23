@@ -6,7 +6,7 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:29 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 14:44:30 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/19 14:57:44 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 class Server {
    public:
 	// Constructor, creates server from configuration file
-	Server(const struct Context& configuration);
+	Server(const ServerContext& configuration);
 
 	// Destructor, closes all listening sockets
 	~Server();
@@ -27,24 +27,24 @@ class Server {
 	void setup_server(void);
 
 	// Getters for private member data
-	const std::vector<std::string> get_server_names() const;
-	const std::vector<Listen> get_network_addresses() const;
-	const std::vector<int> get_listening_sockets() const;
+	const std::vector<std::string>& get_server_names() const;
+	const std::vector<Listen>& get_network_addresses() const;
+	const std::vector<int>& get_listening_sockets() const;
 
    private:
-	// Server's hostname
+	// Server's names in config
 	const std::vector<std::string> _server_names;
 
-	// Server's network addresses
+	// Server's network addresses (IP and Port)
 	const std::vector<Listen> _network_addresses;
 
-	// Server's listening fds
+	// Server's listening fds (opened by socket)
 	std::vector<int> _listening_sockets;
 
 	// Server's sockaddr vector
 	std::vector<struct sockaddr_in> _sockaddr_vector;
 
-	// Constructors not to be used
+	// Constructors (not to be used)
 	Server();
 	const Server& operator=(const Server& copy);
 	// Server(const Server& copy); NOTE: Needed for Cluster[i] access!

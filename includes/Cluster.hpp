@@ -6,7 +6,7 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:25 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 14:44:26 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:13:50 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,15 @@
 
 #include "Webserv.hpp"
 
+#define BUFFER_SIZE 8096
+
+class ServerContext;
 class Server;
 
 class Cluster {
    public:
 	// Constructor; create a vector of servers from provided context vector
-	Cluster(std::vector<struct Context> servers);
+	Cluster(const std::vector<ServerContext>& servers);
 
 	// Destructor, closes _epoll_fd if it opened
 	~Cluster();
@@ -38,10 +41,10 @@ class Cluster {
 	void run();
 
 	// Getters for private member data
-	const std::vector<Server> get_server_list() const;
-	const std::vector<int> get_listening_sockets() const;
-	const std::map<int, int> get_listening_fd_map() const;
-	const std::map<int, int> get_connection_fd_map() const;
+	const std::vector<Server>& get_server_list() const;
+	const std::vector<int>& get_listening_sockets() const;
+	const std::map<int, int>& get_listening_fd_map() const;
+	const std::map<int, int>& get_connection_fd_map() const;
 	int get_epoll_fd() const;
 
 	// Returns respective server from each fd
@@ -49,6 +52,16 @@ class Cluster {
 	Server& get_server_from_connection_fd(int connection_fd);
 
    private:
+	// Sets sockets to non-blocking-mode
+	static void set_socket_to_non_blocking(int socket_fd);
+
+	// Closes socket and removes it from epoll
+	static void close_and_remove_socket(int connecting_socket_fd, int epoll_fd);
+
+	// Placeholder function to get response
+	const std::string get_response(const std::string& buffer_request,
+								   const Server& server);
+
 	// Vector of available servers
 	std::vector<Server> _servers;
 

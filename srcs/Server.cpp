@@ -6,31 +6,29 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:38:07 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 14:43:07 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:16:33 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Exceptions.hpp"
 #include "Webserv.hpp"
 
-// TODO: Initialize _ports
 // Constructor, creates server from configuration file
-Server::Server(const struct Context& configuration)
-	: _server_names(configuration.serverName),
-	  _network_addresses(configuration.network_address),
+Server::Server(const ServerContext& configuration)
+	: _server_names(configuration.getServerName()),
+	  _network_addresses(configuration.getNetworkAddress()),
 	  _listening_sockets(),
 	  _sockaddr_vector() {
-	std::cout << "Created a server!" << std::endl;
+	//	std::cout << "Server Constructor called" << std::endl;
 
-	std::cout << configuration << std::endl;
+	// std::cout << configuration << std::endl;
 }
 
-// TODO: Update with Listen struct
 // Destructor, closes all listening sockets
 Server::~Server() {
-	// for (std::vector<Listen>::iterator it = _listening_sockets.begin();
-	// 	 it != _listening_sockets.end(); it++)
-	// close(*it);
+	//	std::cout << "Server Destructor called" << std::endl;
+	for (std::vector<int>::iterator it = _listening_sockets.begin();
+		 it != _listening_sockets.end(); it++)
+		close(*it);
 }
 
 // Sets up Server and adds sockets to _listening_sockets
@@ -46,12 +44,20 @@ void Server::setup_server(void) {
 		// Listen to connections on socket (port given by *it)
 		struct sockaddr_in sockaddr;
 		std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
-		sockaddr.sin_family = AF_INET;
-		sockaddr.sin_addr.s_addr = INADDR_ANY;
-		//	inet_addr("127.0.0.1");	 // NOTE: INADDR_ANY? htonl host? Get a
-		// _host var? Adapt from Listen struct!!
-		sockaddr.sin_port =
-			htons(1025);  // Converts number to network byte order
+		sockaddr.sin_family = AF_INET;	// IPv4 Internet Protocolos
+		if (it->IP == "")
+			sockaddr.sin_addr.s_addr =
+				INADDR_ANY;	 // Binds to all available interfaces
+		else if (it->IP == "localhost") {
+			if (inet_aton("127.0.0.1", &sockaddr.sin_addr) == 0)
+				throw SocketSetupError("inet_addr");
+
+		} else {
+			if (inet_aton(it->IP.c_str(), &sockaddr.sin_addr) == 0)
+				throw SocketSetupError("inet_addr");
+		}
+		sockaddr.sin_port = htons(
+			string_to_int(it->port));  // Converts number to network byte order
 
 		// Binds name to socket
 		if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
@@ -65,21 +71,20 @@ void Server::setup_server(void) {
 			throw SocketSetupError("listen");
 		}
 
-		// Adds sock_fd and sockaddr to the server object
-		// _listening_sockets.push_back(sock_fd); Update with Listen
+		// Adds sock_fd and sockaddr to the server object. NOTE: Unneeded?
+		_listening_sockets.push_back(sock_fd);
 		_sockaddr_vector.push_back(sockaddr);
 	}
 }
 
 // Getters for private member data
-
-const std::vector<std::string> Server::get_server_names(void) const {
+const std::vector<std::string>& Server::get_server_names(void) const {
 	return _server_names;
 }
-const std::vector<Listen> Server::get_network_addresses(void) const {
+const std::vector<Listen>& Server::get_network_addresses(void) const {
 	return _network_addresses;
 }
-const std::vector<int> Server::get_listening_sockets(void) const {
+const std::vector<int>& Server::get_listening_sockets(void) const {
 	return _listening_sockets;
 }
 

@@ -6,29 +6,11 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:02 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/21 10:55:04 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:15:09 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
-
-Context get_default_conf(int i) {
-	struct Context default_conf;
-
-	(void)i;
-	// default_conf.ports.push_back( // Update with Listen
-	// 1024 + i);	// Ports up to 1024 are privileged and require super user!
-	default_conf.serverName.push_back("localhost");
-	default_conf.index.push_back("index.html");
-	default_conf.autoIndex = FALSE;
-	default_conf.clientMaxBodySize = 200000;
-	default_conf.uploadDir = "None";
-	default_conf.allowedMethods.push_back(GET);
-	default_conf.allowedMethods.push_back(POST);
-	default_conf.allowedMethods.push_back(DELETE);
-
-	return default_conf;
-}
 
 std::string boolToString(bool value) {
 	if (value)
@@ -37,7 +19,7 @@ std::string boolToString(bool value) {
 		return "False";
 }
 
-std::string methodToString(Method method) {
+std::string methodToString(enum Method method) {
 	switch (method) {
 		case GET:
 			return "GET";
@@ -56,27 +38,39 @@ std::string int_to_string(int value) {
 	return ss.str();
 }
 
-std::ostream& operator<<(std::ostream& outstream,
-						 const struct Context configuration) {
-	outstream << "Network Addresses: ";
-	for (std::vector<Listen>::const_iterator it =
-			 configuration.network_address.begin();
-		 it != configuration.network_address.end(); it++)
-		// outstream << *it << " "; // Update with Listen
-		outstream << std::endl;
-	outstream << "Server Name: " << configuration.serverName[0] << std::endl;
-	outstream << "Index: " << configuration.index[0] << std::endl;
-	outstream << "AutoIndex: " << boolToString(configuration.autoIndex)
-			  << std::endl;
-	outstream << "Client Max Body Size: " << configuration.clientMaxBodySize
-			  << std::endl;
-	outstream << "Upload Directory: " << configuration.uploadDir << std::endl;
-	outstream << "Allowed methods: ";
-	for (std::vector<Method>::const_iterator it =
-			 configuration.allowedMethods.begin();
-		 it != configuration.allowedMethods.end(); it++)
-		outstream << methodToString(*it) << " ";
-	outstream << std::endl;
+int string_to_int(const std::string& value) {
+	int result;
 
+	std::stringstream ss(value);
+
+	ss >> result;
+	return result;
+}
+
+std::ostream& operator<<(std::ostream& outstream,
+						 const ServerContext configuration) {
+	/*	outstream << "Network Addresses: ";
+		for (std::vector<Listen>::const_iterator it =
+				 configuration._network_address.begin();
+			 it != configuration._network_address.end(); it++)
+			outstream << (*it).IP << ":" << (*it).port << "\t";
+		outstream << std::endl;
+		outstream << "Server Name: " << configuration._serverName[0] <<
+	   std::endl; outstream << "Index: " << configuration._index[0] <<
+	   std::endl; outstream << "AutoIndex: " <<
+	   boolToString(configuration._autoIndex)
+				  << std::endl;
+		outstream << "Client Max Body Size: " <<
+	   configuration._clientMaxBodySize
+				  << std::endl;
+		outstream << "Upload Directory: " << configuration._uploadDir <<
+	   std::endl; outstream << "Allowed methods: "; for
+	   (std::vector<Method>::const_iterator it =
+				 configuration._allowedMethods.begin();
+			 it != configuration._allowedMethods.end(); it++)
+			outstream << methodToString(*it) << " ";
+		outstream << std::endl;*/
+
+	(void)configuration;
 	return outstream;
 }

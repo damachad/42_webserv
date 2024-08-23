@@ -13,9 +13,10 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-#include <arpa/inet.h>	// for inet
+#include <arpa/inet.h>	// for inet.aton()
 #include <errno.h>		// For errno
 #include <fcntl.h>		// open
+#include <limits.h>
 #include <netinet/in.h>
 #include <netinet/in.h>	 // For sockaddr_in
 #include <sys/epoll.h>	 // For epoll
@@ -28,7 +29,6 @@
 #include <fstream>	 // For file streams
 #include <iostream>	 // For cout
 #include <sstream>
-#include <limits.h>
 
 // STL
 #include <algorithm>
@@ -38,10 +38,10 @@
 #include "Cluster.hpp"
 #include "ConfigParser.hpp"
 #include "Exceptions.hpp"
-#include "ServerContext.hpp"
+#include "Helpers.hpp"
 #include "LocationContext.hpp"
 #include "Server.hpp"
-#include "Helpers.hpp"
+#include "ServerContext.hpp"
 
 // Magic numbers
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
