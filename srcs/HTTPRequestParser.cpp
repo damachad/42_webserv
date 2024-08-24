@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "HTTP_request_parser.hpp"
+#include "HTTPRequestParser.hpp"
 
 const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 	const std::string& request) {
