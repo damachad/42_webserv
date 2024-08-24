@@ -19,33 +19,39 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 	if (request.size() == 0) throw HTTPHeaderError("Empty Request");
 
 	// Struct to return
-	struct HTTP_Request HTTP;
+	HTTP_Request HTTP;
 
 	// Flags for parsing
-	bool http_is_valid = false;
 	bool request_line_is_parsed = false;
-	bool header = false;
+	bool host_is_parsed = false;
+	bool parsing_the_header = false;
 
 	std::stringstream request_stream(request);
 	std::string buffer;
 
-	while (!http_is_valid) {
-		std::getline(request_stream, buffer);
+	while (std::getline(request_stream, buffer)) {
 		if (!request_line_is_parsed) {
 			parse_request_line(HTTP, buffer);
 			request_line_is_parsed = true;
-		} else {
-			(void)header;
-			header = true;
+		} else if (!host_is_parsed) {
+			parse_host_line(HTTP, buffer);
+			host_is_parsed = true;
+		} else if (buffer != "\n\r" && parsing_the_header == false) {
+			continue;
+		} else {  // TODO: Still not correct!!
+			parsing_the_header = true;
+			add_message_body(HTTP, buffer);
 		}
 	}
+
+	// std::cout << HTTP;
 
 	return HTTP;
 }
 
 void HTTP_Request_Parser::parse_request_line(HTTP_Request& HTTP,
 											 const std::string& first_line) {
-	if (!whitespaces_are_valid(first_line))
+	if (!whitespaces_are_valid(first_line, 2))
 		throw HTTPHeaderError("Invalid Whitespaces");
 
 	std::stringstream line_stream(first_line);
@@ -62,7 +68,7 @@ void HTTP_Request_Parser::parse_request_line(HTTP_Request& HTTP,
 	std::string protocol_version;
 	line_stream >> protocol_version;
 	if (protocol_version.size() == 0 ||
-		protocol_version_is_valid(protocol_version))
+		!protocol_version_is_valid(protocol_version))
 		throw HTTPHeaderError("Protocol version");
 
 	HTTP.method = method;
@@ -70,11 +76,34 @@ void HTTP_Request_Parser::parse_request_line(HTTP_Request& HTTP,
 	HTTP.protocol_version = protocol_version;
 }
 
-// Ensures correct number of whitespaces (two ' ' in the request line)
-// Indirectly sets up the next three functions
-bool HTTP_Request_Parser::whitespaces_are_valid(const std::string& first_line) {
-	int whitespace_count = 0;
-	int space_count = 0;
+// Is validation necessary? Considering the host has already been connected
+// to...
+// Also, the IP address has already been validated on the server block
+// Also, we're always using Firefox??
+void HTTP_Request_Parser::parse_host_line(HTTP_Request& HTTP,
+										  const std::string& host) {
+	if (!whitespaces_are_valid(host, 1))
+		throw HTTPHeaderError("Invalid Whitespaces");
+
+	std::stringstream line_stream(host);
+
+	std::string address;
+	line_stream >> address;
+	if (address != "Host:") throw HTTPHeaderError("Host");
+
+	address.clear();
+	line_stream >> address;
+	if (address.size() == 0) throw HTTPHeaderError("Address");
+
+	HTTP.host = address;
+}
+
+// Ensures correct number of whitespaces (two ' ' in the request line, 1 in Host
+// line, etc) Indirectly sets up the next functions
+bool HTTP_Request_Parser::whitespaces_are_valid(const std::string& first_line,
+												unsigned int limit) {
+	unsigned int whitespace_count = 0;
+	unsigned int space_count = 0;
 
 	for (std::string::const_iterator it = first_line.begin();
 		 it != first_line.end(); it++) {
@@ -82,7 +111,7 @@ bool HTTP_Request_Parser::whitespaces_are_valid(const std::string& first_line) {
 		if (*it == ' ') space_count++;
 	}
 
-	if (space_count != 2 || whitespace_count != 2) return false;
+	if (space_count != limit || whitespace_count != limit + 1) return false;
 
 	return true;
 }
@@ -118,4 +147,19 @@ bool HTTP_Request_Parser::protocol_version_is_valid(
 		protocol_version == "HTTP/0.9")
 		return true;
 	return false;
+}
+
+void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
+										   const std::string& line) {
+	HTTP.message_body += line;
+}
+
+std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {
+	outstream << "HTTP Request: \n"
+			  << "Method: " << request.method << "\n"
+			  << "URI: " << request.uri << "\n"
+			  << request.protocol_version << "\n"
+			  << "Message body: " << request.message_body << std::endl;
+
+	return outstream;
 }

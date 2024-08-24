@@ -23,14 +23,6 @@ typedef struct HTTP_Request {
 
 	// Request Header
 	std::string host;
-	std::string user_agent;
-	std::string accept;
-	std::string accept_languages;
-	std::string accept_encoding;
-	std::string connection;
-	std::string content_type;
-	std::string content_length;
-	std::string expect;
 
 	// Request Body
 	std::string message_body;
@@ -46,8 +38,12 @@ class HTTP_Request_Parser {
 	static void parse_request_line(HTTP_Request& HTTP,
 								   const std::string& first_line);
 
+	static void parse_host_line(HTTP_Request& HTTP, const std::string& host);
+	static void add_message_body(HTTP_Request& HTTP, const std::string& line);
+
 	// Self-explanatory bools to check HTTP Requests' request line
-	static bool whitespaces_are_valid(const std::string& first_line);
+	static bool whitespaces_are_valid(const std::string& first_line,
+									  unsigned int limit);
 	static bool method_is_valid(const std::string& method);
 	static bool url_is_valid(const std::string& url);
 	static bool protocol_version_is_valid(
@@ -57,6 +53,8 @@ class HTTP_Request_Parser {
 	HTTP_Request_Parser();
 	~HTTP_Request_Parser();
 };
+
+std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request);
 
 #endif
 
@@ -76,7 +74,7 @@ class HTTP_Request_Parser {
 // Sec-Fetch-User: ?1
 // Priority: u=0, i
 //
-//
+
 // Curl:
 // GET / HTTP/1.1
 // Host: 127.0.0.1:8086
