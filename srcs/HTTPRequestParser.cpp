@@ -12,6 +12,8 @@
 
 #include "HTTPRequestParser.hpp"
 
+#include <algorithm>
+
 const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 	const std::string& request) {
 	if (request.size() == 0) throw HTTPHeaderError("Empty Request");
@@ -90,9 +92,23 @@ bool HTTP_Request_Parser::method_is_valid(const std::string& method) {
 	return false;
 }
 
-// TODO:Gotta work on URL parsing now
 bool HTTP_Request_Parser::url_is_valid(const std::string& url) {
-	(void)url;
+	// Target should always start with a /
+	if (url[0] != '/') return false;
+
+	// There should be no gragmenet urls
+	if (url.find("#") != std::string::npos) return false;
+
+	// There should be only one ?
+	if (std::count(url.begin(), url.end(), '?') > 1) return false;
+
+	// If there's a ?, the number of key-value pairs (std::count of '=') should
+	// be equal to std::count of '&' - 1
+	if (url.find('?') != std::string::npos &&
+		(std::count(url.begin(), url.end(), '=') !=
+		 std::count(url.begin(), url.end(), '&') + 1))
+		return false;
+
 	return true;
 }
 
