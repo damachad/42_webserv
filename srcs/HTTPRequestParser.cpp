@@ -36,9 +36,9 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 		} else if (!host_is_parsed) {
 			parse_host_line(HTTP, buffer);
 			host_is_parsed = true;
-		} else if (buffer != "\n\r" && parsing_the_header == false) {
+		} else if (buffer != "\r\n" && parsing_the_header == false) {
 			continue;
-		} else {  // TODO: Still not correct!!
+		} else {  // TODO: Still not correct!!??
 			parsing_the_header = true;
 			add_message_body(HTTP, buffer);
 		}

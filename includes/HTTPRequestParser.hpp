@@ -74,21 +74,3 @@ std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request);
 // Sec-Fetch-User: ?1
 // Priority: u=0, i
 //
-
-// Curl:
-// GET / HTTP/1.1
-// Host: 127.0.0.1:8086
-// User-Agent: curl/7.81.0
-// Accept: */*
-//
-// Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0
-// Accept:
-// image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5
-// Accept-Language: en-US,en;q=0.5
-// Accept-Encoding: gzip, deflate, br, zstd
-// Connection: keep-alive
-// Referer: http://127.0.0.1:8082/
-// Sec-Fetch-Dest: image
-// Sec-Fetch-Mode: no-cors
-// Sec-Fetch-Site: same-origin
-// Priority: u=6

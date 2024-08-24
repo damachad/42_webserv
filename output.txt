@@ -1,0 +1,5 @@
+Already logging to output.txt.
+$14 = "GET / HTTP/1.1\r\nHost: localhost:9999\r\nConnection: keep-alive\r\nsec-ch-ua: \"Not)A;Brand\";v=\"99\", \"Google Chrome\";v=\"127\", \"Chromium\";v=\"127\"\r\nsec-ch-ua-mobile: ?0\r\nsec-ch-ua-platform: \"Windows\"\r\nUpgrade"...
+Warning: 'set logging off', an alias for the command 'set logging enabled', is deprecated.
+Use 'set logging enabled off'.
+
