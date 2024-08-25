@@ -24,7 +24,7 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 	// Flags for parsing
 	bool request_line_is_parsed = false;
 	bool host_is_parsed = false;
-	bool parsing_the_header = false;
+	bool header_is_parsed = false;
 
 	std::stringstream request_stream(request);
 	std::string buffer;
@@ -36,15 +36,15 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 		} else if (!host_is_parsed) {
 			parse_host_line(HTTP, buffer);
 			host_is_parsed = true;
-		} else if (buffer != "\r\n" && parsing_the_header == false) {
-			continue;
-		} else {  // TODO: Still not correct!!??
-			parsing_the_header = true;
+		} else if (buffer != "\r" && !header_is_parsed)
+			add_header_field(HTTP, buffer);
+		else if (buffer == "\r") {
+			header_is_parsed = true;
+		} else
 			add_message_body(HTTP, buffer);
-		}
 	}
 
-	// std::cout << HTTP;
+	std::cout << HTTP;
 
 	return HTTP;
 }
@@ -149,6 +149,21 @@ bool HTTP_Request_Parser::protocol_version_is_valid(
 	return false;
 }
 
+// Fields without validation (NOTE: is it needed?)
+void HTTP_Request_Parser::add_header_field(HTTP_Request& HTTP,
+										   const std::string& line) {
+	std::stringstream stream(line);
+
+	std::string key;
+	std::string value;
+
+	stream >> key;
+	stream >> value;
+
+	HTTP.header_fields[key.substr(0, key.size() - 1)] = value;
+}
+
+// Fields without validation (NOTE: is it needed?)
 void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 										   const std::string& line) {
 	HTTP.message_body += line;
@@ -158,8 +173,14 @@ std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {
 	outstream << "HTTP Request: \n"
 			  << "Method: " << request.method << "\n"
 			  << "URI: " << request.uri << "\n"
-			  << request.protocol_version << "\n"
-			  << "Message body: " << request.message_body << std::endl;
+			  << request.protocol_version << "\n";
+
+	for (std::map<std::string, std::string>::const_iterator it =
+			 request.header_fields.begin();
+		 it != request.header_fields.end(); it++)
+		outstream << (*it).first << ": " << (*it).second << "\n";
+
+	outstream << "Message body: " << request.message_body << std::endl;
 
 	return outstream;
 }

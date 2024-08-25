@@ -21,8 +21,11 @@ typedef struct HTTP_Request {
 	std::string uri;
 	std::string protocol_version;
 
-	// Request Header
+	// Host
 	std::string host;
+
+	// Remaining Header
+	std::map<std::string, std::string> header_fields;
 
 	// Request Body
 	std::string message_body;
@@ -39,6 +42,7 @@ class HTTP_Request_Parser {
 								   const std::string& first_line);
 
 	static void parse_host_line(HTTP_Request& HTTP, const std::string& host);
+	static void add_header_field(HTTP_Request& HTTP, const std::string& line);
 	static void add_message_body(HTTP_Request& HTTP, const std::string& line);
 
 	// Self-explanatory bools to check HTTP Requests' request line
