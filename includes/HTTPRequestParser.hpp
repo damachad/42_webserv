@@ -21,11 +21,13 @@ typedef struct HTTP_Request {
 	std::string uri;
 	std::string protocol_version;
 
-	// Host
-	std::string host;
+	// Header
+	// NOTE: A multimap organizes key-value pairs, while allowing for repeat
+	// keys. Important for some cookies, and perhaps request validation???
+	std::multimap<std::string, std::string> header_fields;
 
-	// Remaining Header
-	std::map<std::string, std::string> header_fields;
+	// Query Parameters
+	std::multimap<std::string, std::string> query_fields;
 
 	// Request Body
 	std::string message_body;
@@ -37,16 +39,17 @@ class HTTP_Request_Parser {
 	static const HTTP_Request parse_HTTP_request(const std::string& request);
 
    private:
-	// Gets data to request_line
+	// Gets data HTTP_Request structure
 	static void add_req_line(HTTP_Request& HTTP, const std::string& first_line);
 
-	static void add_host_line(HTTP_Request& HTTP, const std::string& host);
-	static void add_header_field(HTTP_Request& HTTP, const std::string& line);
+	static void add_header_fields(HTTP_Request& HTTP, const std::string& line);
 	static void add_message_body(HTTP_Request& HTTP, const std::string& line);
+	static void extract_queries(HTTP_Request& HTTP);
 
 	// Self-explanatory bools to check HTTP Requests' request line
 	static bool whitespaces_are_valid(const std::string& first_line,
 									  unsigned int limit);
+	static std::string trim(const std::string& str);
 	static bool method_is_valid(const std::string& method);
 	static bool url_is_valid(const std::string& url);
 	static bool protocol_version_is_valid(
