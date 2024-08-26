@@ -12,8 +12,6 @@
 
 #include "HTTPRequestParser.hpp"
 
-#include <algorithm>
-
 const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 	const std::string& request) {
 	if (request.size() == 0) throw HTTPHeaderError("Empty Request");
@@ -149,18 +147,21 @@ bool HTTP_Request_Parser::protocol_version_is_valid(
 	return false;
 }
 
-// Fields without validation (NOTE: is it needed?)
 void HTTP_Request_Parser::add_header_field(HTTP_Request& HTTP,
 										   const std::string& line) {
-	std::stringstream stream(line);
+	size_t colon_pos = line.find(':');
 
-	std::string key;
-	std::string value;
+	// Validate the presence of colon
+	if (colon_pos == std::string::npos) throw HTTPHeaderError("HeaderField");
 
-	stream >> key;
-	stream >> value;
+	// Extract key and value
+	std::string key = line.substr(0, colon_pos);
+	std::string value = line.substr(colon_pos, line.size() - colon_pos - 1);
 
-	HTTP.header_fields[key.substr(0, key.size() - 1)] = value;
+	// Validate the key and value (if needed)
+	if (key.empty() || value.empty()) throw HTTPHeaderError("HeaderField");
+
+	HTTP.header_fields[key] = value;
 }
 
 // Fields without validation (NOTE: is it needed?)
