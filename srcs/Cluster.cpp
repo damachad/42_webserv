@@ -10,6 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "Cluster.hpp"
+
+#include "HTTPRequestParser.hpp"
 #include "Webserv.hpp"
 
 // Constructor
@@ -127,7 +130,7 @@ void Cluster::run(void) {
 					(void)request;
 					//  Echo the data back (for example purposes)
 					std::string buffer_response = get_response(
-						buffer_request,
+						request,
 						_servers[_connection_fd_map[events[i].data.fd]]);
 					ssize_t sent =
 						send(events[i].data.fd, buffer_response.c_str(),
@@ -157,18 +160,25 @@ void Cluster::close_and_remove_socket(int connecting_socket_fd, int epoll_fd) {
 }
 
 // Placeholder function to get responde
-const std::string Cluster::get_response(const std::string& buffer_request,
+const std::string Cluster::get_response(const HTTP_Request& request,
 										const Server& server) {
-	std::vector<std::string> server_name = server.get_server_names();
+	// std::vector<std::string> server_name = server.get_server_names();
+	(void)server;
 
-	std::string body = "Hi mom!\nThis is " + server_name[0] +
-					   " speaking.\nThe request was:\n" + buffer_request;
+	// Read html file to target, and get that to a body c-style STR
+	std::string target = request.uri;
+	if (target == "/") target = "/index.html";
+	target = "resources" + target;
+	std::ifstream filestream(target.c_str());
+	std::stringstream buffer;
+	buffer << filestream.rdbuf();
+	std::string body = buffer.str();
 
 	std::string body_len = int_to_string(static_cast<int>(body.size()));
 
 	std::string response =
 		"HTTP/1.1 200 OK\r\n"  // HTP 1.1 Header
-		"Content-Type: text/plain\r\n"
+		"Content-Type: text/html; charset=UTF-8\r\n"
 		"Content-Length: " +
 		body_len +	// Body Length
 		"\r\n"

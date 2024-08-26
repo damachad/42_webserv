@@ -13,12 +13,14 @@
 #ifndef CLUSTER_HPP
 #define CLUSTER_HPP
 
+#include "HTTPRequestParser.hpp"
 #include "Webserv.hpp"
 
 #define BUFFER_SIZE 8096
 
 class ServerContext;
 class Server;
+struct HTTP_Request;
 
 class Cluster {
    public:
@@ -59,7 +61,7 @@ class Cluster {
 	static void close_and_remove_socket(int connecting_socket_fd, int epoll_fd);
 
 	// Placeholder function to get response
-	const std::string get_response(const std::string& buffer_request,
+	const std::string get_response(const HTTP_Request& request,
 								   const Server& server);
 
 	// Vector of available servers
