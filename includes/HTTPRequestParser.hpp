@@ -38,10 +38,9 @@ class HTTP_Request_Parser {
 
    private:
 	// Gets data to request_line
-	static void parse_request_line(HTTP_Request& HTTP,
-								   const std::string& first_line);
+	static void add_req_line(HTTP_Request& HTTP, const std::string& first_line);
 
-	static void parse_host_line(HTTP_Request& HTTP, const std::string& host);
+	static void add_host_line(HTTP_Request& HTTP, const std::string& host);
 	static void add_header_field(HTTP_Request& HTTP, const std::string& line);
 	static void add_message_body(HTTP_Request& HTTP, const std::string& line);
 

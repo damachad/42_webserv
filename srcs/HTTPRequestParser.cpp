@@ -29,10 +29,10 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 
 	while (std::getline(request_stream, buffer)) {
 		if (!request_line_is_parsed) {
-			parse_request_line(HTTP, buffer);
+			add_req_line(HTTP, buffer);
 			request_line_is_parsed = true;
 		} else if (!host_is_parsed) {
-			parse_host_line(HTTP, buffer);
+			add_host_line(HTTP, buffer);
 			host_is_parsed = true;
 		} else if (buffer != "\r" && !header_is_parsed)
 			add_header_field(HTTP, buffer);
@@ -42,13 +42,13 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 			add_message_body(HTTP, buffer);
 	}
 
-	std::cout << HTTP;
+	//	std::cout << HTTP;
 
 	return HTTP;
 }
 
-void HTTP_Request_Parser::parse_request_line(HTTP_Request& HTTP,
-											 const std::string& first_line) {
+void HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
+									   const std::string& first_line) {
 	if (!whitespaces_are_valid(first_line, 2))
 		throw HTTPHeaderError("Invalid Whitespaces");
 
@@ -78,8 +78,8 @@ void HTTP_Request_Parser::parse_request_line(HTTP_Request& HTTP,
 // to...
 // Also, the IP address has already been validated on the server block
 // Also, we're always using Firefox??
-void HTTP_Request_Parser::parse_host_line(HTTP_Request& HTTP,
-										  const std::string& host) {
+void HTTP_Request_Parser::add_host_line(HTTP_Request& HTTP,
+										const std::string& host) {
 	if (!whitespaces_are_valid(host, 1))
 		throw HTTPHeaderError("Invalid Whitespaces");
 
