@@ -122,9 +122,10 @@ void Cluster::run(void) {
 					close_and_remove_socket(events[i].data.fd, _epoll_fd);
 				// TODO: Remove from client_to_fd map ??
 				else {
-					/*HTTP_Request request =
+					HTTP_Request request =
 						HTTP_Request_Parser::parse_HTTP_request(buffer_request);
-					//  Echo the data back (for example purposes)*/
+					(void)request;
+					//  Echo the data back (for example purposes)
 					std::string buffer_response = get_response(
 						buffer_request,
 						_servers[_connection_fd_map[events[i].data.fd]]);
