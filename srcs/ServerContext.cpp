@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/22 17:08:55 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/27 09:22:19 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,49 +165,50 @@ void ServerContext::handleCliMaxSize(std::vector<std::string> &tokens) {
 		throw ConfigError("Invalid client_max_body_size directive.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
-	maxSize.resize(maxSize.size() - 1);
+	if (!std::isdigit(unit))
+		maxSize.resize(maxSize.size() - 1);
 	
 	// check if there is overflow
 	char *endPtr = NULL;
 	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
 	if (*endPtr != '\0')
 		throw ConfigError("Invalid numeric value for client_max_body_size.");
-	// check for overflow during multiplication
-	const long maxLimit = LONG_MAX;
-	switch (unit)
-	{
-	case 'b':
-	case 'B':
-		_clientMaxBodySize = size;
-		break;
-	case 'k':
-	case 'K':
-		if (size > maxLimit / 1024)
-			throw ConfigError("client_max_body_size value overflow.");
-		_clientMaxBodySize = size * 1024;
-		break;
-	case 'm':
-	case 'M':
-		if (size > maxLimit / 1048576)
-			throw ConfigError("client_max_body_size value overflow.");
-		_clientMaxBodySize = size * 1048576;
-		break;
-	case 'g':
-	case 'G':
-		if (size > maxLimit / 1073741824)
-			throw ConfigError("client_max_body_size value overflow.");
-		_clientMaxBodySize = size * 1073741824;
-		break;
-	default:
-		throw ConfigError("Invalid unit for client_max_body_size.");
+	_clientMaxBodySize = size;
+	if (!std::isdigit(unit)){	
+		// check for overflow during multiplication
+		const long maxLimit = LONG_MAX;
+		switch (unit)
+		{
+			case 'k':
+			case 'K':
+				if (size > maxLimit / 1024)
+					throw ConfigError("client_max_body_size value overflow.");
+				_clientMaxBodySize = size * 1024;
+				break;
+			case 'm':
+			case 'M':
+				if (size > maxLimit / 1048576)
+					throw ConfigError("client_max_body_size value overflow.");
+				_clientMaxBodySize = size * 1048576;
+				break;
+			case 'g':
+			case 'G':
+				if (size > maxLimit / 1073741824)
+					throw ConfigError("client_max_body_size value overflow.");
+				_clientMaxBodySize = size * 1073741824;
+				break;
+			default:
+				throw ConfigError("Invalid unit for client_max_body_size.");
+		}
 	}
 }
 
 void ServerContext::handleAutoIndex(std::vector<std::string> &tokens) {
-	_autoIndex = FALSE; // review
 	if (tokens[1] == "on")
 		_autoIndex = TRUE;
-	else if (tokens[1] != "off")
+	else if (tokens[1] == "off")
+		_autoIndex = FALSE;
+	else
 		throw ConfigError("Invalid syntax.");
 }
 
