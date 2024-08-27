@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/27 09:22:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/27 10:37:52 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,8 @@ _clientMaxBodySize(src.getClientMaxBodySize()), \
 _tryFiles(src.getTryFiles()), \
 _allowedMethods(src.getAllowedMethods()), \
 _errorPages(src.getErrorPages()), \
-_locations(src.getLocations()) {}
+_locations(src.getLocations()), \
+_return(src.getReturn()) {}
 
 ServerContext & ServerContext::operator=(const ServerContext & src) {
 	_network_address = src.getNetworkAddress();
@@ -47,6 +48,7 @@ ServerContext & ServerContext::operator=(const ServerContext & src) {
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
 	_locations = src.getLocations();
+	_return = src.getReturn();
 	return (*this);
 }
 
@@ -62,7 +64,7 @@ void ServerContext::initializeDirectiveMap(void) {
 	_directiveMap["error_page"] = &ServerContext::handleErrorPage;
 	_directiveMap["client_max_body_size"] = &ServerContext::handleCliMaxSize;
 	_directiveMap["autoindex"] = &ServerContext::handleAutoIndex;
-	// _directiveMap["redirect"] = &ServerContext::handleRedirect;
+	_directiveMap["return"] = &ServerContext::handleReturn;
 }
 
 static bool isValidPort(const std::string& port) {
@@ -212,6 +214,21 @@ void ServerContext::handleAutoIndex(std::vector<std::string> &tokens) {
 		throw ConfigError("Invalid syntax.");
 }
 
+void ServerContext::handleReturn(std::vector<std::string> &tokens) {
+	if (tokens.size() != 3)
+		throw ConfigError("Invalid return directive.");
+	// check if there is overflow
+	char *endPtr = NULL;
+	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
+	if (*endPtr != '\0' || errorCode < 100 || errorCode > 599 \
+		|| errorCode != static_cast<short>(errorCode)) // review possible values
+		throw ConfigError("Invalid error code for return directive.");
+	if (_return.first)
+		return ;
+	_return.first = static_cast<short>(errorCode);
+	_return.second = tokens[2];
+}
+
 void ServerContext::processDirective(std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = ConfigParser::tokenizeLine(line);
@@ -299,6 +316,10 @@ std::map<std::string, LocationContext> ServerContext::getLocations() const {
 	return _locations;
 }
 
+std::pair<short, std::string> ServerContext::getReturn() const {
+	return _return;
+}
+
 std::string ServerContext::getRoot(const std::string &route) const {
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
@@ -363,6 +384,15 @@ std::vector<Method> ServerContext::getAllowedMethods(const std::string &route) c
 		return it->second.getAllowedMethods();
 }
 
+std::pair<short, std::string> ServerContext::getReturn(const std::string &route) const {
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getReturn().first == 0)
+		return _return;
+	else
+		return it->second.getReturn();
+}
+
 std::ostream& operator<<(std::ostream& os, const ServerContext& context) {
 	os << "Network Addresses:\n";
 	std::vector<Listen> networkAddress = context.getNetworkAddress();
@@ -398,6 +428,11 @@ std::ostream& operator<<(std::ostream& os, const ServerContext& context) {
 		os << "  " << it->first << " : " << it->second << "\n";
 	}
 
+	os << "  Return:\n";
+	std::pair<short, std::string> returns = context.getReturn();
+	if (returns.first)
+		os << "    " << returns.first << " : " << returns.second << "\n";
+	
 	os << "Locations:\n";
 	std::map<std::string, LocationContext> locations = context.getLocations();
 	for (std::map<std::string, LocationContext>::const_iterator it = locations.begin(); it != locations.end(); ++it) {

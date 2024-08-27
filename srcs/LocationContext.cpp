@@ -23,7 +23,8 @@ _autoIndex(src.getAutoIndex()), \
 _clientMaxBodySize(src.getClientMaxBodySize()), \
 _tryFiles(src.getTryFiles()), \
 _allowedMethods(src.getAllowedMethods()), \
-_errorPages(src.getErrorPages()) {}
+_errorPages(src.getErrorPages()), \
+_return(src.getReturn()) {}
 
 LocationContext & LocationContext::operator=(const LocationContext & src) {
 	_root = src.getRoot();
@@ -33,6 +34,7 @@ LocationContext & LocationContext::operator=(const LocationContext & src) {
 	_tryFiles = src.getTryFiles();
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
+	_return = src.getReturn();
 	return (*this);
 }
 
@@ -47,7 +49,7 @@ void LocationContext::initializeDirectiveMap(void) {
 	_directiveMap["error_page"] = &LocationContext::handleErrorPage;
 	_directiveMap["client_max_body_size"] = &LocationContext::handleCliMaxSize;
 	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
-	// _directiveMap["redirect"] = &LocationContext::handleRedirect;
+	_directiveMap["return"] = &LocationContext::handleReturn;
 }
 
 //Handlers
@@ -151,6 +153,21 @@ void LocationContext::handleAutoIndex(std::vector<std::string> &tokens) {
 		throw ConfigError("Invalid syntax.");
 }
 
+void LocationContext::handleReturn(std::vector<std::string> &tokens) {
+	if (tokens.size() != 3)
+		throw ConfigError("Invalid return directive.");
+	// check if there is overflow
+	char *endPtr = NULL;
+	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
+	if (*endPtr != '\0' || errorCode < 100 || errorCode > 599 \
+		|| errorCode != static_cast<short>(errorCode)) // review possible values
+		throw ConfigError("Invalid error code for return directive.");
+	if (_return.first)
+		return ;
+	_return.first = static_cast<short>(errorCode);
+	_return.second = tokens[2];
+}
+
 void LocationContext::processDirective(std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = ConfigParser::tokenizeLine(line);
@@ -191,6 +208,10 @@ std::vector<Method> LocationContext::getAllowedMethods() const {
 
 std::map<short, std::string> LocationContext::getErrorPages() const {
 	return _errorPages;
+}
+
+std::pair<short, std::string> LocationContext::getReturn() const {
+	return _return;
 }
 
 std::ostream& operator<<(std::ostream& os, const LocationContext& context) {
@@ -236,6 +257,11 @@ std::ostream& operator<<(std::ostream& os, const LocationContext& context) {
 	for (std::map<short, std::string>::const_iterator it = errorPages.begin(); it != errorPages.end(); ++it) {
 		os << "    " << it->first << " : " << it->second << "\n";
 	}
+
+	os << "  Return:\n";
+	std::pair<short, std::string> returns = context.getReturn();
+	if (returns.first)
+		os << "    " << returns.first << " : " << returns.second << "\n";
 
 	return os;
 }

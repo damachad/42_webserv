@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 16:59:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/27 10:26:47 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,5 +191,10 @@ void ConfigParser::printLocationValues(unsigned int serverNum, const std::string
 				std::cout << "UNKNOWN ";
 		}
 	}
+	std::cout << std::endl;
+	std::cout << "Return: ";
+	std::pair<short, std::string> returns =  _servers[serverNum].getReturn(route);
+	if (returns.first)
+		std::cout << returns.first << " : " << returns.second;
 	std::cout << std::endl;
 }
