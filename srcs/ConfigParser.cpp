@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/27 10:26:47 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/27 10:51:04 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,21 @@ std::vector<std::string> ConfigParser::tokenizeLine(std::string line) {
 	return (tokens);
 }
 
+static bool areListenEqual(const Listen& a, const Listen& b) {
+	return (a.port == b.port) && (a.IP == b.IP);
+}
+
+static bool hasDuplicates(const std::vector<Listen>& vec) {
+	for (size_t i = 0; i < vec.size(); ++i) {
+		for (size_t j = i + 1; j < vec.size(); ++j) {
+			if (areListenEqual(vec[i], vec[j])) {
+				return true; // Duplicate found
+			}
+		}
+	}
+	return false; // No duplicates
+}
+
 void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	std::string line;
 	std::vector<std::string>::iterator it;
@@ -129,6 +144,8 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 				server.processDirective(line);
 			startPos = block.tellg();
 		}
+		if (hasDuplicates(server.getNetworkAddress()))
+			throw ConfigError("Duplicate network addresses found.");
 		_servers.push_back(server);
 	}
 }
