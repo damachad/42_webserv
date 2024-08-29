@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 12:35:47 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:15:31 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,9 +63,9 @@ const char *SocketSetupError::what() const throw() {
 
 SocketSetupError::~SocketSetupError() throw() {}
 
-/* Cluster Setup Error for when there are errors with epoll */
+/* Cluster Setup Error for when there are errors with its setup */
 ClusterSetupError::ClusterSetupError(const std::string &str) throw() {
-	_message = "Error: could not run cluster setup function " + str +
+	_message = "Error: could not execute cluster_setup function " + str +
 			   " (errno: " + strerror(errno) + ")\n";
 }
 
@@ -74,3 +74,22 @@ const char *ClusterSetupError::what() const throw() {
 }
 
 ClusterSetupError::~ClusterSetupError() throw() {}
+
+/* Cluster Run Error for when there are errors during its runtime */
+ClusterRunError::ClusterRunError(const std::string &str) throw() {
+	_message = "Error: could not run cluster_run function " + str +
+			   " (errno: " + strerror(errno) + ")\n";
+}
+
+const char *ClusterRunError::what() const throw() { return (_message.c_str()); }
+
+ClusterRunError::~ClusterRunError() throw() {}
+
+/* HTTP Header error for when there are errors during its parsing */
+HTTPHeaderError::HTTPHeaderError(const std::string &str) throw() {
+	_message = "Wrong HTTP Header (" + str + ")\n";
+}
+
+const char *HTTPHeaderError::what() const throw() { return (_message.c_str()); }
+
+HTTPHeaderError::~HTTPHeaderError() throw() {}

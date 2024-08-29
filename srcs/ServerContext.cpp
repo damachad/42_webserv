@@ -12,7 +12,8 @@
 
 #include "Webserv.hpp"
 
-ServerContext::ServerContext() : _autoIndex(FALSE), _clientMaxBodySize(1048576) {
+ServerContext::ServerContext()
+	: _autoIndex(FALSE), _clientMaxBodySize(1048576) {
 	// NGINX defaults
 	_index.push_back("index.html");
 	_index.push_back("index.htm");
@@ -24,20 +25,20 @@ ServerContext::ServerContext() : _autoIndex(FALSE), _clientMaxBodySize(1048576) 
 	_allowedMethods = methods;
 }
 
-ServerContext::ServerContext(const ServerContext & src) : \
-_network_address(src.getNetworkAddress()), \
-_serverName(src.getServerName()), \
-_root(src.getRoot()), \
-_index(src.getIndex()), \
-_autoIndex(src.getAutoIndex()), \
-_clientMaxBodySize(src.getClientMaxBodySize()), \
-_tryFiles(src.getTryFiles()), \
-_allowedMethods(src.getAllowedMethods()), \
-_errorPages(src.getErrorPages()), \
-_locations(src.getLocations()), \
-_return(src.getReturn()) {}
+ServerContext::ServerContext(const ServerContext &src)
+	: _network_address(src.getNetworkAddress()),
+	  _serverName(src.getServerName()),
+	  _root(src.getRoot()),
+	  _index(src.getIndex()),
+	  _autoIndex(src.getAutoIndex()),
+	  _clientMaxBodySize(src.getClientMaxBodySize()),
+	  _tryFiles(src.getTryFiles()),
+	  _allowedMethods(src.getAllowedMethods()),
+	  _errorPages(src.getErrorPages()),
+	  _locations(src.getLocations()),
+    _return(src.getReturn() {}
 
-ServerContext & ServerContext::operator=(const ServerContext & src) {
+ServerContext &ServerContext::operator=(const ServerContext &src) {
 	_network_address = src.getNetworkAddress();
 	_serverName = src.getServerName();
 	_root = src.getRoot();
@@ -67,7 +68,7 @@ void ServerContext::initializeDirectiveMap(void) {
 	_directiveMap["return"] = &ServerContext::handleReturn;
 }
 
-static bool isValidPort(const std::string& port) {
+static bool isValidPort(const std::string &port) {
 	for (std::string::size_type i = 0; i < port.size(); ++i) {
 		if (!std::isdigit(port[i])) return false;
 	}
@@ -81,8 +82,7 @@ static bool isValidIp(const std::string& ip) {
 	std::string segment;
 	std::istringstream ipStream(ip);
 
-	while (std::getline(ipStream, segment, '.'))
-	{
+	while (std::getline(ipStream, segment, '.')) {
 		if (segment.empty() || segment.size() > 3) return false;
 		for (std::string::size_type i = 0; i < segment.size(); i++)
 			if (!std::isdigit(segment[i])) return false;
@@ -93,10 +93,10 @@ static bool isValidIp(const std::string& ip) {
 	return (numDots == 4);
 }
 
-//Handlers
+// Handlers
 
 // TODO: implement IPv6? default_server ?
-// test what happens in NGINX address:<nothing> or <nothing>:port, 
+// test what happens in NGINX address:<nothing> or <nothing>:port,
 // is it the same as not including that parameter?
 void ServerContext::handleListen(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
@@ -117,10 +117,8 @@ void ServerContext::handleListen(std::vector<std::string> &tokens) {
 			else
 				listening.IP = value;
 		}
-		if (listening.IP.empty())
-			listening.IP = ""; // default
-		if (listening.port.empty())
-			listening.port = "80"; // default
+		if (listening.IP.empty()) listening.IP = "";		// default
+		if (listening.port.empty()) listening.port = "80";	// default
 		if (!isValidIp(listening.IP) || !isValidPort(listening.port))
 			throw ConfigError("Invalid IP:Port.");
 		_network_address.push_back(listening);
@@ -133,8 +131,7 @@ void ServerContext::handleServerName(std::vector<std::string> &tokens) {
 }
 
 void ServerContext::handleRoot(std::vector<std::string> &tokens) {
-	if (tokens.size() > 2)
-		throw ConfigError("Too many arguments in root directive.");
+	if (tokens.size() > 2) throw ConfigError("Too many arguments in root directive.");
 	_root = tokens[1];
 }
 
@@ -149,15 +146,14 @@ void ServerContext::handleTryFiles(std::vector<std::string> &tokens) {
 }
 
 void ServerContext::handleErrorPage(std::vector<std::string> &tokens) {
-	if (tokens.size() < 3)
-		throw ConfigError("Invalid error_page directive.");
+	if (tokens.size() < 3) throw ConfigError("Invalid error_page directive.");
 	std::string page = tokens.back();
-	for (size_t i = 1; i < tokens.size() - 1; i++){
+	for (size_t i = 1; i < tokens.size() - 1; i++) {
 		char *end;
 		long statusCodeLong = std::strtol(tokens[i].c_str(), &end, 10);
-		if (*end != '\0' || statusCodeLong < 100 || statusCodeLong > 599 \
-		|| statusCodeLong != static_cast<short>(statusCodeLong))
-				throw ConfigError("Invalid status code in error_page directive.");
+		if (*end != '\0' || statusCodeLong < 100 || statusCodeLong > 599 ||
+			statusCodeLong != static_cast<short>(statusCodeLong))
+			throw ConfigError("Invalid status code in error_page directive.");
 		_errorPages[static_cast<short>(statusCodeLong)] = page;
 	}
 }
@@ -244,7 +240,8 @@ void ServerContext::processDirective(std::string &line) {
 
 // TODO: improve flow of function
 //		load inherited values?
-void ServerContext::processLocation(std::string block, size_t start, size_t end) {
+void ServerContext::processLocation(std::string block, size_t start,
+									size_t end) {
 	std::string route;
 	std::string line;
 	std::string firstWord;
@@ -252,25 +249,20 @@ void ServerContext::processLocation(std::string block, size_t start, size_t end)
 	std::istringstream location(block.substr(start, end - start));
 	LocationContext locationInfo;
 
-	location >> route;  				// Discard 'location'
-	location >> route;  				// Get the actual route
-	if (route == "{")
-		throw ConfigError("No location route.");
+	location >> route;	// Discard 'location'
+	location >> route;	// Get the actual route
+	if (route == "{") throw ConfigError("No location route.");
 	location >> line;  // Discard the opening '{'
-	if (line != "{")
-		throw ConfigError("Location can only support one route.");
-	while (std::getline(location, line, ';'))
-	{
+	if (line != "{") throw ConfigError("Location can only support one route.");
+	while (std::getline(location, line, ';')) {
 		ConfigParser::trimOuterSpaces(line);
 		if ((line.empty() && !location.eof()))
 			throw ConfigError("Unparsable location block detected.");
-		if (line.empty())
-			continue;
+		if (line.empty()) continue;
 		std::istringstream readLine(line);
 		readLine >> firstWord;
 		locationInfo.processDirective(line);
-		if (location.tellg() >= static_cast<std::streampos>(end)) 
-			break;
+		if (location.tellg() >= static_cast<std::streampos>(end)) break;
 	}
 	_locations[route] = locationInfo;
 }
@@ -284,21 +276,13 @@ std::vector<std::string> ServerContext::getServerName() const {
 	return _serverName;
 }
 
-std::string ServerContext::getRoot() const {
-	return _root;
-}
+std::string ServerContext::getRoot() const { return _root; }
 
-std::vector<std::string> ServerContext::getIndex() const {
-	return _index;
-}
+std::vector<std::string> ServerContext::getIndex() const { return _index; }
 
-State ServerContext::getAutoIndex() const {
-	return _autoIndex;
-}
+State ServerContext::getAutoIndex() const { return _autoIndex; }
 
-long ServerContext::getClientMaxBodySize() const {
-	return _clientMaxBodySize;
-}
+long ServerContext::getClientMaxBodySize() const { return _clientMaxBodySize; }
 
 std::vector<std::string> ServerContext::getTryFiles() const {
 	return _tryFiles;
@@ -329,7 +313,8 @@ std::string ServerContext::getRoot(const std::string &route) const {
 		return it->second.getRoot();
 }
 
-std::vector<std::string> ServerContext::getIndex(const std::string &route) const {
+std::vector<std::string> ServerContext::getIndex(
+	const std::string &route) const {
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getIndex().empty())
@@ -356,7 +341,8 @@ long ServerContext::getClientMaxBodySize(const std::string &route) const {
 		return it->second.getClientMaxBodySize();
 }
 
-std::vector<std::string> ServerContext::getTryFiles(const std::string &route) const {
+std::vector<std::string> ServerContext::getTryFiles(
+	const std::string &route) const {
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getTryFiles().empty())
@@ -365,7 +351,8 @@ std::vector<std::string> ServerContext::getTryFiles(const std::string &route) co
 		return it->second.getTryFiles();
 }
 
-std::map<short, std::string> ServerContext::getErrorPages(const std::string &route) const {
+std::map<short, std::string> ServerContext::getErrorPages(
+	const std::string &route) const {
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getErrorPages().empty())
@@ -374,8 +361,8 @@ std::map<short, std::string> ServerContext::getErrorPages(const std::string &rou
 		return it->second.getErrorPages();
 }
 
-std::vector<Method> ServerContext::getAllowedMethods(const std::string &route) const {
-	
+std::vector<Method> ServerContext::getAllowedMethods(
+	const std::string &route) const {
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getAllowedMethods().empty())
@@ -393,38 +380,47 @@ std::pair<short, std::string> ServerContext::getReturn(const std::string &route)
 		return it->second.getReturn();
 }
 
-std::ostream& operator<<(std::ostream& os, const ServerContext& context) {
+std::ostream &operator<<(std::ostream &os, const ServerContext &context) {
 	os << "Network Addresses:\n";
 	std::vector<Listen> networkAddress = context.getNetworkAddress();
-	for (std::vector<Listen>::const_iterator it = networkAddress.begin(); it != networkAddress.end(); ++it)
+	for (std::vector<Listen>::const_iterator it = networkAddress.begin();
+		 it != networkAddress.end(); ++it)
 		os << "  IP: " << it->IP << ", Port: " << it->port << "\n";
 
 	os << "Server Names:\n";
 	std::vector<std::string> serverNames = context.getServerName();
-	for (std::vector<std::string>::const_iterator it = serverNames.begin(); it != serverNames.end(); ++it)
+	for (std::vector<std::string>::const_iterator it = serverNames.begin();
+		 it != serverNames.end(); ++it)
 		os << "  " << *it << "\n";
 
 	os << "Root: " << context.getRoot() << "\n";
 
 	os << "Index Files:\n";
 	std::vector<std::string> indexFiles = context.getIndex();
-	for (std::vector<std::string>::const_iterator it = indexFiles.begin(); it != indexFiles.end(); ++it) {
+	for (std::vector<std::string>::const_iterator it = indexFiles.begin();
+		 it != indexFiles.end(); ++it) {
 		os << "  " << *it << "\n";
 	}
 
-	os << "AutoIndex: " << (context.getAutoIndex() == TRUE ? "TRUE" : context.getAutoIndex() == FALSE ? "FALSE" : "UNSET") << "\n";
+	os << "AutoIndex: "
+	   << (context.getAutoIndex() == TRUE	 ? "TRUE"
+		   : context.getAutoIndex() == FALSE ? "FALSE"
+											 : "UNSET")
+	   << "\n";
 
 	os << "Client Max Body Size: " << context.getClientMaxBodySize() << "\n";
 
 	os << "Try Files:\n";
 	std::vector<std::string> tryFiles = context.getTryFiles();
-	for (std::vector<std::string>::const_iterator it = tryFiles.begin(); it != tryFiles.end(); ++it) {
+	for (std::vector<std::string>::const_iterator it = tryFiles.begin();
+		 it != tryFiles.end(); ++it) {
 		os << "  " << *it << "\n";
 	}
 
 	os << "Error Pages:\n";
 	std::map<short, std::string> errorPages = context.getErrorPages();
-	for (std::map<short, std::string>::const_iterator it = errorPages.begin(); it != errorPages.end(); ++it) {
+	for (std::map<short, std::string>::const_iterator it = errorPages.begin();
+		 it != errorPages.end(); ++it) {
 		os << "  " << it->first << " : " << it->second << "\n";
 	}
 
@@ -435,7 +431,9 @@ std::ostream& operator<<(std::ostream& os, const ServerContext& context) {
 	
 	os << "Locations:\n";
 	std::map<std::string, LocationContext> locations = context.getLocations();
-	for (std::map<std::string, LocationContext>::const_iterator it = locations.begin(); it != locations.end(); ++it) {
+	for (std::map<std::string, LocationContext>::const_iterator it =
+			 locations.begin();
+		 it != locations.end(); ++it) {
 		os << "  " << it->first << " :\n" << it->second << "\n";
 	}
 

@@ -127,8 +127,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 		ServerContext server;
 		std::istringstream block(*it);
 		std::streampos startPos = block.tellg();
-		while (std::getline(block, line,
-							';')) {
+		while (std::getline(block, line, ';')) {
 			trimOuterSpaces(line);
 			if (line.empty()) throw ConfigError("Unparsable block detected.");
 			std::istringstream readLine(line);
@@ -137,9 +136,8 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 				size_t endPos = (*it).find("}", startPos);
 				server.processLocation((*it), startPos, endPos);
 				std::getline(block, line, '}');
-			}
-			else if (stringToLower(firstWord) == "}")
-				break ;
+			} else if (stringToLower(firstWord) == "}")
+				break;
 			else
 				server.processDirective(line);
 			startPos = block.tellg();
@@ -157,43 +155,53 @@ void ConfigParser::loadConfigs() {
 	std::string fileContents;
 	// Read file contents into the string
 	fileContents.assign((std::istreambuf_iterator<char>(file)),
-							(std::istreambuf_iterator<char>()));
+						(std::istreambuf_iterator<char>()));
 	file.close();
 	trimOuterSpaces(fileContents);
 	trimComments(fileContents);
-	if (fileContents.empty())
-		throw ConfigError("Configuration file is empty.");
+	if (fileContents.empty()) throw ConfigError("Configuration file is empty.");
 	std::vector<std::string> serverBlocks;
 	serverBlocks = splitServerBlocks(fileContents);
 	loadIntoContext(serverBlocks);
 }
 
-std::vector<ServerContext> ConfigParser::getServers(void) { return (this->_servers); }
+std::vector<ServerContext> ConfigParser::getServers(void) {
+	return (this->_servers);
+}
 
-void ConfigParser::printLocationValues(unsigned int serverNum, const std::string &route)
-{
+void ConfigParser::printLocationValues(unsigned int serverNum,
+									   const std::string &route) {
 	std::cout << "Getting diretive values from location '" << route;
 	std::cout << "' in server[" << serverNum << "]:\n";
 	std::cout << "(If not present in location, tries to get from server)\n\n";
 	std::cout << "Root: " << _servers[serverNum].getRoot(route) << '\n';
 	std::cout << "Index:\n";
 	std::vector<std::string> indexFiles = _servers[serverNum].getIndex(route);
-	for (std::vector<std::string>::const_iterator it = indexFiles.begin(); it != indexFiles.end(); ++it)
+	for (std::vector<std::string>::const_iterator it = indexFiles.begin();
+		 it != indexFiles.end(); ++it)
 		std::cout << "  " << *it << "\n";
-	std::cout << "AutoIndex: " << (_servers[serverNum].getAutoIndex(route) == TRUE ? "TRUE" : \
-	_servers[serverNum].getAutoIndex(route) == FALSE ? "FALSE" : "UNSET") << "\n";
-	std::cout << "Client Max Body Size: " << _servers[serverNum].getClientMaxBodySize(route) << '\n';
+	std::cout << "AutoIndex: "
+			  << (_servers[serverNum].getAutoIndex(route) == TRUE	 ? "TRUE"
+				  : _servers[serverNum].getAutoIndex(route) == FALSE ? "FALSE"
+																	 : "UNSET")
+			  << "\n";
+	std::cout << "Client Max Body Size: "
+			  << _servers[serverNum].getClientMaxBodySize(route) << '\n';
 	std::cout << "Try Files:\n";
 	std::vector<std::string> tryFiles = _servers[serverNum].getTryFiles(route);
-	for (std::vector<std::string>::const_iterator it = tryFiles.begin(); it != tryFiles.end(); ++it)
+	for (std::vector<std::string>::const_iterator it = tryFiles.begin();
+		 it != tryFiles.end(); ++it)
 		std::cout << "  " << *it << "\n";
 	std::cout << "Error Pages:\n";
-	std::map<short, std::string> errorPages = _servers[serverNum].getErrorPages(route);
-	for (std::map<short, std::string>::const_iterator it = errorPages.begin(); it != errorPages.end(); ++it)
+	std::map<short, std::string> errorPages =
+		_servers[serverNum].getErrorPages(route);
+	for (std::map<short, std::string>::const_iterator it = errorPages.begin();
+		 it != errorPages.end(); ++it)
 		std::cout << "  " << it->first << " : " << it->second << "\n";
 	std::cout << "Allowed Methods: ";
 	std::vector<Method> methods = _servers[serverNum].getAllowedMethods(route);
-	for (std::vector<Method>::const_iterator it = methods.begin(); it != methods.end(); ++it) {
+	for (std::vector<Method>::const_iterator it = methods.begin();
+		 it != methods.end(); ++it) {
 		switch (*it) {
 			case GET:
 				std::cout << "GET ";
