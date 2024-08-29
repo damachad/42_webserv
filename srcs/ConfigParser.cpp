@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/27 10:51:04 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/29 14:17:35 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,8 +199,8 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 		 it != errorPages.end(); ++it)
 		std::cout << "  " << it->first << " : " << it->second << "\n";
 	std::cout << "Allowed Methods: ";
-	std::vector<Method> methods = _servers[serverNum].getAllowedMethods(route);
-	for (std::vector<Method>::const_iterator it = methods.begin();
+	std::set<Method> methods = _servers[serverNum].getAllowedMethods(route);
+	for (std::set<Method>::const_iterator it = methods.begin();
 		 it != methods.end(); ++it) {
 		switch (*it) {
 			case GET:

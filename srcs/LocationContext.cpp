@@ -67,15 +67,15 @@ void LocationContext::handleIndex(std::vector<std::string> &tokens) {
 
 // TODO: review logic
 void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
-	std::vector<Method> methods;
+	std::set<Method> methods;
 	std::vector<std::string>::const_iterator it;
 	for (it = tokens.begin() + 1; it != tokens.end(); it++){
 		if ((*it) == "GET")
-			methods.push_back(GET);
+			methods.insert(GET);
 		else if ((*it) == "DELETE")
-			methods.push_back(DELETE);
+			methods.insert(DELETE);
 		else if ((*it) == "POST")
-			methods.push_back(POST);
+			methods.insert(POST);
 		else
 			throw ConfigError("Unsupported method detected.");
 	}
@@ -94,7 +94,7 @@ void LocationContext::handleErrorPage(std::vector<std::string> &tokens) {
 	for (size_t i = 1; i < tokens.size() - 1; i++){
 		char *end;
 		long statusCodeLong = std::strtol(tokens[i].c_str(), &end, 10);
-		if (*end != '\0' || statusCodeLong < 100 || statusCodeLong > 599 \
+		if (*end != '\0' || statusCodeLong < 300 || statusCodeLong > 599 \
 		|| statusCodeLong != static_cast<short>(statusCodeLong))
 				throw ConfigError("Invalid status code in error_page directive.");
 		_errorPages[static_cast<short>(statusCodeLong)] = page;
@@ -156,11 +156,10 @@ void LocationContext::handleAutoIndex(std::vector<std::string> &tokens) {
 void LocationContext::handleReturn(std::vector<std::string> &tokens) {
 	if (tokens.size() != 3)
 		throw ConfigError("Invalid return directive.");
-	// check if there is overflow
 	char *endPtr = NULL;
 	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
-	if (*endPtr != '\0' || errorCode < 100 || errorCode > 599 \
-		|| errorCode != static_cast<short>(errorCode)) // review possible values
+	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 \
+		|| errorCode != static_cast<short>(errorCode)) // accepted NGINX values
 		throw ConfigError("Invalid error code for return directive.");
 	if (_return.first)
 		return ;
@@ -202,7 +201,7 @@ std::vector<std::string> LocationContext::getTryFiles() const {
 	return _tryFiles;
 }
 
-std::vector<Method> LocationContext::getAllowedMethods() const {
+std::set<Method> LocationContext::getAllowedMethods() const {
 	return _allowedMethods;
 }
 
@@ -234,8 +233,8 @@ std::ostream& operator<<(std::ostream& os, const LocationContext& context) {
 	}
 
 	os << "  Allowed Methods: ";
-	std::vector<Method> methods = context.getAllowedMethods();
-	for (std::vector<Method>::const_iterator it = methods.begin(); it != methods.end(); ++it) {
+	std::set<Method> methods = context.getAllowedMethods();
+	for (std::set<Method>::const_iterator it = methods.begin(); it != methods.end(); ++it) {
 		switch (*it) {
 				case GET:
 					os << "GET ";

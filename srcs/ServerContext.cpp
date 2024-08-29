@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/27 10:37:52 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/29 14:17:04 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,10 @@ ServerContext::ServerContext()
 	_index.push_back("index.html");
 	_index.push_back("index.htm");
 	initializeDirectiveMap();
-	std::vector<Method> methods;
-	methods.push_back(GET);
-	methods.push_back(POST);
-	methods.push_back(DELETE);
+	std::set<Method> methods;
+	methods.insert(GET);
+	methods.insert(POST);
+	methods.insert(DELETE);
 	_allowedMethods = methods;
 }
 
@@ -36,7 +36,7 @@ ServerContext::ServerContext(const ServerContext &src)
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _locations(src.getLocations()),
-    _return(src.getReturn() {}
+      _return(src.getReturn()) {}
 
 ServerContext &ServerContext::operator=(const ServerContext &src) {
 	_network_address = src.getNetworkAddress();
@@ -151,7 +151,7 @@ void ServerContext::handleErrorPage(std::vector<std::string> &tokens) {
 	for (size_t i = 1; i < tokens.size() - 1; i++) {
 		char *end;
 		long statusCodeLong = std::strtol(tokens[i].c_str(), &end, 10);
-		if (*end != '\0' || statusCodeLong < 100 || statusCodeLong > 599 ||
+		if (*end != '\0' || statusCodeLong < 300 || statusCodeLong > 599 ||
 			statusCodeLong != static_cast<short>(statusCodeLong))
 			throw ConfigError("Invalid status code in error_page directive.");
 		_errorPages[static_cast<short>(statusCodeLong)] = page;
@@ -216,8 +216,8 @@ void ServerContext::handleReturn(std::vector<std::string> &tokens) {
 	// check if there is overflow
 	char *endPtr = NULL;
 	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
-	if (*endPtr != '\0' || errorCode < 100 || errorCode > 599 \
-		|| errorCode != static_cast<short>(errorCode)) // review possible values
+	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 \
+		|| errorCode != static_cast<short>(errorCode)) // accepted NGINX values
 		throw ConfigError("Invalid error code for return directive.");
 	if (_return.first)
 		return ;
@@ -288,7 +288,7 @@ std::vector<std::string> ServerContext::getTryFiles() const {
 	return _tryFiles;
 }
 
-std::vector<Method> ServerContext::getAllowedMethods() const {
+std::set<Method> ServerContext::getAllowedMethods() const {
 	return _allowedMethods;
 }
 
@@ -361,7 +361,7 @@ std::map<short, std::string> ServerContext::getErrorPages(
 		return it->second.getErrorPages();
 }
 
-std::vector<Method> ServerContext::getAllowedMethods(
+std::set<Method> ServerContext::getAllowedMethods(
 	const std::string &route) const {
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);

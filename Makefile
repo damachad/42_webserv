@@ -6,7 +6,7 @@
 #    By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/01 11:53:48 by damachad          #+#    #+#              #
-#    Updated: 2024/08/21 15:01:11 by damachad         ###   ########.fr        #
+#    Updated: 2024/08/29 14:12:15 by damachad         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,7 +40,7 @@ OBJ_DIR		= objs
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ FILES _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
 NAME 		= webserv
-FILES 		= main Helpers ConfigParser Exceptions Server Cluster utils LocationContext ServerContext HTTPRequestParser
+FILES 		= main2 Helpers ConfigParser Exceptions Server Cluster utils LocationContext ServerContext HTTPRequestParser
 SRC 		= $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILES)))
 OBJ 		= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILES)))
 

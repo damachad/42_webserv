@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:37:41 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/27 10:04:29 by damachad         ###   ########.fr       */
+/*   Updated: 2024/08/29 14:13:58 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ class ServerContext {
 	State _autoIndex;
 	long _clientMaxBodySize;
 	std::vector<std::string> _tryFiles;
-	std::vector<Method> _allowedMethods;
+	std::set<Method> _allowedMethods;
 	std::map<short, std::string> _errorPages;
 	std::map<std::string, LocationContext> _locations;
   std::pair<short, std::string>	_return;
@@ -59,7 +59,7 @@ class ServerContext {
 	State getAutoIndex() const;
 	long getClientMaxBodySize() const;
 	std::vector<std::string> getTryFiles() const;
-	std::vector<Method> getAllowedMethods() const;
+	std::set<Method> getAllowedMethods() const;
 	std::map<short, std::string> getErrorPages() const;
 	std::map<std::string, LocationContext> getLocations() const;
   std::pair<short, std::string> getReturn() const;
@@ -70,7 +70,7 @@ class ServerContext {
 	long getClientMaxBodySize(const std::string &route) const;
 	std::vector<std::string> getTryFiles(const std::string &route) const;
 	std::map<short, std::string> getErrorPages(const std::string &route) const;
-	std::vector<Method> getAllowedMethods(const std::string &route) const;
+	std::set<Method> getAllowedMethods(const std::string &route) const;
   std::pair<short, std::string> getReturn(const std::string &route) const;
 
 	// Handlers for directives
