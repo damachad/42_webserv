@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 14:31:32 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/03 17:52:38 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@
 #include "LocationContext.hpp"
 #include "Server.hpp"
 #include "ServerContext.hpp"
+#include "AResponse.hpp"
 
 // Magic numbers
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
