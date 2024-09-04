@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/03 18:08:06 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/04 16:41:43 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,10 +16,11 @@
 #include "Webserv.hpp"
 
 struct HTTP_Request;
+class ServerContext;
 
 class AResponse {
    public:
-	AResponse(const HTTP_Request & request);
+	AResponse(const ServerContext & server, const HTTP_Request & request);
 	AResponse(const AResponse & src);
 	virtual ~AResponse();
 	const AResponse & operator=(const AResponse & src);
@@ -29,10 +30,16 @@ class AResponse {
 
    protected:
 	HTTP_Request _request;
+	ServerContext _server;
+	std::map<short, std::string> _statusMessages;
 
-	bool isValidSize();
+	std::string getStatusMessage(short code) const;
+	
+	// return status code
+	short isValidSize() const;
 
    private:
+    void initializeStatusMessages();
 	AResponse();
 };
 
