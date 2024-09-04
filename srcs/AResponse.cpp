@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/04 18:05:40 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/04 18:20:13 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,29 +110,24 @@ short AResponse::isValidSize() const {
 	return 200; // mandatory Content-Length header ?
 }
 
-static int matchingChars(const std::string & url, const std::string & route) {
-	size_t pos = url.find(route);
-	if (pos == std::string::npos)
-		return 0;
-	return route.size();
-}
-
-LocationContext * AResponse::getMatchLocation(const std::string & url) {
+LocationContext * AResponse::getMatchLocation(const std::string & uri) {
 	std::map<std::string, LocationContext> serverLocations = _server.getLocations();
+	
 	std::map<std::string, LocationContext>::iterator it;
-	it = serverLocations.find(url);
+	it = serverLocations.find(uri);
 	if (it != serverLocations.end())
 		return &it->second;
-	int biggestMatch = 0;
-	LocationContext * closestLocation = NULL;
+
+	int bestMatchLen = 0;
+	LocationContext * bestMatch = NULL;
 	for (it = serverLocations.begin(); it != serverLocations.end(); ++it) {
-		int match = matchingChars(url, it->first);
-		if (match > biggestMatch) {
-			biggestMatch = match;
-			closestLocation = &it->second;
+		if (uri.compare(0, it->first.size(), it->first) == 0) {
+			size_t match = it->first.size();
+			if (match > bestMatchLen) {
+				bestMatchLen = match;
+				bestMatch = &it->second;
+			}
 		}
 	}
-	if (biggestMatch > 0)
-		return closestLocation;
-	return NULL;
+	return bestMatch;
 }
