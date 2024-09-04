@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/04 18:20:13 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/04 19:00:07 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,24 +110,31 @@ short AResponse::isValidSize() const {
 	return 200; // mandatory Content-Length header ?
 }
 
-LocationContext * AResponse::getMatchLocation(const std::string & uri) {
+// If REGEX is not considered, NGINX does prefix match for the location routes,
+// which means route must match the start of the URI
+const std::string & AResponse::getMatchLocationRoute(const std::string & uri) {
 	std::map<std::string, LocationContext> serverLocations = _server.getLocations();
 	
 	std::map<std::string, LocationContext>::iterator it;
 	it = serverLocations.find(uri);
 	if (it != serverLocations.end())
-		return &it->second;
+		return it->first;
 
 	int bestMatchLen = 0;
-	LocationContext * bestMatch = NULL;
+	std::string bestMatchRoute;
 	for (it = serverLocations.begin(); it != serverLocations.end(); ++it) {
 		if (uri.compare(0, it->first.size(), it->first) == 0) {
 			size_t match = it->first.size();
 			if (match > bestMatchLen) {
 				bestMatchLen = match;
-				bestMatch = &it->second;
+				bestMatchRoute = it->first;
 			}
 		}
 	}
-	return bestMatch;
+	return bestMatchRoute;
+}
+
+const std::string & AResponse::getPath(const std::string & locationRoute, const std::string & uri) {
+	std::string root = _server.getRoot(locationRoute);
+	return (root + uri.substr(locationRoute.size()));
 }

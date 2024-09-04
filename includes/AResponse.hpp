@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/04 18:14:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/04 18:59:17 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,8 @@ class AResponse {
 	std::map<short, std::string> _statusMessages;
 
 	std::string getStatusMessage(short code) const;
-	LocationContext * getMatchLocation(const std::string & uri);
+	const std::string & getMatchLocationRoute(const std::string & uri);
+	const std::string & getPath(const std::string & locationRoute, const std::string & uri);
 	
 	// return status code
 	short isValidSize() const;
