@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/04 18:59:17 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/04 19:31:24 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ class AResponse {
 	
 	// return status code
 	short isValidSize() const;
+	short isValidMethod(const std::string & locationRoute) const;
 
    private:
     void initializeStatusMessages();

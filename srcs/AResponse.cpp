@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/04 19:00:07 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/04 19:49:47 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,6 +110,14 @@ short AResponse::isValidSize() const {
 	return 200; // mandatory Content-Length header ?
 }
 
+// TODO: Change method in HTTP_Request to Method
+short AResponse::isValidMethod(const std::string & locationRoute) const {
+	std::set<Method>::const_iterator it = _server.getAllowedMethods().find(_request.method);
+	if (it != _server.getAllowedMethods().end())
+		return 200;
+	return 405; // Method Not Allowed
+}
+
 // If REGEX is not considered, NGINX does prefix match for the location routes,
 // which means route must match the start of the URI
 const std::string & AResponse::getMatchLocationRoute(const std::string & uri) {
@@ -138,3 +146,21 @@ const std::string & AResponse::getPath(const std::string & locationRoute, const 
 	std::string root = _server.getRoot(locationRoute);
 	return (root + uri.substr(locationRoute.size()));
 }
+
+
+
+// Example implementation
+// std::string generateResponse() {
+// 	short statusCode = isValidSize();
+// 	std::string route = getMatchLocationRoute(_request.uri);
+// 	statusCode = isValidMethod(route);
+// 	std::string path = getPath(route, _request.uri);
+// 
+//	Check if file exists and is not a dir
+// 
+// 	std::string response =
+// 		"HTTP/1.1 " + statusCode + getStatusMessage(statusCode) + "\r\n" + \
+// 		headers + "\r\n\r\n" + body;
+
+// 	return response;
+// }
