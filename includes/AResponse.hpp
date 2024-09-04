@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/04 16:41:43 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/04 18:03:20 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 struct HTTP_Request;
 class ServerContext;
+class LocationContext;
 
 class AResponse {
    public:
@@ -34,6 +35,7 @@ class AResponse {
 	std::map<short, std::string> _statusMessages;
 
 	std::string getStatusMessage(short code) const;
+	LocationContext * getMatchLocation(const std::string & url);
 	
 	// return status code
 	short isValidSize() const;
