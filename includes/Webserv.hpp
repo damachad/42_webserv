@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/03 17:52:38 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/05 11:26:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <sys/epoll.h>	 // For epoll
 #include <sys/socket.h>	 // For socket functions
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>	 // For read
 
 #include <cstdlib>	 // For exit() and EXIT_FAILURE
