@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/29 14:17:04 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/05 14:16:06 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,6 +305,8 @@ std::pair<short, std::string> ServerContext::getReturn() const {
 }
 
 std::string ServerContext::getRoot(const std::string &route) const {
+	if (route.empty())
+		return _root;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getRoot().empty())
@@ -315,6 +317,8 @@ std::string ServerContext::getRoot(const std::string &route) const {
 
 std::vector<std::string> ServerContext::getIndex(
 	const std::string &route) const {
+	if (route.empty())
+		return _index;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getIndex().empty())
@@ -324,6 +328,8 @@ std::vector<std::string> ServerContext::getIndex(
 }
 
 State ServerContext::getAutoIndex(const std::string &route) const {
+	if (route.empty())
+		return _autoIndex;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getAutoIndex() == UNSET)
@@ -333,6 +339,8 @@ State ServerContext::getAutoIndex(const std::string &route) const {
 }
 
 long ServerContext::getClientMaxBodySize(const std::string &route) const {
+	if (route.empty())
+		return _clientMaxBodySize;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getClientMaxBodySize() == -1)
@@ -343,6 +351,8 @@ long ServerContext::getClientMaxBodySize(const std::string &route) const {
 
 std::vector<std::string> ServerContext::getTryFiles(
 	const std::string &route) const {
+	if (route.empty())
+		return _tryFiles;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getTryFiles().empty())
@@ -353,6 +363,8 @@ std::vector<std::string> ServerContext::getTryFiles(
 
 std::map<short, std::string> ServerContext::getErrorPages(
 	const std::string &route) const {
+	if (route.empty())
+		return _errorPages;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getErrorPages().empty())
@@ -363,6 +375,8 @@ std::map<short, std::string> ServerContext::getErrorPages(
 
 std::set<Method> ServerContext::getAllowedMethods(
 	const std::string &route) const {
+	if (route.empty())
+		return _allowedMethods;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getAllowedMethods().empty())
@@ -372,6 +386,8 @@ std::set<Method> ServerContext::getAllowedMethods(
 }
 
 std::pair<short, std::string> ServerContext::getReturn(const std::string &route) const {
+	if (route.empty())
+		return _return;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getReturn().first == 0)
