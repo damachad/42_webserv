@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/06 15:07:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/06 16:03:01 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>	 // For read
+#include <ctime>
 
 #include <cstdlib>	 // For exit() and EXIT_FAILURE
 #include <cstring>	 // For memset (?)

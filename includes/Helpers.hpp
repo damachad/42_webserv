@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Helpers.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:07 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 15:21:02 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/06 16:06:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ std::string boolToString(bool value);
 std::string methodToString(enum Method method);
 std::string int_to_string(int value);
 int string_to_int(const std::string& value);
+std::string & getHttpDate();
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration);
 
