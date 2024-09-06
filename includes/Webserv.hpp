@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/05 11:26:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/06 15:07:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,5 +49,7 @@
 
 // Magic numbers
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
+
+extern const std::map<short, std::string> STATUS_MESSAGES;
 
 #endif
