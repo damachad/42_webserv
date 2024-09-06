@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/04 19:31:24 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/06 16:27:14 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,14 @@
 struct HTTP_Request;
 class ServerContext;
 class LocationContext;
+
+struct HTTP_Response {
+	short status;
+
+	std::multimap<std::string, std::string> headers;
+
+	std::string body;
+};
 
 class AResponse {
    public:
@@ -31,19 +39,22 @@ class AResponse {
 
    protected:
 	HTTP_Request _request;
+	HTTP_Response _response;
 	ServerContext _server;
-	std::map<short, std::string> _statusMessages;
+	std::string	_locationRoute;
 
-	std::string getStatusMessage(short code) const;
-	const std::string & getMatchLocationRoute(const std::string & uri);
-	const std::string & getPath(const std::string & locationRoute, const std::string & uri);
-	
-	// return status code
-	short isValidSize() const;
-	short isValidMethod(const std::string & locationRoute) const;
+	void getMatchLocationRoute();
+	const std::string & getPath();
+
+	void checkSize() const;
+	void checkMethod() const;
+	void checkReturn() const;
+
+	std::string & getErrorPage(short status);
+
+	std::string & getResponseStr() const;
 
    private:
-    void initializeStatusMessages();
 	AResponse();
 };
 

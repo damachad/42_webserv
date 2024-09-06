@@ -6,11 +6,58 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/04 19:49:47 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/06 16:38:26 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
+
+const std::map<short, std::string> STATUS_MESSAGES = {
+    {100, "Continue"},
+    {101, "Switching Protocols"},
+    {200, "OK"},
+    {201, "Created"},
+    {202, "Accepted"},
+    {203, "Non-Authoritative Information"},
+    {204, "No Content"},
+    {205, "Reset Content"},
+    {206, "Partial Content"},
+    {300, "Multiple Choices"},
+    {301, "Moved Permanently"},
+    {302, "Found"},
+    {303, "See Other"},
+    {304, "Not Modified"},
+    {305, "Use Proxy"},
+    {307, "Temporary Redirect"},
+    {308, "Permanent Redirect"},
+    {400, "Bad Request"},
+    {401, "Unauthorized"},
+    {402, "Payment Required"},
+    {403, "Forbidden"},
+    {404, "Not Found"},
+    {405, "Method Not Allowed"},
+    {406, "Not Acceptable"},
+    {407, "Proxy Authentication Required"},
+    {408, "Request Timeout"},
+    {409, "Conflict"},
+    {410, "Gone"},
+    {411, "Length Required"},
+    {412, "Precondition Failed"},
+    {413, "Content Too Large"},
+    {414, "URI Too Long"},
+    {415, "Unsupported Media Type"},
+    {416, "Range Not Satisfiable"},
+    {417, "Expectation Failed"},
+    {421, "Misdirected Request"},
+    {422, "Unprocessable Content"},
+    {426, "Upgrade Required"},
+    {500, "Internal Server Error"},
+    {501, "Not Implemented"},
+    {502, "Bad Gateway"},
+    {503, "Service Unavailable"},
+    {504, "Gateway Timeout"},
+    {505, "HTTP Version Not Supported"}
+};
 
 AResponse::AResponse() {}
 
@@ -18,82 +65,29 @@ AResponse::~AResponse() {}
 
 AResponse::AResponse(const ServerContext & server, const HTTP_Request & request)
 	: _request(request), _server(server) {
-	initializeStatusMessages();
 }
 
 AResponse::AResponse(const AResponse & src)
 	: _request(src._request),
-	 _server(src._server) {}
+	 _response(src._response),
+	 _server(src._server),
+	 _locationRoute(src._locationRoute) {}
 
 const AResponse & AResponse::operator=(const AResponse & src) {
 	_request = src._request;
+	_response = src._response;
 	_server = src._server;
+	_locationRoute = src._locationRoute;
 }
 
-// TODO: Review where to locate this info in the code
-void AResponse::initializeStatusMessages(void) {
-	_statusMessages[100] = "Continue";
-	_statusMessages[101] = "Switching Protocols";
-	
-	_statusMessages[200] = "OK";
-	_statusMessages[201] = "Created";
-	_statusMessages[202] = "Accepted";
-	_statusMessages[203] = "Non-Authoritative Information";
-	_statusMessages[204] = "No Content";
-	_statusMessages[205] = "Reset Content";
-	_statusMessages[206] = "Partial Content";
-	
-	_statusMessages[300] = "Multiple Choices";
-	_statusMessages[301] = "Moved Permanently";
-	_statusMessages[302] = "Found";
-	_statusMessages[303] = "See Other";
-	_statusMessages[304] = "Not Modified";
-	_statusMessages[305] = "Use Proxy";
-	_statusMessages[307] = "Temporary Redirect";
-	_statusMessages[308] = "Permanent Redirect";
-	
-	_statusMessages[400] = "Bad Request";
-	_statusMessages[401] = "Unauthorized";
-	_statusMessages[402] = "Payment Required";
-	_statusMessages[403] = "Forbidden";
-	_statusMessages[404] = "Not Found";
-	_statusMessages[405] = "Method Not Allowed";
-	_statusMessages[406] = "Not Acceptable";
-	_statusMessages[407] = "Proxy Authentication Required";
-	_statusMessages[408] = "Request Timeout";
-	_statusMessages[409] = "Conflict";
-	_statusMessages[410] = "Gone";
-	_statusMessages[411] = "Length Required";
-	_statusMessages[412] = "Precondition Failed";
-	_statusMessages[413] = "Content Too Large";
-	_statusMessages[414] = "URI Too Long";
-	_statusMessages[415] = "Unsupported Media Type";
-	_statusMessages[416] = "Range Not Satisfiable";
-	_statusMessages[417] = "Expectation Failed";
-	_statusMessages[421] = "Misdirected Request";
-	_statusMessages[422] = "Unprocessable Content";
-	_statusMessages[426] = "Upgrade Required";
-	
-	_statusMessages[500] = "Internal Server Error";
-	_statusMessages[501] = "Not Implemented";
-	_statusMessages[502] = "Bad Gateway";
-	_statusMessages[503] = "Service Unavailable";
-	_statusMessages[504] = "Gateway Timeout";
-	_statusMessages[505] = "HTTP Version Not Supported";
-}
-
-std::string AResponse::getStatusMessage(short code) const {
-	std::map<short, std::string>::const_iterator it = _statusMessages.find(code);
-	if (it != _statusMessages.end()) {
-		return it->second;
-	} else
-		return "Unknown Status";
-}
-
-short AResponse::isValidSize() const {
+void AResponse::checkSize() const {
+	if (_request.header_fields.count("Content-Length") == 0) // mandatory Content-Length header ?
+		throw HTTPResponseError(411); // Length Required
+	if (_request.message_body.size() > _server.getClientMaxBodySize(_locationRoute))
+		throw HTTPResponseError(413); // Request Entity Too Large
 	// How to handle multiple Content-Length values ?
 	if (_request.header_fields.count("Content-Length") > 1)
-		return 400; // Bad Request
+		throw HTTPResponseError(400); // Bad Request
 	std::multimap<std::string, std::string>::const_iterator it = _request.header_fields.find("Content-Length");
 	long size = -1;
 	if (it != _request.header_fields.end())
@@ -101,37 +95,35 @@ short AResponse::isValidSize() const {
 		char *endPtr = NULL;
 		size = std::strtol(it->second.c_str(), &endPtr, 10);
 		if (*endPtr != '\0')
-			return 400;
+			throw HTTPResponseError(400);
 		if (size != _request.message_body.size())
-			return 400;
+			throw HTTPResponseError(400);
 	}
-	if (size != _request.message_body.size())
-			return 413; // Request Entity Too Large
-	return 200; // mandatory Content-Length header ?
 }
 
 // TODO: Change method in HTTP_Request to Method
-short AResponse::isValidMethod(const std::string & locationRoute) const {
-	std::set<Method>::const_iterator it = _server.getAllowedMethods().find(_request.method);
-	if (it != _server.getAllowedMethods().end())
-		return 200;
-	return 405; // Method Not Allowed
+void AResponse::checkMethod() const {
+	std::set<Method>::const_iterator it = _server.getAllowedMethods(_locationRoute).find(_request.method);
+	if (it == _server.getAllowedMethods(_locationRoute).end())
+		throw HTTPResponseError(405); // Method Not Allowed
 }
 
 // If REGEX is not considered, NGINX does prefix match for the location routes,
 // which means route must match the start of the URI
-const std::string & AResponse::getMatchLocationRoute(const std::string & uri) {
+void AResponse::getMatchLocationRoute() {
 	std::map<std::string, LocationContext> serverLocations = _server.getLocations();
 	
 	std::map<std::string, LocationContext>::iterator it;
-	it = serverLocations.find(uri);
-	if (it != serverLocations.end())
-		return it->first;
+	it = serverLocations.find(_request.uri);
+	if (it != serverLocations.end()) {
+		_locationRoute = it->first;
+		return ;
+	}
 
 	int bestMatchLen = 0;
 	std::string bestMatchRoute;
 	for (it = serverLocations.begin(); it != serverLocations.end(); ++it) {
-		if (uri.compare(0, it->first.size(), it->first) == 0) {
+		if (_request.uri.compare(0, it->first.size(), it->first) == 0) {
 			size_t match = it->first.size();
 			if (match > bestMatchLen) {
 				bestMatchLen = match;
@@ -139,28 +131,67 @@ const std::string & AResponse::getMatchLocationRoute(const std::string & uri) {
 			}
 		}
 	}
-	return bestMatchRoute;
+	_locationRoute = bestMatchRoute;
 }
 
-const std::string & AResponse::getPath(const std::string & locationRoute, const std::string & uri) {
-	std::string root = _server.getRoot(locationRoute);
-	return (root + uri.substr(locationRoute.size()));
+const std::string & AResponse::getPath() {
+	std::string root = _server.getRoot(_locationRoute);
+	return (root + _request.uri.substr(_locationRoute.size()));
 }
 
+// TODO: Review check empty logic
+void AResponse::checkReturn() const {
+	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
+	if (redirect.second.empty())
+		return ;
+	if (redirect.first == 302) {
+		
+	}
+		
+}
 
+bool isDirectory(const char* path) {
+	struct stat info;
+
+	if (stat(path, &info) != 0) {
+		// Error in getting file information (file does not exist, permission denied, etc.)
+		return false;
+	}
+	return (info.st_mode & S_IFDIR) != 0;  // Check if it's a directory
+}
+
+// TODO: finish implementing (get contents from error page or default if none)
+std::string & AResponse::getErrorPage(short status) {
+	std::map<short, std::string>::const_iterator it;
+	it = _server.getErrorPages(_locationRoute).find(status);
+	if (it !=  _server.getErrorPages(_locationRoute).end()) {
+		// Get content from specified file (check file first)
+		return ;
+	}
+}
+
+std::string & AResponse::getResponseStr() const {
+	std::map<short, std::string>::const_iterator itStatus = STATUS_MESSAGES.find(_response.status);
+	std::string message = (itStatus != STATUS_MESSAGES.end()) ? itStatus->second : "Unknown status code";
+	std::string headersStr;
+	std::multimap<std::string, std::string>::const_iterator itHead;
+	for (itHead = _response.headers.begin(); itHead != _response.headers.end(); itHead++) {
+		headersStr += itHead->first + ": " + itHead->second + "\r\n";
+	}
+	std::string response = "HTTP/1.1 " + int_to_string(_response.status)
+	 + message + "\r\n" + headersStr + "\r\n" + _response.body;
+	return response;
+}
 
 // Example implementation
 // std::string generateResponse() {
-// 	short statusCode = isValidSize();
-// 	std::string route = getMatchLocationRoute(_request.uri);
-// 	statusCode = isValidMethod(route);
-// 	std::string path = getPath(route, _request.uri);
+// 	setMatchLocationRoute();
+// 	checkSize();
+// 	checkMethod();
+// 	checkReturn();
+// 	std::string path = getPath();
 // 
 //	Check if file exists and is not a dir
-// 
-// 	std::string response =
-// 		"HTTP/1.1 " + statusCode + getStatusMessage(statusCode) + "\r\n" + \
-// 		headers + "\r\n\r\n" + body;
-
-// 	return response;
+// 	
+// 	return getResponseStr();
 // }
