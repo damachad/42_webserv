@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/06 15:27:23 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/06 16:12:15 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,20 +95,13 @@ const char *HTTPHeaderError::what() const throw() { return (_message.c_str()); }
 HTTPHeaderError::~HTTPHeaderError() throw() {}
 
 /* HTTP Response error for when there are errors during HTTP request interpretation */
-HTTPResponseError::HTTPResponseError(const short status, 
-	const std::multimap<std::string, std::string> & headers, 
-	const std::string & body) throw() {
+HTTPResponseError::HTTPResponseError(const short status) throw() {
 	
 	std::map<short, std::string>::const_iterator itStatus = STATUS_MESSAGES.find(status);
 	std::string message = (itStatus != STATUS_MESSAGES.end()) ? itStatus->second : "Unknown status code";
-	std::ostringstream statusStream;
-    statusStream << status;
-	std::string headersStr;
-	std::multimap<std::string, std::string>::const_iterator itHead;
-	for (itHead = headers.begin(); itHead != headers.end(); itHead++) {
-		headersStr += itHead->first + ": " + itHead->second + "\r\n";
-	}
-	_response = "HTTP1.1 " + statusStream.str() + message + "\r\n" + headersStr+ "\r\n\r\n" + body;
+	std::string headers = getHttpDate() + "\r\n" + "Server: Webserv\r\n" + "Connection: close\r\n";
+	
+	_response = "HTTP1.1 " + int_to_string(status) + message + "\r\n" + headers + "\r\n";
 }
 
 const char *HTTPResponseError::what() const throw() { return (_response.c_str()); }
