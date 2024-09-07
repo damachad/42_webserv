@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "ConfigParser.hpp"
 
 ConfigParser::ConfigParser(void) {}
 
@@ -103,19 +103,19 @@ std::vector<std::string> ConfigParser::tokenizeLine(std::string line) {
 	return (tokens);
 }
 
-static bool areListenEqual(const Listen& a, const Listen& b) {
+static bool areListenEqual(const Listen &a, const Listen &b) {
 	return (a.port == b.port) && (a.IP == b.IP);
 }
 
-static bool hasDuplicates(const std::vector<Listen>& vec) {
+static bool hasDuplicates(const std::vector<Listen> &vec) {
 	for (size_t i = 0; i < vec.size(); ++i) {
 		for (size_t j = i + 1; j < vec.size(); ++j) {
 			if (areListenEqual(vec[i], vec[j])) {
-				return true; // Duplicate found
+				return true;  // Duplicate found
 			}
 		}
 	}
-	return false; // No duplicates
+	return false;  // No duplicates
 }
 
 void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
@@ -218,8 +218,8 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 	}
 	std::cout << std::endl;
 	std::cout << "Return: ";
-	std::pair<short, std::string> returns =  _servers[serverNum].getReturn(route);
-	if (returns.first)
-		std::cout << returns.first << " : " << returns.second;
+	std::pair<short, std::string> returns =
+		_servers[serverNum].getReturn(route);
+	if (returns.first) std::cout << returns.first << " : " << returns.second;
 	std::cout << std::endl;
 }

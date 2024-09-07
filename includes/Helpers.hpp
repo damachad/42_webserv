@@ -13,12 +13,12 @@
 #ifndef HELPERS_HPP
 #define HELPERS_HPP
 
-#include "ServerContext.hpp"
 #include "Webserv.hpp"
 
 std::vector<ServerContext> get_default_conf(int i);
 std::string boolToString(bool value);
-std::string methodToString(enum Method method);
+std::string methodToString(Method method);
+Method stringToMethod(const std::string& method);
 std::string int_to_string(int value);
 int string_to_int(const std::string& value);
 std::ostream& operator<<(std::ostream& outstream,

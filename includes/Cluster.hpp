@@ -17,9 +17,6 @@
 
 #define BUFFER_SIZE 8096
 
-class ServerContext;
-class Server;
-
 class Cluster {
    public:
 	// Constructor; create a vector of servers from provided context vector
