@@ -20,8 +20,6 @@ struct Listen {
 	std::string port;
 };
 
-class LocationContext;
-
 class ServerContext {
    private:
 	std::vector<Listen> _network_address;

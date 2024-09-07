@@ -10,8 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ServerContext.hpp"
-#include "Webserv.hpp"
+#include "Helpers.hpp"
 
 std::string boolToString(bool value) {
 	if (value)

@@ -40,6 +40,16 @@
 enum Method { GET = 1, POST, DELETE, UNKNOWN };
 enum State { FALSE, TRUE, UNSET };
 
+// Custom Classes
+class ServerContext;
+class Server;
+class Cluster;
+class LocationContext;
+class ConfigParser;
+
+// Custom Structs
+struct Listen;
+
 // Custom .hpp files
 #include "Cluster.hpp"
 #include "ConfigParser.hpp"

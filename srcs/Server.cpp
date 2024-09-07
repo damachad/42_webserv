@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Server.hpp"
 
 // Constructor, creates server from configuration file
 Server::Server(const ServerContext& configuration)

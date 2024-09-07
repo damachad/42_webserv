@@ -15,8 +15,6 @@
 
 #include "Webserv.hpp"
 
-struct Listen;
-
 class Server {
    public:
 	// Constructor, creates server from configuration file

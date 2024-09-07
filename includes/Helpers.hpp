@@ -13,7 +13,6 @@
 #ifndef HELPERS_HPP
 #define HELPERS_HPP
 
-#include "ServerContext.hpp"
 #include "Webserv.hpp"
 
 std::vector<ServerContext> get_default_conf(int i);

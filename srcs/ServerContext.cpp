@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "ServerContext.hpp"
 
 ServerContext::ServerContext()
 	: _autoIndex(FALSE), _clientMaxBodySize(1048576) {
@@ -36,7 +36,7 @@ ServerContext::ServerContext(const ServerContext &src)
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _locations(src.getLocations()),
-      _return(src.getReturn()) {}
+	  _return(src.getReturn()) {}
 
 ServerContext &ServerContext::operator=(const ServerContext &src) {
 	_network_address = src.getNetworkAddress();
@@ -76,7 +76,7 @@ static bool isValidPort(const std::string &port) {
 	return (portNumber >= 0 && portNumber <= 65535);
 }
 
-static bool isValidIp(const std::string& ip) {
+static bool isValidIp(const std::string &ip) {
 	if (ip.empty() || ip == "localhost") return true;
 	int numDots = 0;
 	std::string segment;
@@ -101,8 +101,10 @@ static bool isValidIp(const std::string& ip) {
 void ServerContext::handleListen(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Too many arguments in listen directive.");
-	std::vector<std::string>::const_iterator it; // check if accept just one token (if not implementing default_server)
-	for (it = tokens.begin() + 1; it != tokens.end(); it++){
+	std::vector<std::string>::const_iterator
+		it;	 // check if accept just one token (if not implementing
+			 // default_server)
+	for (it = tokens.begin() + 1; it != tokens.end(); it++) {
 		Listen listening;
 		std::string value = (*it);
 		size_t colonPos = value.find(':');
@@ -131,7 +133,8 @@ void ServerContext::handleServerName(std::vector<std::string> &tokens) {
 }
 
 void ServerContext::handleRoot(std::vector<std::string> &tokens) {
-	if (tokens.size() > 2) throw ConfigError("Too many arguments in root directive.");
+	if (tokens.size() > 2)
+		throw ConfigError("Too many arguments in root directive.");
 	_root = tokens[1];
 }
 
@@ -163,20 +166,18 @@ void ServerContext::handleCliMaxSize(std::vector<std::string> &tokens) {
 		throw ConfigError("Invalid client_max_body_size directive.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
-	if (!std::isdigit(unit))
-		maxSize.resize(maxSize.size() - 1);
-	
+	if (!std::isdigit(unit)) maxSize.resize(maxSize.size() - 1);
+
 	// check if there is overflow
 	char *endPtr = NULL;
 	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
 	if (*endPtr != '\0')
 		throw ConfigError("Invalid numeric value for client_max_body_size.");
 	_clientMaxBodySize = size;
-	if (!std::isdigit(unit)){	
+	if (!std::isdigit(unit)) {
 		// check for overflow during multiplication
 		const long maxLimit = LONG_MAX;
-		switch (unit)
-		{
+		switch (unit) {
 			case 'k':
 			case 'K':
 				if (size > maxLimit / 1024)
@@ -211,16 +212,14 @@ void ServerContext::handleAutoIndex(std::vector<std::string> &tokens) {
 }
 
 void ServerContext::handleReturn(std::vector<std::string> &tokens) {
-	if (tokens.size() != 3)
-		throw ConfigError("Invalid return directive.");
+	if (tokens.size() != 3) throw ConfigError("Invalid return directive.");
 	// check if there is overflow
 	char *endPtr = NULL;
 	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
-	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 \
-		|| errorCode != static_cast<short>(errorCode)) // accepted NGINX values
+	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
+		errorCode != static_cast<short>(errorCode))	 // accepted NGINX values
 		throw ConfigError("Invalid error code for return directive.");
-	if (_return.first)
-		return ;
+	if (_return.first) return;
 	_return.first = static_cast<short>(errorCode);
 	_return.second = tokens[2];
 }
@@ -371,7 +370,8 @@ std::set<Method> ServerContext::getAllowedMethods(
 		return it->second.getAllowedMethods();
 }
 
-std::pair<short, std::string> ServerContext::getReturn(const std::string &route) const {
+std::pair<short, std::string> ServerContext::getReturn(
+	const std::string &route) const {
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
 	if (it == _locations.end() || it->second.getReturn().first == 0)
@@ -428,7 +428,7 @@ std::ostream &operator<<(std::ostream &os, const ServerContext &context) {
 	std::pair<short, std::string> returns = context.getReturn();
 	if (returns.first)
 		os << "    " << returns.first << " : " << returns.second << "\n";
-	
+
 	os << "Locations:\n";
 	std::map<std::string, LocationContext> locations = context.getLocations();
 	for (std::map<std::string, LocationContext>::const_iterator it =
