@@ -67,7 +67,7 @@ void HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 		!protocol_version_is_valid(protocol_version))
 		throw HTTPHeaderError("Protocol version");
 
-	HTTP.method = method;
+	HTTP.method = stringToMethod(method);
 	HTTP.uri = url;
 	HTTP.protocol_version = protocol_version;
 }

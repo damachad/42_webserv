@@ -36,6 +36,11 @@
 #include <set>
 #include <vector>
 
+// Custom Variables // NOTE: Included here to facilitate .hpp inclusion issues
+enum Method { GET = 1, POST, DELETE, UNKNOWN };
+enum State { FALSE, TRUE, UNSET };
+
+// Custom .hpp files
 #include "Cluster.hpp"
 #include "ConfigParser.hpp"
 #include "Exceptions.hpp"
@@ -45,7 +50,7 @@
 #include "Server.hpp"
 #include "ServerContext.hpp"
 
-// Magic numbers
+// Magic numbers		 // TODO: Do we need them?
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
 
 #endif
