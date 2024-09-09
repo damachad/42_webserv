@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/06 16:27:14 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/09 18:31:06 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,10 @@ struct HTTP_Response {
 
 class AResponse {
    public:
-	AResponse(const ServerContext & server, const HTTP_Request & request);
-	AResponse(const AResponse & src);
+	AResponse(const ServerContext& server, const HTTP_Request& request);
+	AResponse(const AResponse& src);
 	virtual ~AResponse();
-	const AResponse & operator=(const AResponse & src);
+	const AResponse& operator=(const AResponse& src);
 
 	// Pure virtual method for generating the HTTP response
 	virtual std::string generateResponse() = 0;
@@ -41,18 +41,26 @@ class AResponse {
 	HTTP_Request _request;
 	HTTP_Response _response;
 	ServerContext _server;
-	std::string	_locationRoute;
+	std::string _locationRoute;
 
-	void getMatchLocationRoute();
-	const std::string & getPath();
+	void setMatchLocationRoute();
+	const std::string& getPath() const;
 
 	void checkSize() const;
 	void checkMethod() const;
 	void checkReturn() const;
+	short checkFile(const std::string& path) const;
+	bool hasAutoindex() const;
 
-	std::string & getErrorPage(short status);
+	// To implement
+	void loadFile(const std::string& path);
 
-	std::string & getResponseStr() const;
+	std::string assemblePath(const std::string& l, const std::string& r) const;
+	std::string getIndexFile(const std::string& path) const;
+	std::string& getErrorPage(short status) const;
+	std::string& getResponseStr() const;
+
+	// TODO: implement logic for index and autoindex
 
    private:
 	AResponse();

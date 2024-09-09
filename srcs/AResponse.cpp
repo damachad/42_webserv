@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/09 15:29:27 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/09 18:31:07 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,6 @@ void AResponse::checkSize() const {
 	}
 }
 
-// TODO: Change method in HTTP_Request to Method
 void AResponse::checkMethod() const {
 	std::set<Method>::const_iterator it =
 		_server.getAllowedMethods(_locationRoute).find(_request.method);
@@ -109,7 +108,7 @@ void AResponse::checkMethod() const {
 
 // If REGEX is not considered, NGINX does prefix match for the location routes,
 // which means route must match the start of the URI
-void AResponse::getMatchLocationRoute() {
+void AResponse::setMatchLocationRoute() {
 	std::map<std::string, LocationContext> serverLocations =
 		_server.getLocations();
 
@@ -134,9 +133,10 @@ void AResponse::getMatchLocationRoute() {
 	_locationRoute = bestMatchRoute;
 }
 
-const std::string& AResponse::getPath() {
+const std::string& AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
-	return (root + _request.uri.substr(_locationRoute.size()));
+	// TODO: ensure there is one '/' present in between root and URI
+	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
 }
 
 // TODO: Review check empty logic
@@ -144,22 +144,57 @@ void AResponse::checkReturn() const {
 	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
 	if (redirect.second.empty()) return;
 	if (redirect.first == 302) {
+		// TODO: Implement redirect logic
 	}
 }
 
-bool isDirectory(const char* path) {
+short AResponse::checkFile(const std::string& path) const {
 	struct stat info;
 
-	if (stat(path, &info) != 0) {
-		// Error in getting file information (file does not exist, permission
-		// denied, etc.)
-		return false;
+	if (stat(path.c_str(), &info) != 0)	 // Error in getting file information
+	{
+		if (errno == ENOENT)
+			throw HTTPResponseError(404);  // file does not exist
+		else if (errno == EACCES)
+			throw HTTPResponseError(403);  // permission denied
+		else
+			throw HTTPResponseError(500);  // TODO: Check if necessary later
+		return -1;
+	} else if ((info.st_mode & S_IFMT) ==
+			   S_IFDIR)	 // Check if it is a directory
+		return 1;
+	else if ((info.st_mode & S_IFMT) ==
+			 S_IFREG)  // Check if it is a regular file (link, device, etc.)
+		return 0;
+	else {
+		throw HTTPResponseError(403);  // permission denied
+		return -2;
 	}
-	return (info.st_mode & S_IFDIR) != 0;  // Check if it's a directory
+}
+
+bool AResponse::hasAutoindex() const {
+	if (_server.getAutoIndex(_locationRoute) == TRUE)
+		return true;
+	else
+		return false;
+}
+
+std::string AResponse::getIndexFile(const std::string& path) const {
+	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
+	std::vector<std::string>::const_iterator it;
+	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
+		std::string filePath = assemblePath(path, *it);
+		if (checkFile(filePath) == REG_FILE)
+			return filePath;
+		else if (checkFile(filePath) == DIR)
+			throw HTTPResponseError(403);  // TODO: NGINX deals with index file
+										   // being a dir by doing a redirection
+	}
+	return NULL;
 }
 
 // TODO: finish implementing (get contents from error page or default if none)
-std::string& AResponse::getErrorPage(short status) {
+std::string& AResponse::getErrorPage(short status) const {
 	std::map<short, std::string>::const_iterator it;
 	it = _server.getErrorPages(_locationRoute).find(status);
 	if (it != _server.getErrorPages(_locationRoute).end()) {
@@ -167,6 +202,20 @@ std::string& AResponse::getErrorPage(short status) {
 		return;
 	}
 }
+
+// TODO: review edge cases (double '/')
+std::string AResponse::assemblePath(const std::string& l,
+									const std::string& r) const {
+	if ((l.back() == '/' && r.at(0) != '/') ||
+		(l.back() != '/' && r.at(0) == '/'))
+		return l + r;
+	else
+		return l + '/' + r;
+}
+
+// TODO: implement, get contents of file into _response.body, update necessary
+// headers (Content-Length and Content-Type)
+void AResponse::loadFile(const std::string& path) {}
 
 std::string& AResponse::getResponseStr() const {
 	std::map<short, std::string>::const_iterator itStatus =
@@ -193,8 +242,19 @@ std::string& AResponse::getResponseStr() const {
 // 	checkMethod();
 // 	checkReturn();
 // 	std::string path = getPath();
-//
-//	Check if file exists and is not a dir
-//
+
+// 	if (checkFile(path) == REG_FILE)  // file exists and is not a dir
+// 		loadFile(path);
+// 	else if (checkFile(path) == DIR) {
+// 		std::string indexFile = checkIndex(path);
+// 		if (!indexFile.empty())
+// 			loadFile(indexFile);
+// 		else if (hasAutoindex())
+// 			loadDirectoryListing();
+// 		else
+// 			throw HTTPResponseError(404);
+// 	}
+//  // Sub classes should change the status code accordingly, etc.
+
 // 	return getResponseStr();
 // }
