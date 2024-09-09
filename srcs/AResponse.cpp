@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/09 18:31:07 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/09 18:49:36 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,9 +213,18 @@ std::string AResponse::assemblePath(const std::string& l,
 		return l + '/' + r;
 }
 
-// TODO: implement, get contents of file into _response.body, update necessary
-// headers (Content-Length and Content-Type)
-void AResponse::loadFile(const std::string& path) {}
+void AResponse::loadFile(const std::string& path) {
+	std::ifstream file(path.c_str());
+	if (!file.is_open()) throw HTTPResponseError(500);
+	_response.body.assign((std::istreambuf_iterator<char>(file)),
+						  (std::istreambuf_iterator<char>()));
+	file.close();
+	_response.headers.insert(std::string("Content-Length"),
+							 int_to_string(_response.body.size()));
+	// TODO: add function to check file extensions and attribute MIME type
+	// _response.headers.insert(std::string("Content-Type"),
+	// 						 getFileType(path));
+}
 
 std::string& AResponse::getResponseStr() const {
 	std::map<short, std::string>::const_iterator itStatus =

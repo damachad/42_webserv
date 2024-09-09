@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/09 18:31:06 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/09 18:50:12 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,6 @@ class AResponse {
 	void checkReturn() const;
 	short checkFile(const std::string& path) const;
 	bool hasAutoindex() const;
-
-	// To implement
 	void loadFile(const std::string& path);
 
 	std::string assemblePath(const std::string& l, const std::string& r) const;
@@ -60,7 +58,7 @@ class AResponse {
 	std::string& getErrorPage(short status) const;
 	std::string& getResponseStr() const;
 
-	// TODO: implement logic for index and autoindex
+	// TODO: implement getFileType()
 
    private:
 	AResponse();
