@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/09 18:50:12 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/09 18:51:36 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ class AResponse {
 	std::string& getErrorPage(short status) const;
 	std::string& getResponseStr() const;
 
-	// TODO: implement getFileType()
+	// TODO: implement getFileType(), getErrorPage() and loadDirectoryListing()
 
    private:
 	AResponse();
