@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/04 18:47:01 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/09 17:27:35 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,7 +144,8 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 		}
 		if (hasDuplicates(server.getNetworkAddress()))
 			throw ConfigError("Duplicate network addresses found.");
-		if (server.getRoot().empty()) // TODO: enforce root directive of set default?
+		if (server.getRoot()
+				.empty())  // TODO: enforce root directive of set default?
 			throw ConfigError("No root directive present in server.");
 		_servers.push_back(server);
 	}
