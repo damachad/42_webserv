@@ -15,8 +15,6 @@
 
 #include "Webserv.hpp"
 
-class ServerContext;
-
 class ConfigParser {
    private:
 	std::string _configFile;

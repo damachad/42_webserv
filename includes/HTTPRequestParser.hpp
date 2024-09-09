@@ -17,7 +17,7 @@
 
 typedef struct HTTP_Request {
 	// Request Line
-	std::string method;
+	enum Method method;
 	std::string uri;
 	std::string protocol_version;
 
