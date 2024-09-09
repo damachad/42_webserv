@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/06 16:03:01 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/09 17:54:05 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,8 @@ struct Listen;
 
 // Magic numbers		 // TODO: Do we need them?
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
+#define REG_FILE 0
+#define DIR 1
 
 extern const std::map<short, std::string> STATUS_MESSAGES;
 
