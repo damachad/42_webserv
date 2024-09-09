@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Cluster.hpp"
 
 // Constructor
 // Create a vector of servers from provided context vector

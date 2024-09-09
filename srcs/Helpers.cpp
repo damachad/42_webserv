@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Helpers.hpp"
 
 std::string boolToString(bool value) {
 	if (value)
@@ -19,7 +19,7 @@ std::string boolToString(bool value) {
 		return "False";
 }
 
-std::string methodToString(enum Method method) {
+std::string methodToString(Method method) {
 	switch (method) {
 		case GET:
 			return "GET";
@@ -30,6 +30,17 @@ std::string methodToString(enum Method method) {
 		default:
 			return "UNKNOWN";
 	}
+}
+
+Method stringToMethod(const std::string& method) {
+	if (method == "GET")
+		return GET;
+	else if (method == "POST")
+		return POST;
+	else if (method == "DELETE")
+		return DELETE;
+	else
+		return UNKNOWN;
 }
 
 std::string int_to_string(int value) {

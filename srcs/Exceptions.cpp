@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Exceptions.hpp"
 
 FileReadError::FileReadError(const std::string &str) throw() {
 	_message = "Unable to read from: " + str + '\n';

@@ -13,8 +13,6 @@
 #ifndef LOCATIONCONTEXT_HPP
 #define LOCATIONCONTEXT_HPP
 
-#include "LocationContext.hpp"
-#include "ServerContext.hpp"
 #include "Webserv.hpp"
 
 class LocationContext {
@@ -26,7 +24,7 @@ class LocationContext {
 	std::vector<std::string> _tryFiles;
 	std::set<Method> _allowedMethods;
 	std::map<short, std::string> _errorPages;
-  std::pair<short, std::string>	_return;
+	std::pair<short, std::string> _return;
 	// std::string _uploadDir;	// Is this necessary ?
 	// Later add redirect and cgi related variables
 	typedef void (LocationContext::*DirectiveHandler)(
@@ -48,7 +46,7 @@ class LocationContext {
 	std::vector<std::string> getTryFiles() const;
 	std::set<Method> getAllowedMethods() const;
 	std::map<short, std::string> getErrorPages() const;
-  std::pair<short, std::string> getReturn() const;
+	std::pair<short, std::string> getReturn() const;
 
 	// Handlers for directives
 	void handleRoot(std::vector<std::string> &tokens);
@@ -58,7 +56,7 @@ class LocationContext {
 	void handleErrorPage(std::vector<std::string> &tokens);
 	void handleCliMaxSize(std::vector<std::string> &tokens);
 	void handleAutoIndex(std::vector<std::string> &tokens);
-  void handleReturn(std::vector<std::string> &tokens);
+	void handleReturn(std::vector<std::string> &tokens);
 
 	void initializeDirectiveMap();
 	void processDirective(std::string &line);
