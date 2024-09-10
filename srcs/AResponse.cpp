@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/10 12:18:46 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 18:43:06 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,152 +57,6 @@ const std::map<short, std::string> STATUS_MESSAGES = {
 	{503, "Service Unavailable"},
 	{504, "Gateway Timeout"},
 	{505, "HTTP Version Not Supported"}};
-
-AResponse::AResponse() {}
-
-AResponse::~AResponse() {}
-
-AResponse::AResponse(const ServerContext& server, const HTTP_Request& request)
-	: _request(request), _server(server) {}
-
-AResponse::AResponse(const AResponse& src)
-	: _request(src._request),
-	  _response(src._response),
-	  _server(src._server),
-	  _locationRoute(src._locationRoute) {}
-
-const AResponse& AResponse::operator=(const AResponse& src) {
-	_request = src._request;
-	_response = src._response;
-	_server = src._server;
-	_locationRoute = src._locationRoute;
-}
-
-void AResponse::checkSize() const {
-	if (_request.header_fields.count("Content-Length") ==
-		0)							   // mandatory Content-Length header ?
-		throw HTTPResponseError(411);  // Length Required
-	if (_request.message_body.size() >
-		_server.getClientMaxBodySize(_locationRoute))
-		throw HTTPResponseError(413);  // Request Entity Too Large
-	// How to handle multiple Content-Length values ?
-	if (_request.header_fields.count("Content-Length") > 1)
-		throw HTTPResponseError(400);  // Bad Request
-	std::multimap<std::string, std::string>::const_iterator it =
-		_request.header_fields.find("Content-Length");
-	long size = -1;
-	if (it != _request.header_fields.end()) {
-		char* endPtr = NULL;
-		size = std::strtol(it->second.c_str(), &endPtr, 10);
-		if (*endPtr != '\0') throw HTTPResponseError(400);
-		if (size != _request.message_body.size()) throw HTTPResponseError(400);
-	}
-}
-
-void AResponse::checkMethod() const {
-	std::set<Method>::const_iterator it =
-		_server.getAllowedMethods(_locationRoute).find(_request.method);
-	if (it == _server.getAllowedMethods(_locationRoute).end())
-		throw HTTPResponseError(405);  // Method Not Allowed
-}
-
-// If REGEX is not considered, NGINX does prefix match for the location routes,
-// which means route must match the start of the URI
-void AResponse::setMatchLocationRoute() {
-	std::map<std::string, LocationContext> serverLocations =
-		_server.getLocations();
-
-	std::map<std::string, LocationContext>::iterator it;
-	it = serverLocations.find(_request.uri);
-	if (it != serverLocations.end()) {
-		_locationRoute = it->first;
-		return;
-	}
-
-	int bestMatchLen = 0;
-	std::string bestMatchRoute;
-	for (it = serverLocations.begin(); it != serverLocations.end(); ++it) {
-		if (_request.uri.compare(0, it->first.size(), it->first) == 0) {
-			size_t match = it->first.size();
-			if (match > bestMatchLen) {
-				bestMatchLen = match;
-				bestMatchRoute = it->first;
-			}
-		}
-	}
-	_locationRoute = bestMatchRoute;
-}
-
-const std::string& AResponse::getPath() const {
-	std::string root = _server.getRoot(_locationRoute);
-	// TODO: ensure there is one '/' present in between root and URI
-	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
-}
-
-short AResponse::checkFile(const std::string& path) const {
-	struct stat info;
-
-	if (stat(path.c_str(), &info) != 0)	 // Error in getting file information
-	{
-		if (errno == ENOENT)
-			throw HTTPResponseError(404);  // file does not exist
-		else if (errno == EACCES)
-			throw HTTPResponseError(403);  // permission denied
-		else
-			throw HTTPResponseError(500);  // TODO: Check if necessary later
-		return -1;
-	} else if ((info.st_mode & S_IFMT) ==
-			   S_IFDIR)	 // Check if it is a directory
-		return 1;
-	else if ((info.st_mode & S_IFMT) ==
-			 S_IFREG)  // Check if it is a regular file (link, device, etc.)
-		return 0;
-	else {
-		throw HTTPResponseError(403);  // permission denied
-		return -2;
-	}
-}
-
-bool AResponse::hasAutoindex() const {
-	if (_server.getAutoIndex(_locationRoute) == TRUE)
-		return true;
-	else
-		return false;
-}
-
-std::string AResponse::getIndexFile(const std::string& path) const {
-	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
-	std::vector<std::string>::const_iterator it;
-	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
-		std::string filePath = assemblePath(path, *it);
-		if (checkFile(filePath) == REG_FILE)
-			return filePath;
-		else if (checkFile(filePath) == DIRECTORY)
-			throw HTTPResponseError(403);  // TODO: NGINX deals with index file
-										   // being a dir by doing a redirection
-	}
-	return NULL;
-}
-
-// TODO: finish implementing (get contents from error page or default if none)
-std::string& AResponse::getErrorPage(short status) const {
-	std::map<short, std::string>::const_iterator it;
-	it = _server.getErrorPages(_locationRoute).find(status);
-	if (it != _server.getErrorPages(_locationRoute).end()) {
-		// Get content from specified file (check file first)
-		return;
-	}
-}
-
-// TODO: review edge cases (double '/')
-std::string AResponse::assemblePath(const std::string& l,
-									const std::string& r) const {
-	if ((l.back() == '/' && r.at(0) != '/') ||
-		(l.back() != '/' && r.at(0) == '/'))
-		return l + r;
-	else
-		return l + '/' + r;
-}
 
 // Initialize a map with common MIME types and returns it
 static std::map<std::string, std::string> initMimeTypes() {
@@ -262,6 +116,145 @@ static std::map<std::string, std::string> initMimeTypes() {
 	return mimeTypes;
 }
 
+AResponse::AResponse() {}
+
+AResponse::~AResponse() {}
+
+AResponse::AResponse(const ServerContext& server, const HTTP_Request& request)
+	: _request(request), _server(server) {}
+
+AResponse::AResponse(const AResponse& src)
+	: _request(src._request),
+	  _response(src._response),
+	  _server(src._server),
+	  _locationRoute(src._locationRoute) {}
+
+const AResponse& AResponse::operator=(const AResponse& src) {
+	_request = src._request;
+	_response = src._response;
+	_server = src._server;
+	_locationRoute = src._locationRoute;
+}
+
+short AResponse::checkSize() const {
+	if (_request.header_fields.count("Content-Length") ==
+		0)			 // mandatory Content-Length header ?
+		return 411;	 // Length Required
+	if (_request.message_body.size() >
+		_server.getClientMaxBodySize(_locationRoute))
+		return 413;	 // Request Entity Too Large
+	// How to handle multiple Content-Length values ?
+	if (_request.header_fields.count("Content-Length") > 1)
+		return 400;	 // Bad Request
+	std::multimap<std::string, std::string>::const_iterator it =
+		_request.header_fields.find("Content-Length");
+	long size = -1;
+	if (it != _request.header_fields.end()) {
+		char* endPtr = NULL;
+		size = std::strtol(it->second.c_str(), &endPtr, 10);
+		if (*endPtr != '\0') return 400;
+		if (size != _request.message_body.size()) return 400;
+	}
+	return 200;
+}
+
+short AResponse::checkMethod() const {
+	std::set<Method>::const_iterator it =
+		_server.getAllowedMethods(_locationRoute).find(_request.method);
+	if (it == _server.getAllowedMethods(_locationRoute).end())
+		return 405;	 // Method Not Allowed
+	return 200;
+}
+
+// If REGEX is not considered, NGINX does prefix match for the location routes,
+// which means route must match the start of the URI
+void AResponse::setMatchLocationRoute() {
+	std::map<std::string, LocationContext> serverLocations =
+		_server.getLocations();
+
+	std::map<std::string, LocationContext>::iterator it;
+	it = serverLocations.find(_request.uri);
+	if (it != serverLocations.end()) {
+		_locationRoute = it->first;
+		return;
+	}
+
+	int bestMatchLen = 0;
+	std::string bestMatchRoute;
+	for (it = serverLocations.begin(); it != serverLocations.end(); ++it) {
+		if (_request.uri.compare(0, it->first.size(), it->first) == 0) {
+			size_t match = it->first.size();
+			if (match > bestMatchLen) {
+				bestMatchLen = match;
+				bestMatchRoute = it->first;
+			}
+		}
+	}
+	_locationRoute = bestMatchRoute;
+}
+
+const std::string& AResponse::getPath() const {
+	std::string root = _server.getRoot(_locationRoute);
+	// TODO: ensure there is one '/' present in between root and URI
+	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
+}
+
+short AResponse::checkFile(const std::string& path) const {
+	struct stat info;
+
+	if (stat(path.c_str(), &info) != 0)	 // Error in getting file information
+	{
+		if (errno == ENOENT)
+			return 404;	 // file does not exist
+		else if (errno == EACCES)
+			return 403;	 // permission denied
+		else
+			return 500;	 // TODO: Check if necessary later
+	} else if ((info.st_mode & S_IFMT) != S_IFDIR &&
+			   (info.st_mode & S_IFMT) !=
+				   S_IFREG)	 // Check if it is a directory or a regular file
+							 // (not a link or device)
+		return 403;			 // permission denied
+	return 200;
+}
+
+bool AResponse::isDirectory(const std::string& path) const {
+	struct stat info;
+
+	stat(path.c_str(), &info);
+	if ((info.st_mode & S_IFMT) == S_IFDIR)	 // Check if it is a directory
+		return true;
+	else
+		return false;
+}
+
+bool AResponse::hasAutoindex() const {
+	if (_server.getAutoIndex(_locationRoute) == TRUE)
+		return true;
+	else
+		return false;
+}
+
+std::string AResponse::getIndexFile(const std::string& path) const {
+	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
+	std::vector<std::string>::const_iterator it;
+	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
+		std::string filePath = assemblePath(path, *it);
+		if (checkFile(filePath) == 200) return filePath;
+	}
+	return NULL;
+}
+
+// TODO: review edge cases (double '/')
+std::string AResponse::assemblePath(const std::string& l,
+									const std::string& r) const {
+	if ((l.back() == '/' && r.at(0) != '/') ||
+		(l.back() != '/' && r.at(0) == '/'))
+		return l + r;
+	else
+		return l + '/' + r;
+}
+
 // Function to get MIME type based on file extension
 void AResponse::setMimeType(const std::string& path) {
 	static std::map<std::string, std::string> mimeTypes = initMimeTypes();
@@ -301,9 +294,9 @@ bool AResponse::hasReturn() {
 	return true;
 }
 
-void AResponse::loadDirectoryListing(const std::string& path) {
+short AResponse::loadDirectoryListing(const std::string& path) {
 	DIR* dir = opendir(path.c_str());
-	if (dir == NULL) throw HTTPResponseError(403);
+	if (dir == NULL) return 403;
 	struct dirent* entry;
 	while ((entry = readdir(dir)) != NULL) {
 		_response.body +=
@@ -314,18 +307,20 @@ void AResponse::loadDirectoryListing(const std::string& path) {
 	_response.headers.insert(std::string("Content-Type"),
 							 std::string("text/html"));
 	_response.status = 200;
+	return 200;
 }
 
 // for GET
-void AResponse::loadFile(const std::string& path) {
+short AResponse::loadFile(const std::string& path) {
 	std::ifstream file(path.c_str());
-	if (!file.is_open()) throw HTTPResponseError(500);
+	if (!file.is_open()) return 500;
 	_response.body.assign((std::istreambuf_iterator<char>(file)),
 						  (std::istreambuf_iterator<char>()));
 	file.close();
 	loadCommonHeaders();
 	setMimeType(path);
 	_response.status = 200;
+	return 200;
 }
 
 std::string& AResponse::getResponseStr() const {
@@ -346,27 +341,51 @@ std::string& AResponse::getResponseStr() const {
 	return response;
 }
 
+std::string& AResponse::generateErrorResponse(short status) {
+	static std::map<short, std::string> error_pages =
+		_server.getErrorPages(_locationRoute);
+	_response.status = status;
+	std::map<short, std::string>::const_iterator it = error_pages.find(status);
+	if (it != error_pages.end()) {
+		std::string path =
+			assemblePath(_server.getRoot(_locationRoute), it->second);
+		if (checkFile(path) == 200) {
+			std::ifstream file(path.c_str());
+			_response.body.assign((std::istreambuf_iterator<char>(file)),
+								  (std::istreambuf_iterator<char>()));
+		}
+	}
+	loadCommonHeaders();
+	return getResponseStr();
+}
+
 // Example implementation
-// std::string generateResponse() {
-// 	setMatchLocationRoute();
-// 	checkSize();
-// 	checkMethod();
-// 	if (hasReturn())
-// 		return getResponseStr();
-// 	std::string path = getPath();
+std::string AResponse::generateResponse() {
+	setMatchLocationRoute();
+	short status = checkSize();
+	if (status != 200) return generateErrorResponse(status);
+	status = checkMethod();
+	if (status != 200) return generateErrorResponse(status);
+	if (hasReturn()) return getResponseStr();
+	std::string path = getPath();
 
-// 	if (checkFile(path) == REG_FILE)  // file exists and is not a dir
-// 		loadFile(path); // if GET
-// 	else if (checkFile(path) == DIRECTORY) {
-// 		std::string indexFile = checkIndex(path);
-// 		if (!indexFile.empty())
-// 			loadFile(indexFile); // if GET
-// 		else if (hasAutoindex())
-// 			loadDirectoryListing();
-// 		else
-// 			throw HTTPResponseError(404);
-// 	}
-//  // Sub classes should change the status code accordingly, etc.
+	status = checkFile(path);
+	if (status != 200) return generateErrorResponse(status);
+	if (!isDirectory(path)) {
+		status = loadFile(path);  // if GET
+		if (status != 200) return generateErrorResponse(status);
+	} else {  // is a directory
+		std::string indexFile = getIndexFile(path);
+		if (!indexFile.empty() &&
+			!isDirectory(indexFile)) {	// TODO: deal with directory in index?
+			status = loadFile(indexFile);  // if GET
+			if (status != 200) return generateErrorResponse(status);
+		} else if (hasAutoindex()) {
+			status = loadDirectoryListing(path);
+			if (status != 200) return generateErrorResponse(status);
+		} else
+			generateErrorResponse(404);
+	}
 
-// 	return getResponseStr();
-// }
+	return getResponseStr();
+}

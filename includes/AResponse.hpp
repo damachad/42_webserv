@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/10 12:13:02 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 18:41:30 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,21 +47,20 @@ class AResponse {
 	void setMimeType(const std::string& path);
 	const std::string& getPath() const;
 
-	void checkSize() const;
-	void checkMethod() const;
+	short checkSize() const;
+	short checkMethod() const;
 	short checkFile(const std::string& path) const;
+	bool isDirectory(const std::string& path) const;
 	bool hasAutoindex() const;
-	void loadFile(const std::string& path);
+	short loadFile(const std::string& path);
 	bool hasReturn();
 	void loadCommonHeaders();
-	void loadDirectoryListing(const std::string& path);
+	short loadDirectoryListing(const std::string& path);
 
 	std::string assemblePath(const std::string& l, const std::string& r) const;
 	std::string getIndexFile(const std::string& path) const;
-	std::string& getErrorPage(short status) const;
 	std::string& getResponseStr() const;
-
-	// TODO: implement getErrorPage() and checkReturn()
+	std::string& generateErrorResponse(short status);
 
    private:
 	AResponse();
