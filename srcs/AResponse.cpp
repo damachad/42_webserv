@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/10 11:50:38 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 12:18:46 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,15 +137,6 @@ const std::string& AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
 	// TODO: ensure there is one '/' present in between root and URI
 	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
-}
-
-// TODO: Review check empty logic
-void AResponse::checkReturn() const {
-	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
-	if (redirect.second.empty()) return;
-	if (redirect.first == 302) {
-		// TODO: Implement redirect logic
-	}
 }
 
 short AResponse::checkFile(const std::string& path) const {
@@ -293,6 +284,21 @@ void AResponse::setMimeType(const std::string& path) {
 void AResponse::loadCommonHeaders() {
 	_response.headers.insert(std::string("Date"), getHttpDate());
 	_response.headers.insert(std::string("Server"), std::string(SERVER));
+	_response.headers.insert(std::string("Content-Length"),
+							 int_to_string(_response.body.size()));
+}
+
+// TODO: Review check empty logic
+bool AResponse::hasReturn() {
+	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
+	if (redirect.second.empty()) return false;
+	_response.body = redirect.second;
+	_response.status = redirect.first;
+	loadCommonHeaders();
+	if (redirect.first == 301 || redirect.first == 302) {
+		_response.headers.insert(std::string("Location"), redirect.second);
+	}
+	return true;
 }
 
 void AResponse::loadDirectoryListing(const std::string& path) {
@@ -305,8 +311,6 @@ void AResponse::loadDirectoryListing(const std::string& path) {
 	}
 	closedir(dir);
 	loadCommonHeaders();
-	_response.headers.insert(std::string("Content-Length"),
-							 int_to_string(_response.body.size()));
 	_response.headers.insert(std::string("Content-Type"),
 							 std::string("text/html"));
 	_response.status = 200;
@@ -320,8 +324,6 @@ void AResponse::loadFile(const std::string& path) {
 						  (std::istreambuf_iterator<char>()));
 	file.close();
 	loadCommonHeaders();
-	_response.headers.insert(std::string("Content-Length"),
-							 int_to_string(_response.body.size()));
 	setMimeType(path);
 	_response.status = 200;
 }
@@ -349,7 +351,8 @@ std::string& AResponse::getResponseStr() const {
 // 	setMatchLocationRoute();
 // 	checkSize();
 // 	checkMethod();
-// 	checkReturn();
+// 	if (hasReturn())
+// 		return getResponseStr();
 // 	std::string path = getPath();
 
 // 	if (checkFile(path) == REG_FILE)  // file exists and is not a dir

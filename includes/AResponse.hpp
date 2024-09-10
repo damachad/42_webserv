@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/10 11:50:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 12:13:02 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,10 +49,10 @@ class AResponse {
 
 	void checkSize() const;
 	void checkMethod() const;
-	void checkReturn() const;
 	short checkFile(const std::string& path) const;
 	bool hasAutoindex() const;
 	void loadFile(const std::string& path);
+	bool hasReturn();
 	void loadCommonHeaders();
 	void loadDirectoryListing(const std::string& path);
 
