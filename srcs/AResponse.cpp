@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/10 11:13:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:50:38 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,7 +186,7 @@ std::string AResponse::getIndexFile(const std::string& path) const {
 		std::string filePath = assemblePath(path, *it);
 		if (checkFile(filePath) == REG_FILE)
 			return filePath;
-		else if (checkFile(filePath) == DIR)
+		else if (checkFile(filePath) == DIRECTORY)
 			throw HTTPResponseError(403);  // TODO: NGINX deals with index file
 										   // being a dir by doing a redirection
 	}
@@ -295,6 +295,24 @@ void AResponse::loadCommonHeaders() {
 	_response.headers.insert(std::string("Server"), std::string(SERVER));
 }
 
+void AResponse::loadDirectoryListing(const std::string& path) {
+	DIR* dir = opendir(path.c_str());
+	if (dir == NULL) throw HTTPResponseError(403);
+	struct dirent* entry;
+	while ((entry = readdir(dir)) != NULL) {
+		_response.body +=
+			entry->d_name + '\n';  // Print the name of each file/directory
+	}
+	closedir(dir);
+	loadCommonHeaders();
+	_response.headers.insert(std::string("Content-Length"),
+							 int_to_string(_response.body.size()));
+	_response.headers.insert(std::string("Content-Type"),
+							 std::string("text/html"));
+	_response.status = 200;
+}
+
+// for GET
 void AResponse::loadFile(const std::string& path) {
 	std::ifstream file(path.c_str());
 	if (!file.is_open()) throw HTTPResponseError(500);
@@ -305,6 +323,7 @@ void AResponse::loadFile(const std::string& path) {
 	_response.headers.insert(std::string("Content-Length"),
 							 int_to_string(_response.body.size()));
 	setMimeType(path);
+	_response.status = 200;
 }
 
 std::string& AResponse::getResponseStr() const {
@@ -334,11 +353,11 @@ std::string& AResponse::getResponseStr() const {
 // 	std::string path = getPath();
 
 // 	if (checkFile(path) == REG_FILE)  // file exists and is not a dir
-// 		loadFile(path);
-// 	else if (checkFile(path) == DIR) {
+// 		loadFile(path); // if GET
+// 	else if (checkFile(path) == DIRECTORY) {
 // 		std::string indexFile = checkIndex(path);
 // 		if (!indexFile.empty())
-// 			loadFile(indexFile);
+// 			loadFile(indexFile); // if GET
 // 		else if (hasAutoindex())
 // 			loadDirectoryListing();
 // 		else
