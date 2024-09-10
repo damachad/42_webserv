@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/09 17:54:05 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:05:11 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@ struct Listen;
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
 #define REG_FILE 0
 #define DIR 1
+#define SERVER "webserv"
 
 extern const std::map<short, std::string> STATUS_MESSAGES;
 
