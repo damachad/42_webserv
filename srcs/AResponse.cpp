@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/09 18:49:36 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:13:57 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,17 +213,98 @@ std::string AResponse::assemblePath(const std::string& l,
 		return l + '/' + r;
 }
 
+// Initialize a map with common MIME types and returns it
+static std::map<std::string, std::string> initMimeTypes() {
+	std::map<std::string, std::string> mimeTypes;
+
+	// Text formats
+	mimeTypes["html"] = "text/html";
+	mimeTypes["htm"] = "text/html";
+	mimeTypes["css"] = "text/css";
+	mimeTypes["csv"] = "text/csv";
+	mimeTypes["txt"] = "text/plain";
+	mimeTypes["xml"] = "application/xml";
+
+	// Image formats
+	mimeTypes["png"] = "image/png";
+	mimeTypes["jpg"] = "image/jpeg";
+	mimeTypes["jpeg"] = "image/jpeg";
+	mimeTypes["gif"] = "image/gif";
+	mimeTypes["bmp"] = "image/bmp";
+	mimeTypes["ico"] = "image/x-icon";
+
+	// Audio/Video formats
+	mimeTypes["mp3"] = "audio/mpeg";
+	mimeTypes["wav"] = "audio/wav";
+	mimeTypes["mp4"] = "video/mp4";
+	mimeTypes["avi"] = "video/x-msvideo";
+	mimeTypes["mov"] = "video/quicktime";
+
+	// Application formats
+	mimeTypes["json"] = "application/json";
+	mimeTypes["js"] = "application/javascript";
+	mimeTypes["pdf"] = "application/pdf";
+	mimeTypes["zip"] = "application/zip";
+	mimeTypes["tar"] = "application/x-tar";
+	mimeTypes["gz"] = "application/gzip";
+	mimeTypes["exe"] = "application/octet-stream";
+	mimeTypes["bin"] = "application/octet-stream";
+
+	// Microsoft formats
+	mimeTypes["doc"] = "application/msword";
+	mimeTypes["docx"] =
+		"application/"
+		"vnd.openxmlformats-officedocument.wordprocessingml.document";
+	mimeTypes["xls"] = "application/vnd.ms-excel";
+	mimeTypes["xlsx"] =
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	mimeTypes["ppt"] = "application/vnd.ms-powerpoint";
+	mimeTypes["pptx"] =
+		"application/"
+		"vnd.openxmlformats-officedocument.presentationml.presentation";
+
+	// Other formats
+	mimeTypes["svg"] = "image/svg+xml";
+	mimeTypes["woff"] = "font/woff";
+	mimeTypes["woff2"] = "font/woff2";
+
+	return mimeTypes;
+}
+
+// Function to get MIME type based on file extension
+void AResponse::setMimeType(const std::string& path) {
+	static std::map<std::string, std::string> mimeTypes = initMimeTypes();
+
+	std::size_t dotPos = path.find_last_of('.');
+	if (dotPos != std::string::npos) {
+		std::string extension = path.substr(dotPos + 1);
+		std::map<std::string, std::string>::const_iterator it =
+			mimeTypes.find(extension);
+		if (it != mimeTypes.end()) {
+			_response.headers.insert(std::string("Content-Type"), it->second);
+			return;
+		}
+	}
+	_response.headers.insert(
+		std::string("Content-Type"),
+		std::string("application/octet-stream"));  // default_type
+}
+
+void AResponse::loadCommonHeaders() {
+	_response.headers.insert(std::string("Date"), getHttpDate());
+	_response.headers.insert(std::string("Server"), std::string(SERVER));
+}
+
 void AResponse::loadFile(const std::string& path) {
 	std::ifstream file(path.c_str());
 	if (!file.is_open()) throw HTTPResponseError(500);
 	_response.body.assign((std::istreambuf_iterator<char>(file)),
 						  (std::istreambuf_iterator<char>()));
 	file.close();
+	loadCommonHeaders();
 	_response.headers.insert(std::string("Content-Length"),
 							 int_to_string(_response.body.size()));
-	// TODO: add function to check file extensions and attribute MIME type
-	// _response.headers.insert(std::string("Content-Type"),
-	// 						 getFileType(path));
+	setMimeType(path);
 }
 
 std::string& AResponse::getResponseStr() const {

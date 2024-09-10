@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/09 18:51:36 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 10:59:53 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ class AResponse {
 	std::string _locationRoute;
 
 	void setMatchLocationRoute();
+	void setMimeType(const std::string& path);
 	const std::string& getPath() const;
 
 	void checkSize() const;
@@ -52,13 +53,15 @@ class AResponse {
 	short checkFile(const std::string& path) const;
 	bool hasAutoindex() const;
 	void loadFile(const std::string& path);
+	void loadCommonHeaders();
 
 	std::string assemblePath(const std::string& l, const std::string& r) const;
 	std::string getIndexFile(const std::string& path) const;
 	std::string& getErrorPage(short status) const;
 	std::string& getResponseStr() const;
 
-	// TODO: implement getFileType(), getErrorPage() and loadDirectoryListing()
+	// TODO: implement getErrorPage(), loadDirectoryListing() and
+	// checkReturn()
 
    private:
 	AResponse();
