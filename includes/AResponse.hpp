@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/11 12:08:41 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/11 12:15:04 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ class AResponse {
 	void setMimeType(const std::string& path);
 	void loadCommonHeaders();
 	void loadReturn();
-	short loadFile(const std::string& path);
+	// short loadFile(const std::string& path); // for GET
 	short loadDirectoryListing(const std::string& path);
 	const std::string& loadErrorPage(short status);
 

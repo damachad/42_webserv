@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/11 12:09:48 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/11 12:15:23 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -331,17 +331,17 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 
 // Loads response with contents of file and sets MIME type
 //  NOTE: Used for GET
-short AResponse::loadFile(const std::string& path) {
-	std::ifstream file(path.c_str());
-	if (!file.is_open()) return 500;
-	_response.body.assign((std::istreambuf_iterator<char>(file)),
-						  (std::istreambuf_iterator<char>()));
-	file.close();
-	loadCommonHeaders();
-	setMimeType(path);
-	_response.status = 200;
-	return 200;
-}
+// short AResponse::loadFile(const std::string& path) {
+// 	std::ifstream file(path.c_str());
+// 	if (!file.is_open()) return 500;
+// 	_response.body.assign((std::istreambuf_iterator<char>(file)),
+// 						  (std::istreambuf_iterator<char>()));
+// 	file.close();
+// 	loadCommonHeaders();
+// 	setMimeType(path);
+// 	_response.status = 200;
+// 	return 200;
+// }
 
 // Converts the response struct into a string (loading the status message) and
 // returns it
@@ -401,13 +401,13 @@ std::string AResponse::generateResponse() {
 	status = checkFile(path);
 	if (status != 200) return loadErrorPage(status);
 	if (!isDirectory(path)) {
-		status = loadFile(path);  // if GET
+		// status = loadFile(path);  // if GET
 		if (status != 200) return loadErrorPage(status);
 	} else {  // is a directory
 		std::string indexFile = getIndexFile(path);
 		if (!indexFile.empty() &&
 			!isDirectory(indexFile)) {	// TODO: deal with directory in index?
-			status = loadFile(indexFile);  // if GET
+			// status = loadFile(indexFile);  // if GET
 			if (status != 200) return loadErrorPage(status);
 		} else if (hasAutoindex()) {
 			status = loadDirectoryListing(path);
