@@ -55,6 +55,12 @@ class HTTP_Request_Parser {
 	static bool protocol_version_is_valid(
 		const ::std::string& protocol_version);
 
+	// Checks validity of HTTP header fields
+	static void check_validity_of_header_fields(HTTP_Request& HTTP);
+	static void check_curl_validity(
+		std::multimap<std::string, std::string>& header_fields);
+	static void check_firefox_validity(
+		std::multimap<std::string, std::string>& header_fields);
 	// Private constructor and destructor: class is not instanciable
 	HTTP_Request_Parser();
 	~HTTP_Request_Parser();
@@ -64,19 +70,45 @@ std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request);
 
 #endif
 
-// Firefox:
-// GET / HTTP/1.1
-// Host: 127.0.0.1:8082
-// User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101
-// Firefox/128.0 Accept:
-// text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8
-// Accept-Language: en-US,en;q=0.5
-// Accept-Encoding: gzip, deflate, br, zstd
-// Connection: keep-alive
-// Upgrade-Insecure-Requests: 1
-// Sec-Fetch-Dest: document
-// Sec-Fetch-Mode: navigate
-// Sec-Fetch-Site: none
-// Sec-Fetch-User: ?1
-// Priority: u=0, i
+// Curl:
 //
+// HTTP Request:
+// Method: 1
+// URI: /ping
+// Protocol: HTTP/1.1
+// Header fields:
+//        Accept: */*
+//        Host: localhost:9999
+//        User-Agent: curl/7.81.0
+// Query fields:
+//        tia: gorbachov
+//        user: miguel
+// Message body:
+//
+// Firefox:
+// Header fields:
+//        Accept: text/html
+//        Accept: application/xhtml+xml
+//        Accept: application/xml;q=0.9
+//        Accept: image/avif
+//        Accept: image/webp
+//        Accept: image/png
+//        Accept: image/svg+xml
+//        Accept: */*;q=0.8
+//        Accept-Encoding: gzip
+//        Accept-Encoding: deflate
+//        Accept-Encoding: br
+//        Accept-Encoding: zstd
+//        Accept-Language: en-US
+//        Accept-Language: en;q=0.5
+//        Connection: keep-alive
+//        Host: localhost:9999
+//        Priority: u=0
+//        Priority: i
+//        Sec-Fetch-Dest: document
+//        Sec-Fetch-Mode: navigate
+//        Sec-Fetch-Site: none
+//        Sec-Fetch-User: ?1
+//        Upgrade-Insecure-Requests: 1
+//        User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101
+//        Firefox/130.0

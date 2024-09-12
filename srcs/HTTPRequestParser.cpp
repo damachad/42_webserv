@@ -12,6 +12,8 @@
 
 #include "HTTPRequestParser.hpp"
 
+#include <map>
+
 const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 	const std::string& request) {
 	if (request.size() == 0) throw HTTPHeaderError("Empty Request");
@@ -37,6 +39,8 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 		} else
 			add_message_body(HTTP, buffer);
 	}
+
+	check_validity_of_header_fields(HTTP);
 
 	extract_queries(HTTP);
 
@@ -110,6 +114,56 @@ void HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 										   const std::string& line) {
 	HTTP.message_body += line;
+}
+
+// Checks validity of HTTP header fields
+void HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
+	std::multimap<std::string, std::string>::iterator user_agent_it =
+		HTTP.header_fields.find("User-Agent");
+
+	if (user_agent_it == HTTP.header_fields.end())
+		throw HTTPHeaderError("Request doesn't include User-Agent");
+
+	std::string user_agent = user_agent_it->second;
+
+	if (user_agent.substr(0, 4) == "curl")
+		check_curl_validity(HTTP.header_fields);
+	else if (user_agent.substr(0, 7) == "Mozilla")
+		check_firefox_validity(HTTP.header_fields);
+	else
+		throw HTTPHeaderError("Request not from Curl nor Mozilla");
+
+	// TODO: Siege parse??
+}
+
+// Checks validity of Curl fields
+void HTTP_Request_Parser::check_curl_validity(
+	std::multimap<std::string, std::string>& header_fields) {
+	// Checks size of current Curl requests
+	if (header_fields.size() != 3)
+		throw HTTPHeaderError("Curl request of wrong size");
+
+	// Checks if "Accept" is */*
+	if (header_fields.find("Accept") == header_fields.end() ||
+		header_fields.find("Accept")->second != "*/*")
+		throw HTTPHeaderError("Curl Request accepts wrong type");
+
+	// Checks if Host is a field. Doesn't validate it because it has to already
+	// be valid to be connected.
+	if (header_fields.find("Host") == header_fields.end())
+		throw HTTPHeaderError("Curl Request doesn't include Host");
+
+	// No check for User-Agent as that has already been done before
+}
+
+// Checks validity of Mozilla fields
+void HTTP_Request_Parser::check_firefox_validity(
+	std::multimap<std::string, std::string>& header_fields) {
+	// Checks size of current Firefox requests
+	if (header_fields.size() != 24)
+		throw HTTPHeaderError("Firefox request of wrong size");
+
+	// Checks if
 }
 
 // Extracts queries from URI to HTTP struct. Also updates URI.
