@@ -6,58 +6,68 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/11 12:24:46 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/12 16:30:44 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
 
+
 // Global map of status codes and respective messages
-const std::map<short, std::string> STATUS_MESSAGES = {
-	{100, "Continue"},
-	{101, "Switching Protocols"},
-	{200, "OK"},
-	{201, "Created"},
-	{202, "Accepted"},
-	{203, "Non-Authoritative Information"},
-	{204, "No Content"},
-	{205, "Reset Content"},
-	{206, "Partial Content"},
-	{300, "Multiple Choices"},
-	{301, "Moved Permanently"},
-	{302, "Found"},
-	{303, "See Other"},
-	{304, "Not Modified"},
-	{305, "Use Proxy"},
-	{307, "Temporary Redirect"},
-	{308, "Permanent Redirect"},
-	{400, "Bad Request"},
-	{401, "Unauthorized"},
-	{402, "Payment Required"},
-	{403, "Forbidden"},
-	{404, "Not Found"},
-	{405, "Method Not Allowed"},
-	{406, "Not Acceptable"},
-	{407, "Proxy Authentication Required"},
-	{408, "Request Timeout"},
-	{409, "Conflict"},
-	{410, "Gone"},
-	{411, "Length Required"},
-	{412, "Precondition Failed"},
-	{413, "Content Too Large"},
-	{414, "URI Too Long"},
-	{415, "Unsupported Media Type"},
-	{416, "Range Not Satisfiable"},
-	{417, "Expectation Failed"},
-	{421, "Misdirected Request"},
-	{422, "Unprocessable Content"},
-	{426, "Upgrade Required"},
-	{500, "Internal Server Error"},
-	{501, "Not Implemented"},
-	{502, "Bad Gateway"},
-	{503, "Service Unavailable"},
-	{504, "Gateway Timeout"},
-	{505, "HTTP Version Not Supported"}};
+const std::map<short, std::string> STATUS_MESSAGES = initStatusMessages();
+
+static std::map<short, std::string> initStatusMessages() {
+    std::map<short, std::string> m;
+    m.insert(std::make_pair(100, "Continue"));
+    m.insert(std::make_pair(101, "Switching Protocols"));
+	
+    m.insert(std::make_pair(200, "OK"));
+    m.insert(std::make_pair(201, "Created"));
+    m.insert(std::make_pair(202, "Accepted"));
+    m.insert(std::make_pair(203, "Non-Authoritative Information"));
+    m.insert(std::make_pair(204, "No Content"));
+    m.insert(std::make_pair(205, "Reset Content"));
+    m.insert(std::make_pair(206, "Partial Content"));
+	
+    m.insert(std::make_pair(300, "Multiple Choices"));
+    m.insert(std::make_pair(301, "Moved Permanently"));
+    m.insert(std::make_pair(302, "Found"));
+    m.insert(std::make_pair(303, "See Other"));
+    m.insert(std::make_pair(304, "Not Modified"));
+    m.insert(std::make_pair(305, "Use Proxy"));
+    m.insert(std::make_pair(307, "Temporary Redirect"));
+    m.insert(std::make_pair(308, "Permanent Redirect"));
+	
+    m.insert(std::make_pair(400, "Bad Request"));
+    m.insert(std::make_pair(401, "Unauthorized"));
+    m.insert(std::make_pair(402, "Payment Required"));
+    m.insert(std::make_pair(403, "Forbidden"));
+    m.insert(std::make_pair(404, "Not Found"));
+    m.insert(std::make_pair(405, "Method Not Allowed"));
+    m.insert(std::make_pair(406, "Not Acceptable"));
+    m.insert(std::make_pair(407, "Proxy Authentication Required"));
+    m.insert(std::make_pair(408, "Request Timeout"));
+    m.insert(std::make_pair(409, "Conflict"));
+    m.insert(std::make_pair(410, "Gone"));
+    m.insert(std::make_pair(411, "Length Required"));
+    m.insert(std::make_pair(412, "Precondition Failed"));
+    m.insert(std::make_pair(413, "Content Too Large"));
+    m.insert(std::make_pair(414, "URI Too Long"));
+    m.insert(std::make_pair(415, "Unsupported Media Type"));
+    m.insert(std::make_pair(416, "Range Not Satisfiable"));
+    m.insert(std::make_pair(417, "Expectation Failed"));
+    m.insert(std::make_pair(421, "Misdirected Request"));
+    m.insert(std::make_pair(422, "Unprocessable Content"));
+    m.insert(std::make_pair(426, "Upgrade Required"));
+	
+    m.insert(std::make_pair(500, "Internal Server Error"));
+    m.insert(std::make_pair(501, "Not Implemented"));
+    m.insert(std::make_pair(502, "Bad Gateway"));
+    m.insert(std::make_pair(503, "Service Unavailable"));
+    m.insert(std::make_pair(504, "Gateway Timeout"));
+    m.insert(std::make_pair(505, "HTTP Version Not Supported"));
+    return m;
+}
 
 // Initializes a map with common MIME types and returns it
 static std::map<std::string, std::string> initMimeTypes() {
@@ -259,8 +269,8 @@ const std::string AResponse::getIndexFile(const std::string& path) const {
 //  TODO: review edge cases (double '/')
 const std::string AResponse::assemblePath(const std::string& l,
 										  const std::string& r) const {
-	if ((l.back() == '/' && r.at(0) != '/') ||
-		(l.back() != '/' && r.at(0) == '/'))
+	if ((l.at(l.size() - 1) == '/' && r.at(0) != '/') ||
+		(l.at(l.size() - 1) != '/' && r.at(0) == '/'))
 		return l + r;
 	else
 		return l + '/' + r;
