@@ -1,22 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HTTP_request_parser.hpp                            :+:      :+:    :+:   */
+/*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/21 16:12:58 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/12 16:47:25 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef HTTP_REQUEST_PARSER
-#define HTTP_REQUEST_PARSER
+#ifndef HTTPREQUESTPARSER_HPP
+#define HTTPREQUESTPARSER_HPP
 
 #include "Exceptions.hpp"
 #include "Webserv.hpp"
 
-typedef struct HTTP_Request {
+struct HTTP_Request {
 	// Request Line
 	enum Method method;
 	std::string uri;
@@ -32,7 +32,7 @@ typedef struct HTTP_Request {
 
 	// Request Body
 	std::string message_body;
-} HTTP_Request;
+};
 
 class HTTP_Request_Parser {
    public:
