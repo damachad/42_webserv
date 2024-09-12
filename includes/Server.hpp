@@ -13,6 +13,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "Exceptions.hpp"
+#include "ServerContext.hpp"
 #include "Webserv.hpp"
 
 class Server {
