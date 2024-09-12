@@ -44,6 +44,7 @@ class HTTP_Request_Parser {
 
 	static void add_header_fields(HTTP_Request& HTTP, const std::string& line);
 	static void add_message_body(HTTP_Request& HTTP, const std::string& line);
+	static std::string decode(const std::string& encoded);
 	static void extract_queries(HTTP_Request& HTTP);
 
 	// Self-explanatory bools to check HTTP Requests' request line
