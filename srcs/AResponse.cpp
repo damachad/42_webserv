@@ -6,68 +6,67 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/12 16:30:44 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/12 17:14:25 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "AResponse.hpp"
 
+static std::map<short, std::string> initStatusMessages() {
+	std::map<short, std::string> m;
+	m.insert(std::make_pair(100, "Continue"));
+	m.insert(std::make_pair(101, "Switching Protocols"));
+
+	m.insert(std::make_pair(200, "OK"));
+	m.insert(std::make_pair(201, "Created"));
+	m.insert(std::make_pair(202, "Accepted"));
+	m.insert(std::make_pair(203, "Non-Authoritative Information"));
+	m.insert(std::make_pair(204, "No Content"));
+	m.insert(std::make_pair(205, "Reset Content"));
+	m.insert(std::make_pair(206, "Partial Content"));
+
+	m.insert(std::make_pair(300, "Multiple Choices"));
+	m.insert(std::make_pair(301, "Moved Permanently"));
+	m.insert(std::make_pair(302, "Found"));
+	m.insert(std::make_pair(303, "See Other"));
+	m.insert(std::make_pair(304, "Not Modified"));
+	m.insert(std::make_pair(305, "Use Proxy"));
+	m.insert(std::make_pair(307, "Temporary Redirect"));
+	m.insert(std::make_pair(308, "Permanent Redirect"));
+
+	m.insert(std::make_pair(400, "Bad Request"));
+	m.insert(std::make_pair(401, "Unauthorized"));
+	m.insert(std::make_pair(402, "Payment Required"));
+	m.insert(std::make_pair(403, "Forbidden"));
+	m.insert(std::make_pair(404, "Not Found"));
+	m.insert(std::make_pair(405, "Method Not Allowed"));
+	m.insert(std::make_pair(406, "Not Acceptable"));
+	m.insert(std::make_pair(407, "Proxy Authentication Required"));
+	m.insert(std::make_pair(408, "Request Timeout"));
+	m.insert(std::make_pair(409, "Conflict"));
+	m.insert(std::make_pair(410, "Gone"));
+	m.insert(std::make_pair(411, "Length Required"));
+	m.insert(std::make_pair(412, "Precondition Failed"));
+	m.insert(std::make_pair(413, "Content Too Large"));
+	m.insert(std::make_pair(414, "URI Too Long"));
+	m.insert(std::make_pair(415, "Unsupported Media Type"));
+	m.insert(std::make_pair(416, "Range Not Satisfiable"));
+	m.insert(std::make_pair(417, "Expectation Failed"));
+	m.insert(std::make_pair(421, "Misdirected Request"));
+	m.insert(std::make_pair(422, "Unprocessable Content"));
+	m.insert(std::make_pair(426, "Upgrade Required"));
+
+	m.insert(std::make_pair(500, "Internal Server Error"));
+	m.insert(std::make_pair(501, "Not Implemented"));
+	m.insert(std::make_pair(502, "Bad Gateway"));
+	m.insert(std::make_pair(503, "Service Unavailable"));
+	m.insert(std::make_pair(504, "Gateway Timeout"));
+	m.insert(std::make_pair(505, "HTTP Version Not Supported"));
+	return m;
+}
 
 // Global map of status codes and respective messages
 const std::map<short, std::string> STATUS_MESSAGES = initStatusMessages();
-
-static std::map<short, std::string> initStatusMessages() {
-    std::map<short, std::string> m;
-    m.insert(std::make_pair(100, "Continue"));
-    m.insert(std::make_pair(101, "Switching Protocols"));
-	
-    m.insert(std::make_pair(200, "OK"));
-    m.insert(std::make_pair(201, "Created"));
-    m.insert(std::make_pair(202, "Accepted"));
-    m.insert(std::make_pair(203, "Non-Authoritative Information"));
-    m.insert(std::make_pair(204, "No Content"));
-    m.insert(std::make_pair(205, "Reset Content"));
-    m.insert(std::make_pair(206, "Partial Content"));
-	
-    m.insert(std::make_pair(300, "Multiple Choices"));
-    m.insert(std::make_pair(301, "Moved Permanently"));
-    m.insert(std::make_pair(302, "Found"));
-    m.insert(std::make_pair(303, "See Other"));
-    m.insert(std::make_pair(304, "Not Modified"));
-    m.insert(std::make_pair(305, "Use Proxy"));
-    m.insert(std::make_pair(307, "Temporary Redirect"));
-    m.insert(std::make_pair(308, "Permanent Redirect"));
-	
-    m.insert(std::make_pair(400, "Bad Request"));
-    m.insert(std::make_pair(401, "Unauthorized"));
-    m.insert(std::make_pair(402, "Payment Required"));
-    m.insert(std::make_pair(403, "Forbidden"));
-    m.insert(std::make_pair(404, "Not Found"));
-    m.insert(std::make_pair(405, "Method Not Allowed"));
-    m.insert(std::make_pair(406, "Not Acceptable"));
-    m.insert(std::make_pair(407, "Proxy Authentication Required"));
-    m.insert(std::make_pair(408, "Request Timeout"));
-    m.insert(std::make_pair(409, "Conflict"));
-    m.insert(std::make_pair(410, "Gone"));
-    m.insert(std::make_pair(411, "Length Required"));
-    m.insert(std::make_pair(412, "Precondition Failed"));
-    m.insert(std::make_pair(413, "Content Too Large"));
-    m.insert(std::make_pair(414, "URI Too Long"));
-    m.insert(std::make_pair(415, "Unsupported Media Type"));
-    m.insert(std::make_pair(416, "Range Not Satisfiable"));
-    m.insert(std::make_pair(417, "Expectation Failed"));
-    m.insert(std::make_pair(421, "Misdirected Request"));
-    m.insert(std::make_pair(422, "Unprocessable Content"));
-    m.insert(std::make_pair(426, "Upgrade Required"));
-	
-    m.insert(std::make_pair(500, "Internal Server Error"));
-    m.insert(std::make_pair(501, "Not Implemented"));
-    m.insert(std::make_pair(502, "Bad Gateway"));
-    m.insert(std::make_pair(503, "Service Unavailable"));
-    m.insert(std::make_pair(504, "Gateway Timeout"));
-    m.insert(std::make_pair(505, "HTTP Version Not Supported"));
-    return m;
-}
 
 // Initializes a map with common MIME types and returns it
 static std::map<std::string, std::string> initMimeTypes() {
@@ -131,7 +130,7 @@ AResponse::AResponse() {}
 
 AResponse::~AResponse() {}
 
-AResponse::AResponse(const ServerContext& server, const HTTP_Request& request)
+AResponse::AResponse(ServerContext* server, HTTP_Request* request)
 	: _request(request), _server(server) {}
 
 AResponse::AResponse(const AResponse& src)
@@ -145,28 +144,29 @@ const AResponse& AResponse::operator=(const AResponse& src) {
 	_response = src._response;
 	_server = src._server;
 	_locationRoute = src._locationRoute;
+	return *this;
 }
 
 // Checks if Content-Lenght is present once and if request body size matches
 // this value and value of client_max_body_size
 short AResponse::checkSize() const {
-	if (_request.header_fields.count("Content-Length") ==
+	if (_request->header_fields.count("Content-Length") ==
 		0)			 // mandatory Content-Length header ?
 		return 411;	 // Length Required
-	if (_request.message_body.size() >
-		_server.getClientMaxBodySize(_locationRoute))
+	if (_request->message_body.size() >
+		static_cast<size_t>(_server->getClientMaxBodySize(_locationRoute)))
 		return 413;	 // Request Entity Too Large
 	// How to handle multiple Content-Length values ?
-	if (_request.header_fields.count("Content-Length") > 1)
+	if (_request->header_fields.count("Content-Length") > 1)
 		return 400;	 // Bad Request
 	std::multimap<std::string, std::string>::const_iterator it =
-		_request.header_fields.find("Content-Length");
-	long size = -1;
-	if (it != _request.header_fields.end()) {
+		_request->header_fields.find("Content-Length");
+	size_t size = -1;
+	if (it != _request->header_fields.end()) {
 		char* endPtr = NULL;
 		size = std::strtol(it->second.c_str(), &endPtr, 10);
 		if (*endPtr != '\0') return 400;
-		if (size != _request.message_body.size()) return 400;
+		if (size != _request->message_body.size()) return 400;
 	}
 	return 200;
 }
@@ -174,8 +174,8 @@ short AResponse::checkSize() const {
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
 	std::set<Method>::const_iterator it =
-		_server.getAllowedMethods(_locationRoute).find(_request.method);
-	if (it == _server.getAllowedMethods(_locationRoute).end())
+		_server->getAllowedMethods(_locationRoute).find(_request->method);
+	if (it == _server->getAllowedMethods(_locationRoute).end())
 		return 405;	 // Method Not Allowed
 	return 200;
 }
@@ -186,19 +186,19 @@ short AResponse::checkMethod() const {
 // routes, which means route must match the start of the URI
 void AResponse::setMatchLocationRoute() {
 	std::map<std::string, LocationContext> serverLocations =
-		_server.getLocations();
+		_server->getLocations();
 
 	std::map<std::string, LocationContext>::iterator it;
-	it = serverLocations.find(_request.uri);
+	it = serverLocations.find(_request->uri);
 	if (it != serverLocations.end()) {
 		_locationRoute = it->first;
 		return;
 	}
 
-	int bestMatchLen = 0;
+	size_t bestMatchLen = 0;
 	std::string bestMatchRoute;
 	for (it = serverLocations.begin(); it != serverLocations.end(); ++it) {
-		if (_request.uri.compare(0, it->first.size(), it->first) == 0) {
+		if (_request->uri.compare(0, it->first.size(), it->first) == 0) {
 			size_t match = it->first.size();
 			if (match > bestMatchLen) {
 				bestMatchLen = match;
@@ -210,9 +210,9 @@ void AResponse::setMatchLocationRoute() {
 }
 
 // Returns path to look for resource in location, root + (uri - locationRoute)
-const std::string& AResponse::getPath() const {
-	std::string root = _server.getRoot(_locationRoute);
-	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
+const std::string AResponse::getPath() const {
+	std::string root = _server->getRoot(_locationRoute);
+	return (assemblePath(root, _request->uri.substr(_locationRoute.size())));
 }
 
 // Checks if file is a regular file and there are no problems opening it
@@ -248,7 +248,7 @@ bool AResponse::isDirectory(const std::string& path) const {
 
 // Checks if autoindex is on
 bool AResponse::hasAutoindex() const {
-	if (_server.getAutoIndex(_locationRoute) == TRUE)
+	if (_server->getAutoIndex(_locationRoute) == TRUE)
 		return true;
 	else
 		return false;
@@ -256,7 +256,7 @@ bool AResponse::hasAutoindex() const {
 
 // Returns an index file if it exists or NULL (empty string)
 const std::string AResponse::getIndexFile(const std::string& path) const {
-	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
+	std::vector<std::string> indexFiles = _server->getIndex(_locationRoute);
 	std::vector<std::string>::const_iterator it;
 	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
 		std::string filePath = assemblePath(path, *it);
@@ -286,38 +286,42 @@ void AResponse::setMimeType(const std::string& path) {
 		std::map<std::string, std::string>::const_iterator it =
 			mimeTypes.find(extension);
 		if (it != mimeTypes.end()) {
-			_response.headers.insert(std::string("Content-Type"), it->second);
+			_response.headers.insert(
+				std::make_pair(std::string("Content-Type"), it->second));
 			return;
 		}
 	}
-	_response.headers.insert(
+	_response.headers.insert(std::make_pair(
 		std::string("Content-Type"),
-		std::string("application/octet-stream"));  // default_type
+		std::string("application/octet-stream")));	// default_type
 }
 
 // Adds Date, Server and Content-Length headers to _response
 void AResponse::loadCommonHeaders() {
-	_response.headers.insert(std::string("Date"), getHttpDate());
-	_response.headers.insert(std::string("Server"), std::string(SERVER));
-	_response.headers.insert(std::string("Content-Length"),
-							 int_to_string(_response.body.size()));
+	_response.headers.insert(
+		std::make_pair(std::string("Date"), getHttpDate()));
+	_response.headers.insert(
+		std::make_pair(std::string("Server"), std::string(SERVER)));
+	_response.headers.insert(std::make_pair(
+		std::string("Content-Length"), int_to_string(_response.body.size())));
 }
 
 // Loads reponse struct with values of return
 void AResponse::loadReturn() {
-	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
+	std::pair<short, std::string> redirect = _server->getReturn(_locationRoute);
 	_response.body = redirect.second;
 	_response.status = redirect.first;
 	loadCommonHeaders();
 	if (redirect.first == 301 || redirect.first == 302) {
-		_response.headers.insert(std::string("Location"), redirect.second);
+		_response.headers.insert(
+			std::make_pair(std::string("Location"), redirect.second));
 	}
 }
 
 // Checks if there is a return directive
 //  TODO: Review check empty logic
 bool AResponse::hasReturn() const {
-	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
+	std::pair<short, std::string> redirect = _server->getReturn(_locationRoute);
 	if (redirect.second.empty()) return false;
 	return true;
 }
@@ -333,8 +337,8 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	}
 	closedir(dir);
 	loadCommonHeaders();
-	_response.headers.insert(std::string("Content-Type"),
-							 std::string("text/html"));
+	_response.headers.insert(
+		std::make_pair(std::string("Content-Type"), std::string("text/html")));
 	_response.status = 200;
 	return 200;
 }
@@ -355,7 +359,7 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 
 // Converts the response struct into a string (loading the status message) and
 // returns it
-const std::string& AResponse::getResponseStr() const {
+const std::string AResponse::getResponseStr() const {
 	std::map<short, std::string>::const_iterator itStatus =
 		STATUS_MESSAGES.find(_response.status);
 	std::string message = (itStatus != STATUS_MESSAGES.end())
@@ -376,14 +380,14 @@ const std::string& AResponse::getResponseStr() const {
 // Loads response with respoective status code, gets personalized error page, if
 // it exists and calls getResponseStr() to convert struct to string before
 // returning it
-const std::string& AResponse::loadErrorPage(short status) {
+const std::string AResponse::loadErrorPage(short status) {
 	static std::map<short, std::string> error_pages =
-		_server.getErrorPages(_locationRoute);
+		_server->getErrorPages(_locationRoute);
 	_response.status = status;
 	std::map<short, std::string>::const_iterator it = error_pages.find(status);
 	if (it != error_pages.end()) {
 		std::string path =
-			assemblePath(_server.getRoot(_locationRoute), it->second);
+			assemblePath(_server->getRoot(_locationRoute), it->second);
 		if (checkFile(path) == 200) {
 			std::ifstream file(path.c_str());
 			_response.body.assign((std::istreambuf_iterator<char>(file)),
