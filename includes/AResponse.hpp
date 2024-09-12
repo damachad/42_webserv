@@ -13,11 +13,12 @@
 #ifndef ARESPONSE_HPP
 #define ARESPONSE_HPP
 
-#include "Webserv.hpp"
-
-struct HTTP_Request;
 class ServerContext;
 class LocationContext;
+
+#include "HTTPRequestParser.hpp"
+#include "ServerContext.hpp"
+#include "Webserv.hpp"
 
 struct HTTP_Response {
 	short status;

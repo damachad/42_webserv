@@ -13,6 +13,7 @@
 #ifndef HTTP_REQUEST_PARSER
 #define HTTP_REQUEST_PARSER
 
+#include "Exceptions.hpp"
 #include "Webserv.hpp"
 
 typedef struct HTTP_Request {
