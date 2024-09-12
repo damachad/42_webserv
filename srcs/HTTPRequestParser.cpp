@@ -155,6 +155,10 @@ void HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 			throw HTTPHeaderError("Invalid Content-Length");
 		if (content_length != HTTP.message_body.size())
 			throw HTTPHeaderError("Invalid Message Body size");
+	} else	// NOTE: caso haja body mas não haja content-length
+	{
+		if (HTTP.message_body.size())
+			throw HTTPHeaderError("Invalid Message Body size");
 	}
 }
 
