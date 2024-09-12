@@ -12,12 +12,7 @@
 
 #include "Helpers.hpp"
 
-std::string boolToString(bool value) {
-	if (value)
-		return "True";
-	else
-		return "False";
-}
+std::string boolToString(bool value) { return value ? "True" : "False"; }
 
 std::string methodToString(Method method) {
 	switch (method) {
@@ -55,6 +50,29 @@ int string_to_int(const std::string& value) {
 	std::stringstream ss(value);
 
 	ss >> result;
+
+	// Check if the conversion was successful
+	if (ss.fail() || !ss.eof()) {
+		throw std::invalid_argument(
+			"Invalid input: could not convert string to int");
+	}
+
+	return result;
+}
+
+unsigned int stringToUnsignedInt(const std::string& value) {
+	unsigned int result;
+
+	std::stringstream ss(value);
+
+	ss >> result;
+
+	// Check if the conversion was successful
+	if (ss.fail() || !ss.eof()) {
+		throw std::invalid_argument(
+			"Invalid input: could not convert string to unsigned int");
+	}
+
 	return result;
 }
 

@@ -12,6 +12,7 @@
 
 #include "HTTPRequestParser.hpp"
 
+#include <limits>
 #include <map>
 
 const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
@@ -110,7 +111,7 @@ void HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 	}
 }
 
-// Fields without validation (NOTE:is it needed?)
+// Fields without validation
 void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 										   const std::string& line) {
 	HTTP.message_body += line;
@@ -118,22 +119,43 @@ void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 
 // Checks validity of HTTP header fields
 void HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
-	std::multimap<std::string, std::string>::iterator user_agent_it =
-		HTTP.header_fields.find("User-Agent");
-
-	if (user_agent_it == HTTP.header_fields.end())
-		throw HTTPHeaderError("Request doesn't include User-Agent");
-
-	std::string user_agent = user_agent_it->second;
-
-	if (user_agent.compare(0, 4, "curl") != 0 &&
-		(user_agent.compare(0, 7, "Mozilla") != 0))
+	// NOTE: User-Agent is not a mandatory field, but helps for evaluation
+	if (HTTP.header_fields.count("User-Agent") != 1)
 		throw HTTPHeaderError(
-			"Request not from Curl nor Mozilla (Firefox or Siege)");
-	// TODO: Specify Firefox & Siege inside "Mozilla" checker ?
+			"Request doesn't include valid number of User-Agent");
 
-	if (HTTP.header_fields.find("Host") == HTTP.header_fields.end())
-		throw HTTPHeaderError("Request doesn't include Host");
+	std::string user_agent = HTTP.header_fields.find("User-Agent")->second;
+
+	bool has_curl = user_agent.find("curl") != std::string::npos;
+	bool has_mozilla = user_agent.find("Mozilla") != std::string::npos;
+	bool has_firefox = user_agent.find("Firefox") != std::string::npos;
+	bool has_siege = user_agent.find("Siege") != std::string::npos;
+
+	// Checks that the request is from Curl, Mozilla Firefox or Mozilla Siege
+	if (!(has_curl || (has_mozilla && (has_firefox || has_siege)))) {
+		throw HTTPHeaderError(
+			"Request must include 'curl', or 'Mozilla' with either 'Firefox' "
+			"or 'Siege'");
+	}
+
+	// NOTE: Host is mandatory on HTTP 1.1
+	if (HTTP.header_fields.count("Host") != 1)
+		throw HTTPHeaderError("Request doesn't include valid number of Host");
+
+	// NOTE: Immediately parses Content-Length, if it exists
+	if (HTTP.header_fields.count("Content-Length") > 1)
+		throw HTTPHeaderError(
+			"Request doesn't include valid number of Content-Length");
+
+	if (HTTP.header_fields.find("Content-Length") != HTTP.header_fields.end()) {
+		size_t content_length = static_cast<size_t>(stringToUnsignedInt(
+			HTTP.header_fields.find("Content-Length")->second));
+		if (content_length >
+			static_cast<size_t>(std::numeric_limits<int>::max()))
+			throw HTTPHeaderError("Invalid Content-Length");
+		if (content_length != HTTP.message_body.size())
+			throw HTTPHeaderError("Invalid Message Body size");
+	}
 }
 
 void HTTP_Request_Parser::extract_queries(HTTP_Request& HTTP) {
