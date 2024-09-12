@@ -259,8 +259,8 @@ const std::string AResponse::getIndexFile(const std::string& path) const {
 //  TODO: review edge cases (double '/')
 const std::string AResponse::assemblePath(const std::string& l,
 										  const std::string& r) const {
-	if ((l.back() == '/' && r.at(0) != '/') ||
-		(l.back() != '/' && r.at(0) == '/'))
+	if ((l.at(l.size() - 1) == '/' && r.at(0) != '/') ||
+		(l.at(l.size() - 1) != '/' && r.at(0) == '/'))
 		return l + r;
 	else
 		return l + '/' + r;

@@ -13,6 +13,7 @@
 #ifndef EXCEPTIONS_HPP
 #define EXCEPTIONS_HPP
 
+#include "AResponse.hpp"
 #include "Helpers.hpp"
 #include "Webserv.hpp"
 

@@ -14,12 +14,11 @@
 #define ARESPONSE_HPP
 
 class ServerContext;
-
-#include "ServerContext.hpp"  // Include the full definition
-#include "Webserv.hpp"
-
-struct HTTP_Request;
 class LocationContext;
+
+#include "HTTPRequestParser.hpp"
+#include "ServerContext.hpp"
+#include "Webserv.hpp"
 
 struct HTTP_Response {
 	short status;
