@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 14:31:32 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:30:46 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,10 @@
 #include <sys/epoll.h>	 // For epoll
 #include <sys/socket.h>	 // For socket functions
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>	 // For read
+#include <dirent.h>
+#include <ctime>
 
 #include <cstdlib>	 // For exit() and EXIT_FAILURE
 #include <cstring>	 // For memset (?)
@@ -59,8 +62,14 @@ struct Listen;
 #include "LocationContext.hpp"
 #include "Server.hpp"
 #include "ServerContext.hpp"
+#include "AResponse.hpp"
 
 // Magic numbers		 // TODO: Do we need them?
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
+#define REG_FILE 0
+#define DIRECTORY 1
+#define SERVER "webserv"
+
+extern const std::map<short, std::string> STATUS_MESSAGES;
 
 #endif
