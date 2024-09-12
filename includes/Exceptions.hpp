@@ -13,6 +13,7 @@
 #ifndef EXCEPTIONS_HPP
 #define EXCEPTIONS_HPP
 
+#include "Helpers.hpp"
 #include "Webserv.hpp"
 
 class FileReadError : public std::exception {

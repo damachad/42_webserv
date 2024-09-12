@@ -10,6 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "Cluster.hpp"
+#include "ConfigParser.hpp"
+#include "ServerContext.hpp"
 #include "Webserv.hpp"
 
 int main(int argc, char** argv) {

@@ -12,6 +12,8 @@
 
 #include "ConfigParser.hpp"
 
+#include "Exceptions.hpp"
+
 ConfigParser::ConfigParser(void) {}
 
 ConfigParser::ConfigParser(const ConfigParser &src) { *this = src; }

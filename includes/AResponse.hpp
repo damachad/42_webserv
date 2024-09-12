@@ -13,10 +13,12 @@
 #ifndef ARESPONSE_HPP
 #define ARESPONSE_HPP
 
+class ServerContext;
+
+#include "ServerContext.hpp"  // Include the full definition
 #include "Webserv.hpp"
 
 struct HTTP_Request;
-class ServerContext;
 class LocationContext;
 
 struct HTTP_Response {

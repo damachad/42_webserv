@@ -13,6 +13,8 @@
 #ifndef LOCATIONCONTEXT_HPP
 #define LOCATIONCONTEXT_HPP
 
+#include "ConfigParser.hpp"
+#include "Exceptions.hpp"
 #include "Webserv.hpp"
 
 class LocationContext {
