@@ -41,6 +41,16 @@ void Server::setup_server(void) {
 		int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock_fd == -1) throw SocketSetupError("socket");
 
+		// Set the socket option SO_REUSEADDR
+		// NOTE: Allows for quicker debugging because socket doesn't get held
+		// TODO: REMOVE AT THE END????
+		int optval = 1;
+		if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
+					   sizeof(optval)) < 0) {
+			std::cerr << "Error: Could not set SO_REUSEADDR\n";
+			return;
+		}
+
 		// Listen to connections on socket (port given by *it)
 		struct sockaddr_in sockaddr;
 		std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct

@@ -12,6 +12,9 @@
 
 #include "HTTPRequestParser.hpp"
 
+#include <limits>
+#include <map>
+
 const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 	const std::string& request) {
 	if (request.size() == 0) throw HTTPHeaderError("Empty Request");
@@ -38,6 +41,7 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 			add_message_body(HTTP, buffer);
 	}
 
+	check_validity_of_header_fields(HTTP);
 	extract_queries(HTTP);
 
 	std::cout << "***Extracted HTTP***\n\n" << HTTP;
@@ -59,6 +63,7 @@ void HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 
 	std::string url;
 	line_stream >> url;
+	url = decode(url);
 	if (url.size() == 0 || !url_is_valid(url)) throw HTTPHeaderError("URI");
 
 	std::string protocol_version;
@@ -106,13 +111,29 @@ void HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 	}
 }
 
-// Fields without validation (NOTE:is it needed?)
+// Fields without validation
 void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 										   const std::string& line) {
-	HTTP.message_body += line;
+	if (line != "\r") HTTP.message_body += line;
 }
 
-// Extracts queries from URI to HTTP struct. Also updates URI.
+std::string HTTP_Request_Parser::decode(const std::string& encoded) {
+	std::ostringstream decoded;
+	for (size_t i = 0; i < encoded.length(); ++i) {
+		if (encoded[i] == '%' && i + 2 < encoded.length() &&
+			std::isxdigit(encoded[i + 1]) && std::isxdigit(encoded[i + 2])) {
+			int value;
+			std::istringstream ss(encoded.substr(i + 1, 2));
+			ss >> std::hex >> value;
+			decoded << static_cast<char>(value);
+			i += 2;
+		} else {
+			decoded << encoded[i];
+		}
+	}
+	return decoded.str();
+}
+
 void HTTP_Request_Parser::extract_queries(HTTP_Request& HTTP) {
 	size_t delimiter_pos = HTTP.uri.find('?');
 
@@ -145,8 +166,8 @@ void HTTP_Request_Parser::extract_queries(HTTP_Request& HTTP) {
 	return;
 }
 
-// Ensures correct number of whitespaces (two ' ' in the request line, 1 in Host
-// line, etc) Indirectly sets up the next functions
+// Ensures correct number of whitespaces (two ' ' in the request line, 1 in
+// Host line, etc) Indirectly sets up the next functions
 bool HTTP_Request_Parser::whitespaces_are_valid(const std::string& first_line,
 												unsigned int limit) {
 	unsigned int whitespace_count = 0;
@@ -180,14 +201,14 @@ bool HTTP_Request_Parser::url_is_valid(const std::string& url) {
 	// Target should always start with a /
 	if (url[0] != '/') return false;
 
-	// There should be no gragmenet urls
+	// There should be no fragmenet urls
 	if (url.find("#") != std::string::npos) return false;
 
 	// There should be only one ?
 	if (std::count(url.begin(), url.end(), '?') > 1) return false;
 
-	// If there's a ?, the number of key-value pairs (std::count of '=') should
-	// be equal to std::count of '&' - 1
+	// If there's a ?, the number of key-value pairs (std::count of '=')
+	// should be equal to std::count of '&' - 1
 	if (url.find('?') != std::string::npos &&
 		(std::count(url.begin(), url.end(), '=') !=
 		 std::count(url.begin(), url.end(), '&') + 1))
@@ -202,6 +223,51 @@ bool HTTP_Request_Parser::protocol_version_is_valid(
 		protocol_version == "HTTP/0.9")
 		return true;
 	return false;
+}
+
+// Checks validity of HTTP header fields
+void HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
+	// NOTE: User-Agent is not a mandatory field, but helps for evaluation
+	if (HTTP.header_fields.count("User-Agent") != 1)
+		throw HTTPHeaderError(
+			"Request doesn't include valid number of User-Agent");
+
+	std::string user_agent = HTTP.header_fields.find("User-Agent")->second;
+
+	bool has_curl = user_agent.find("curl") != std::string::npos;
+	bool has_mozilla = user_agent.find("Mozilla") != std::string::npos;
+	bool has_firefox = user_agent.find("Firefox") != std::string::npos;
+	bool has_siege = user_agent.find("Siege") != std::string::npos;
+
+	// Checks that the request is from Curl, Mozilla Firefox or Mozilla Siege
+	if (!(has_curl || (has_mozilla && (has_firefox || has_siege)))) {
+		throw HTTPHeaderError(
+			"Request must include 'curl', or 'Mozilla' with either 'Firefox' "
+			"or 'Siege'");
+	}
+
+	// NOTE: Host is mandatory on HTTP 1.1
+	if (HTTP.header_fields.count("Host") != 1)
+		throw HTTPHeaderError("Request doesn't include valid number of Host");
+
+	// NOTE: Immediately parses Content-Length, if it exists
+	if (HTTP.header_fields.count("Content-Length") > 1)
+		throw HTTPHeaderError(
+			"Request doesn't include valid number of Content-Length");
+
+	if (HTTP.header_fields.find("Content-Length") != HTTP.header_fields.end()) {
+		size_t content_length = static_cast<size_t>(stringToUnsignedInt(
+			HTTP.header_fields.find("Content-Length")->second));
+		if (content_length >
+			static_cast<size_t>(std::numeric_limits<int>::max()))
+			throw HTTPHeaderError("Invalid Content-Length");
+		if (content_length != HTTP.message_body.size())
+			throw HTTPHeaderError("Invalid Message Body size");
+	} else	// NOTE: If there is a body but not content-length
+	{
+		if (HTTP.message_body.size())
+			throw HTTPHeaderError("Invalid Message Body size");
+	}
 }
 
 std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {

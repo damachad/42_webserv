@@ -12,12 +12,7 @@
 
 #include "Helpers.hpp"
 
-std::string boolToString(bool value) {
-	if (value)
-		return "True";
-	else
-		return "False";
-}
+std::string boolToString(bool value) { return value ? "True" : "False"; }
 
 std::string methodToString(Method method) {
 	switch (method) {
@@ -55,6 +50,29 @@ int string_to_int(const std::string& value) {
 	std::stringstream ss(value);
 
 	ss >> result;
+
+	// Check if the conversion was successful
+	if (ss.fail() || !ss.eof()) {
+		throw std::invalid_argument(
+			"Invalid input: could not convert string to int");
+	}
+
+	return result;
+}
+
+unsigned int stringToUnsignedInt(const std::string& value) {
+	unsigned int result;
+
+	std::stringstream ss(value);
+
+	ss >> result;
+
+	// Check if the conversion was successful
+	if (ss.fail() || !ss.eof()) {
+		throw std::invalid_argument(
+			"Invalid input: could not convert string to unsigned int");
+	}
+
 	return result;
 }
 
@@ -77,28 +95,27 @@ std::string getHttpDate() {
 
 std::ostream& operator<<(std::ostream& outstream,
 						 const ServerContext configuration) {
-	/*	outstream << "Network Addresses: ";
-		for (std::vector<Listen>::const_iterator it =
-				 configuration._network_address.begin();
-			 it != configuration._network_address.end(); it++)
-			outstream << (*it).IP << ":" << (*it).port << "\t";
-		outstream << std::endl;
-		outstream << "Server Name: " << configuration._serverName[0] <<
-	   std::endl; outstream << "Index: " << configuration._index[0] <<
-	   std::endl; outstream << "AutoIndex: " <<
-	   boolToString(configuration._autoIndex)
-				  << std::endl;
-		outstream << "Client Max Body Size: " <<
-	   configuration._clientMaxBodySize
-				  << std::endl;
-		outstream << "Upload Directory: " << configuration._uploadDir <<
-	   std::endl; outstream << "Allowed methods: "; for
-	   (std::vector<Method>::const_iterator it =
-				 configuration._allowedMethods.begin();
-			 it != configuration._allowedMethods.end(); it++)
-			outstream << methodToString(*it) << " ";
-		outstream << std::endl;*/
+	outstream << "Network Addresses: ";
 
-	(void)configuration;
+	std::vector<Listen> networkaddress = configuration.getNetworkAddress();
+	for (std::vector<Listen>::const_iterator it = networkaddress.begin();
+		 it != networkaddress.end(); it++)
+		outstream << (*it).IP << ":" << (*it).port << "\t";
+	outstream << std::endl;
+	outstream << "Server Name: " << configuration.getServerName()[0]
+			  << std::endl;
+	outstream << "Index: " << configuration.getIndex()[0] << std::endl;
+	outstream << "AutoIndex: " << boolToString(configuration.getAutoIndex())
+			  << std::endl;
+	outstream << "Client Max Body Size: "
+			  << configuration.getClientMaxBodySize() << std::endl;
+	outstream << "Allowed methods: ";
+
+	std::set<Method> allowedmethods = configuration.getAllowedMethods();
+	for (std::set<Method>::const_iterator it = allowedmethods.begin();
+		 it != allowedmethods.end(); it++)
+		outstream << methodToString(*it) << " ";
+	outstream << std::endl;
+
 	return outstream;
 }
