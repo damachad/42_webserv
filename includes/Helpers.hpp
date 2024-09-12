@@ -21,6 +21,7 @@ std::string methodToString(Method method);
 Method stringToMethod(const std::string& method);
 std::string int_to_string(int value);
 int string_to_int(const std::string& value);
+unsigned int stringToUnsignedInt(const std::string& value);
 std::string getHttpDate();
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration);

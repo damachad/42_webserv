@@ -27,9 +27,11 @@
 #include <dirent.h>
 #include <ctime>
 
+#include <cctype>	 // For islanum
 #include <cstdlib>	 // For exit() and EXIT_FAILURE
 #include <cstring>	 // For memset (?)
 #include <fstream>	 // For file streams
+#include <iomanip>	 // For iomanip for encoding
 #include <iostream>	 // For cout
 #include <sstream>
 
