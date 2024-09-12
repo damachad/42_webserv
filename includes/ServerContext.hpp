@@ -13,6 +13,9 @@
 #ifndef SERVERCONTEXT_HPP
 #define SERVERCONTEXT_HPP
 
+class LocationContext;
+
+#include "LocationContext.hpp"
 #include "Webserv.hpp"
 
 struct Listen {
