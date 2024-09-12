@@ -57,10 +57,7 @@ class HTTP_Request_Parser {
 
 	// Checks validity of HTTP header fields
 	static void check_validity_of_header_fields(HTTP_Request& HTTP);
-	static void check_curl_validity(
-		std::multimap<std::string, std::string>& header_fields);
-	static void check_firefox_validity(
-		std::multimap<std::string, std::string>& header_fields);
+
 	// Private constructor and destructor: class is not instanciable
 	HTTP_Request_Parser();
 	~HTTP_Request_Parser();
