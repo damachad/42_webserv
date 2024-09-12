@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:30:13 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/14 11:37:06 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/06 16:07:40 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,6 +93,16 @@ class HTTPHeaderError : public std::exception {
 	HTTPHeaderError(const std::string &str) throw();
 	virtual const char *what() const throw();
 	virtual ~HTTPHeaderError() throw();
+};
+
+class HTTPResponseError : public std::exception {
+   private:
+	std::string _response;
+
+   public:
+	HTTPResponseError(const short status) throw();
+	virtual const char *what() const throw();
+	virtual ~HTTPResponseError() throw();
 };
 
 #endif

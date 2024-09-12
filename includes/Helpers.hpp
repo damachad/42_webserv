@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Helpers.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:07 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 15:21:02 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:03:11 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ Method stringToMethod(const std::string& method);
 std::string int_to_string(int value);
 int string_to_int(const std::string& value);
 unsigned int stringToUnsignedInt(const std::string& value);
+std::string getHttpDate();
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration);
 
