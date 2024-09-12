@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:02 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/21 16:15:09 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:09:57 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,23 @@ int string_to_int(const std::string& value) {
 
 	ss >> result;
 	return result;
+}
+
+// returns http format date, e.g. "Thu, 05 Sep 2024 12:34:56 GMT"
+std::string getHttpDate() {
+	// Get the current time in seconds since the Epoch
+	std::time_t now = std::time(0);
+
+	// Convert to UTC (GMT)
+	std::tm* gmt = std::gmtime(&now);
+
+	// Buffer to hold the formatted date string
+	char buffer[35];
+
+	// Format to "Thu, 05 Sep 2024 12:34:56 GMT"
+	std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", gmt);
+
+	return std::string(buffer);
 }
 
 std::ostream& operator<<(std::ostream& outstream,
