@@ -12,6 +12,7 @@
 
 #include "Helpers.hpp"
 
+// Type conversions
 std::string boolToString(bool value) { return value ? "True" : "False"; }
 
 std::string methodToString(Method method) {
@@ -36,44 +37,6 @@ Method stringToMethod(const std::string& method) {
 		return DELETE;
 	else
 		return UNKNOWN;
-}
-
-std::string int_to_string(int value) {
-	std::stringstream ss;
-	ss << value;
-	return ss.str();
-}
-
-int string_to_int(const std::string& value) {
-	int result;
-
-	std::stringstream ss(value);
-
-	ss >> result;
-
-	// Check if the conversion was successful
-	if (ss.fail() || !ss.eof()) {
-		throw std::invalid_argument(
-			"Invalid input: could not convert string to int");
-	}
-
-	return result;
-}
-
-unsigned int stringToUnsignedInt(const std::string& value) {
-	unsigned int result;
-
-	std::stringstream ss(value);
-
-	ss >> result;
-
-	// Check if the conversion was successful
-	if (ss.fail() || !ss.eof()) {
-		throw std::invalid_argument(
-			"Invalid input: could not convert string to unsigned int");
-	}
-
-	return result;
 }
 
 // returns http format date, e.g. "Thu, 05 Sep 2024 12:34:56 GMT"

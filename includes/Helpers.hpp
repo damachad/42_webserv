@@ -13,20 +13,42 @@
 #ifndef HELPERS_HPP
 #define HELPERS_HPP
 
-class ServerContext;
+class Server;
 
 #include "ServerContext.hpp"
 #include "Webserv.hpp"
 
-std::vector<ServerContext> get_default_conf(int i);
+// Type conversions
 std::string boolToString(bool value);
 std::string methodToString(Method method);
 Method stringToMethod(const std::string& method);
-std::string int_to_string(int value);
-int string_to_int(const std::string& value);
-unsigned int stringToUnsignedInt(const std::string& value);
+
+template <typename T>
+std::string numberToString(T value) {
+	std::stringstream ss;
+	ss << value;
+	return ss.str();
+}
+
+template <typename T>
+T stringToNumber(const std::string& value) {
+	T result;
+
+	std::stringstream ss(value);
+
+	ss >> result;
+
+	// Check if the conversion was successful
+	if (ss.fail() || !ss.eof()) {
+		throw std::invalid_argument(
+			"Invalid input: could not convert string to " +
+			std::string(typeid(T).name()));
+	}
+
+	return result;
+}
+
 std::string getHttpDate();
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration);
-
 #endif

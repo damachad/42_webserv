@@ -34,7 +34,7 @@
 #include <iomanip>	 // For iomanip for encoding
 #include <iostream>	 // For cout
 #include <sstream>
-
+#include <typeinfo>	 // For typeid
 // STL
 #include <algorithm>
 #include <map>

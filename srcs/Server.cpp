@@ -66,8 +66,8 @@ void Server::setup_server(void) {
 			if (inet_aton(it->IP.c_str(), &sockaddr.sin_addr) == 0)
 				throw SocketSetupError("inet_addr");
 		}
-		sockaddr.sin_port = htons(
-			string_to_int(it->port));  // Converts number to network byte order
+		sockaddr.sin_port = htons(stringToNumber<int>(
+			it->port));	 // Converts number to network byte order
 
 		// Binds name to socket
 		if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
