@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/12 17:14:25 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/13 15:46:58 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,7 @@ AResponse::AResponse() {}
 
 AResponse::~AResponse() {}
 
-AResponse::AResponse(Server* server, HTTP_Request* request)
+AResponse::AResponse(const Server* server, const HTTP_Request* request)
 	: _request(request), _server(server) {}
 
 AResponse::AResponse(const AResponse& src)
