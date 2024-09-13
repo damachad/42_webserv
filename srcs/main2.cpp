@@ -10,6 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "ConfigParser.hpp"
 #include "Webserv.hpp"
 
 int main(int argc, char **argv) {
@@ -18,7 +19,9 @@ int main(int argc, char **argv) {
 		std::cout << "Usage: ./webserv [configuration file]";
 		return (1);
 	}
+
 	ConfigParser parser(argv[1]);
+
 	try {
 		parser.loadConfigs();
 		std::vector<ServerContext> servers = parser.getServers();

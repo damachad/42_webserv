@@ -172,9 +172,9 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 			// return std::string
 			break;
 		case (POST):
-			// std::string = resultado da classe PostResponse
-			// return std::string
-			break;
+			PostResponse =
+				// return std::string
+				break;
 		case (UNKNOWN):
 			// Provavelmente impossível de acontecer???
 			break;
