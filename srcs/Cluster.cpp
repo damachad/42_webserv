@@ -165,6 +165,8 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 										const Server& server) {
 	std::vector<std::string> server_name = server.getServerName();
 
+	std::string response;
+
 	switch (request.method) {
 		case (GET):
 			// std::string = resultado da classe GetResponse
@@ -175,12 +177,14 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 			// return std::string
 			break;
 		case (POST):
-			// return std::string
-			break;
+			PostResponse ProcessResponse(server, request);
+			response = ProcessResponse::generateResponse();
 		case (UNKNOWN):
 			// Provavelmente impossível de acontecer???
 			break;
 	}
+
+	return response;
 
 	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
 	// Read html file to target, and get that to a body c-style STR

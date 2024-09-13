@@ -14,7 +14,7 @@
 
 #include "AResponse.hpp"
 
-PostResponse::PostResponse(Server *server, HTTP_Request *request)
+PostResponse::PostResponse(const Server &server, const HTTP_Request &request)
 	: AResponse(server, request) {}
 
 PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}

@@ -18,7 +18,7 @@
 
 class PostResponse : public AResponse {
    public:
-	PostResponse(Server* server, HTTP_Request* request);
+	PostResponse(const Server& server, const HTTP_Request& request);
 	PostResponse(const PostResponse& src);
 	~PostResponse();
 
