@@ -14,10 +14,10 @@
 #define ARESPONSE_HPP
 
 #include "HTTPRequestParser.hpp"
-#include "ServerContext.hpp"
+#include "Server.hpp"
 #include "Webserv.hpp"
 
-class ServerContext;
+class Server;
 class LocationContext;
 struct HTTP_Request;
 
@@ -29,7 +29,7 @@ struct HTTP_Response {
 
 class AResponse {
    public:
-	AResponse(ServerContext* server, HTTP_Request* request);
+	AResponse(Server* server, HTTP_Request* request);
 	AResponse(const AResponse& src);
 	virtual ~AResponse();
 
@@ -39,7 +39,7 @@ class AResponse {
    protected:
 	HTTP_Request* _request;
 	HTTP_Response _response;
-	ServerContext* _server;
+	Server* _server;
 	std::string _locationRoute;
 
 	// Validators

@@ -35,7 +35,7 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 			request_line_is_parsed = true;
 		} else if (buffer != "\r" && !header_is_parsed)
 			add_header_fields(HTTP, buffer);
-		else if (buffer == "\r " || buffer.empty()) {
+		else if (buffer == "\r" || buffer.empty()) {
 			header_is_parsed = true;
 		} else
 			add_message_body(HTTP, buffer);

@@ -13,15 +13,15 @@
 #ifndef CONFIGPARSER_HPP
 #define CONFIGPARSER_HPP
 
-class ServerContext;
+class Server;
 
-#include "ServerContext.hpp"
+#include "Server.hpp"
 #include "Webserv.hpp"
 
 class ConfigParser {
    private:
 	std::string _configFile;
-	std::vector<ServerContext> _servers;
+	std::vector<Server> _servers;
 
    public:
 	ConfigParser();
@@ -35,8 +35,8 @@ class ConfigParser {
 	void loadIntoContext(std::vector<std::string> &blocks);
 	size_t advanceBlock(std::string content, size_t start);
 	std::vector<std::string> splitServerBlocks(std::string content);
-	void processDirective(ServerContext &server, std::string &line);
-	std::vector<ServerContext> getServers(void);
+	void processDirective(Server &server, std::string &line);
+	std::vector<Server> getServers(void);
 
 	void printLocationValues(unsigned int serverNumconst,
 							 const std::string &route);

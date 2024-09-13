@@ -15,7 +15,7 @@
 
 class Server;
 
-#include "ServerContext.hpp"
+#include "Server.hpp"
 #include "Webserv.hpp"
 
 // Type conversions
