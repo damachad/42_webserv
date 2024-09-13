@@ -6,14 +6,15 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/12 16:47:25 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/13 20:03:38 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef HTTPREQUESTPARSER_HPP
-#define HTTPREQUESTPARSER_HPP
+#ifndef HTTP_REQUEST_PARSER_HPP
+#define HTTP_REQUEST_PARSER_HPP
 
 #include "Exceptions.hpp"
+#include "Helpers.hpp"
 #include "Webserv.hpp"
 
 struct HTTP_Request {
@@ -32,12 +33,16 @@ struct HTTP_Request {
 
 	// Request Body
 	std::string message_body;
+
+	// NOTE: Default constructor to initialize the members
+	HTTP_Request() : method(UNKNOWN) {};
 };
 
 class HTTP_Request_Parser {
    public:
 	// Main function, parses request
-	static const HTTP_Request parse_HTTP_request(const std::string& request);
+	static const HTTP_Request parse_HTTP_request(const std::string& request,
+												 short& status);
 
    private:
 	// Gets data HTTP_Request structure

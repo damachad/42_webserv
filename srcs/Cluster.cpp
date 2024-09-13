@@ -6,7 +6,7 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/21 16:14:51 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/13 19:57:38 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,12 +126,12 @@ void Cluster::run(void) {
 					close_and_remove_socket(events[i].data.fd, _epoll_fd);
 				// TODO: Remove from client_to_fd map ??
 				else {
-					HTTP_Request request =
-						HTTP_Request_Parser::parse_HTTP_request(buffer_request);
-					(void)request;
-					//  Echo the data back (for example purposes)
+					// HTTP_Request request =
+					//	HTTP_Request_Parser::parse_HTTP_request(buffer_request);
+					//(void)request;
+					//   Echo the data back (for example purposes)
 					std::string buffer_response = get_response(
-						request,
+						buffer_request,
 						_servers[_connection_fd_map[events[i].data.fd]]);
 					ssize_t sent =
 						send(events[i].data.fd, buffer_response.c_str(),
@@ -161,30 +161,15 @@ void Cluster::close_and_remove_socket(int connecting_socket_fd, int epoll_fd) {
 }
 
 // Placeholder function to get response
-const std::string Cluster::get_response(const HTTP_Request& request,
+const std::string Cluster::get_response(const char* buffer_request,
 										const Server& server) {
 	std::vector<std::string> server_name = server.getServerName();
 
-	switch (request.method) {
-		case (GET):
-			// std::string = resultado da classe GetResponse
-			// return std::string
-			break;
-		case (DELETE):
-			// std::string = resultado da classe DeleteResponse
-			// return std::string
-			break;
-		case (POST):
-			// return std::string
-			break;
-		case (UNKNOWN):
-			// Provavelmente impossível de acontecer???
-			break;
-	}
+	(void)buffer_request;
 
 	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
 	// Read html file to target, and get that to a body c-style STR
-	std::string target = request.uri;
+	/*std::string target = request.uri;
 	if (target == "/") target = "/index.html";
 	target = "resources" + target;
 	std::ifstream filestream(target.c_str());
@@ -203,7 +188,8 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 		"\r\n" +
 		body;  // Body content;
 
-	return response;
+	return response;*/
+	return "Hi";
 }
 
 // Getters for private member data
