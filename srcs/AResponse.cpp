@@ -333,8 +333,8 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	if (dir == NULL) return 403;
 	struct dirent* entry;
 	while ((entry = readdir(dir)) != NULL) {
-		_response.body +=
-			entry->d_name + "\n";  // Print the name of each file/directory
+		_response.body += std::string(entry->d_name) +
+						  "\n";	 // Print the name of each file/directory
 	}
 	closedir(dir);
 	loadCommonHeaders();
