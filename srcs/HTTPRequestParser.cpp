@@ -259,7 +259,7 @@ void HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 		size_t content_length = static_cast<size_t>(stringToUnsignedInt(
 			HTTP.header_fields.find("Content-Length")->second));
 		if (content_length >
-			static_cast<size_t>(std::numeric_limits<int>::max()))
+			static_cast<size_t>(std::numeric_limits<unsigned long>::max()))
 			throw HTTPHeaderError("Invalid Content-Length");
 		if (content_length != HTTP.message_body.size())
 			throw HTTPHeaderError("Invalid Message Body size");
