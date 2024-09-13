@@ -302,8 +302,9 @@ void AResponse::loadCommonHeaders() {
 		std::make_pair(std::string("Date"), getHttpDate()));
 	_response.headers.insert(
 		std::make_pair(std::string("Server"), std::string(SERVER)));
-	_response.headers.insert(std::make_pair(
-		std::string("Content-Length"), int_to_string(_response.body.size())));
+	_response.headers.insert(
+		std::make_pair(std::string("Content-Length"),
+					   numberToString<unsigned long>(_response.body.size())));
 }
 
 // Loads reponse struct with values of return
@@ -371,7 +372,7 @@ const std::string AResponse::getResponseStr() const {
 		 itHead++) {
 		headersStr += itHead->first + ": " + itHead->second + "\r\n";
 	}
-	std::string response = "HTTP/1.1 " + int_to_string(_response.status) +
+	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) +
 						   message + "\r\n" + headersStr + "\r\n" +
 						   _response.body;
 	return response;

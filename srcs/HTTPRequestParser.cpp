@@ -256,8 +256,9 @@ void HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 			"Request doesn't include valid number of Content-Length");
 
 	if (HTTP.header_fields.find("Content-Length") != HTTP.header_fields.end()) {
-		size_t content_length = static_cast<size_t>(stringToUnsignedInt(
-			HTTP.header_fields.find("Content-Length")->second));
+		size_t content_length =
+			static_cast<size_t>(stringToNumber<unsigned long>(
+				HTTP.header_fields.find("Content-Length")->second));
 		if (content_length >
 			static_cast<size_t>(std::numeric_limits<unsigned long>::max()))
 			throw HTTPHeaderError("Invalid Content-Length");

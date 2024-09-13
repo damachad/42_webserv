@@ -104,9 +104,9 @@ HTTPResponseError::HTTPResponseError(const short status) throw() {
 							  : "Unknown status code";
 	std::string headers = "Date: " + getHttpDate() + "\r\n" +
 						  "Server: " + SERVER + "\r\n" +
-						  "Connection: close\r\n"; // close the connection?
+						  "Connection: close\r\n";	// close the connection?
 
-	_response = "HTTP/1.1 " + int_to_string(status) + message + "\r\n" +
+	_response = "HTTP/1.1 " + numberToString<int>(status) + message + "\r\n" +
 				headers + "\r\n";
 }
 
