@@ -20,6 +20,10 @@
 
 #define BUFFER_SIZE 8096
 
+class ServerContext;
+class Server;
+struct HTTP_Request;
+
 class Cluster {
    public:
 	// Constructor; create a vector of servers from provided context vector
@@ -59,7 +63,7 @@ class Cluster {
 	static void close_and_remove_socket(int connecting_socket_fd, int epoll_fd);
 
 	// Placeholder function to get response
-	const std::string get_response(const std::string& buffer_request,
+	const std::string get_response(const HTTP_Request& request,
 								   const Server& server);
 
 	// Vector of available servers
