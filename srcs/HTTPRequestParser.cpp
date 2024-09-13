@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HTTP_request_parser.cpp                            :+:      :+:    :+:   */
+/*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/21 16:13:11 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/13 13:16:55 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 			request_line_is_parsed = true;
 		} else if (buffer != "\r" && !header_is_parsed)
 			add_header_fields(HTTP, buffer);
-		else if (buffer == "\r " || buffer.empty()) {
+		else if (buffer == "\r" || buffer.empty()) {
 			header_is_parsed = true;
 		} else
 			add_message_body(HTTP, buffer);
