@@ -157,12 +157,30 @@ void Cluster::close_and_remove_socket(int connecting_socket_fd, int epoll_fd) {
 	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, connecting_socket_fd, NULL);
 }
 
-// Placeholder function to get responde
+// Placeholder function to get response
 const std::string Cluster::get_response(const HTTP_Request& request,
 										const Server& server) {
-	// std::vector<std::string> server_name = server.get_server_names();
-	(void)server;
+	std::vector<std::string> server_name = server.get_server_names();
 
+	switch (request.method) {
+		case (GET):
+			// std::string = resultado da classe GetResponse
+			// return std::string
+			break;
+		case (DELETE):
+			// std::string = resultado da classe DeleteResponse
+			// return std::string
+			break;
+		case (POST):
+			// std::string = resultado da classe PostResponse
+			// return std::string
+			break;
+		case (UNKNOWN):
+			// Provavelmente impossível de acontecer???
+			break;
+	}
+
+	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
 	// Read html file to target, and get that to a body c-style STR
 	std::string target = request.uri;
 	if (target == "/") target = "/index.html";
