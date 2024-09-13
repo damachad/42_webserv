@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/13 13:01:50 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/13 16:08:58 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ struct HTTP_Response {
 
 class AResponse {
    public:
-	AResponse(Server* server, HTTP_Request* request);
+	AResponse(const Server& server, const HTTP_Request& request);
 	AResponse(const AResponse& src);
 	const AResponse& operator=(const AResponse& src);
 	~AResponse();
@@ -38,9 +38,9 @@ class AResponse {
 	virtual std::string generateResponse() = 0;
 
    protected:
-	HTTP_Request* _request;
+	const HTTP_Request& _request;
 	HTTP_Response _response;
-	Server* _server;
+	const Server& _server;
 	std::string _locationRoute;
 
 	// Validators
