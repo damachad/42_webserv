@@ -14,6 +14,8 @@
 #define CLUSTER_HPP
 
 #include "HTTPRequestParser.hpp"
+#include "Server.hpp"
+#include "ServerContext.hpp"
 #include "Webserv.hpp"
 
 #define BUFFER_SIZE 8096

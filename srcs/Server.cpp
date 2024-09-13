@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Server.hpp"
 
 // Constructor, creates server from configuration file
 Server::Server(const ServerContext& configuration)
@@ -41,6 +41,16 @@ void Server::setup_server(void) {
 		int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock_fd == -1) throw SocketSetupError("socket");
 
+		// Set the socket option SO_REUSEADDR
+		// NOTE: Allows for quicker debugging because socket doesn't get held
+		// TODO: REMOVE AT THE END????
+		int optval = 1;
+		if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
+					   sizeof(optval)) < 0) {
+			std::cerr << "Error: Could not set SO_REUSEADDR\n";
+			return;
+		}
+
 		// Listen to connections on socket (port given by *it)
 		struct sockaddr_in sockaddr;
 		std::memset(&sockaddr, 0, sizeof(sockaddr));  // Clears the struct
@@ -56,8 +66,8 @@ void Server::setup_server(void) {
 			if (inet_aton(it->IP.c_str(), &sockaddr.sin_addr) == 0)
 				throw SocketSetupError("inet_addr");
 		}
-		sockaddr.sin_port = htons(
-			string_to_int(it->port));  // Converts number to network byte order
+		sockaddr.sin_port = htons(stringToNumber<int>(
+			it->port));	 // Converts number to network byte order
 
 		// Binds name to socket
 		if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {

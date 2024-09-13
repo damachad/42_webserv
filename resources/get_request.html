@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GET Request Test</title>
+    <script>
+        function displayTime() {
+            // Get the current date and time
+            var now = new Date();
+            // Format the time as HH:MM:SS
+            var timeString = now.toLocaleTimeString();
+            // Display the time in the element with id="clock"
+            document.getElementById('clock').textContent = timeString;
+        }
+
+        // Update the time every second
+        setInterval(displayTime, 1000);
+    </script>
+</head>
+<body>
+    <h1>Test GET Request</h1>
+    <div> Hi, you got this information at <div>
+    <div id="clock"></div> <!-- This is where the time will be displayed -->
+    <a href="index.html">Back to Index</a>
+</body>
+</html>
+

@@ -12,9 +12,6 @@
 
 #include "Cluster.hpp"
 
-#include "HTTPRequestParser.hpp"
-#include "Webserv.hpp"
-
 // Constructor
 // Create a vector of servers from provided context vector
 Cluster::Cluster(const std::vector<ServerContext>& servers)
@@ -35,7 +32,8 @@ Cluster::~Cluster() {
 
 // Accesses ith server of _server array when asking Cluster[i]
 const Server& Cluster::operator[](unsigned int index) const {
-	if (index >= _servers.size()) throw OutOfBoundsError(int_to_string(index));
+	if (index >= _servers.size())
+		throw OutOfBoundsError(numberToString<int>(index));
 
 	return _servers[index];
 }
@@ -174,7 +172,7 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 	buffer << filestream.rdbuf();
 	std::string body = buffer.str();
 
-	std::string body_len = int_to_string(static_cast<int>(body.size()));
+	std::string body_len = numberToString<int>(static_cast<int>(body.size()));
 
 	std::string response =
 		"HTTP/1.1 200 OK\r\n"  // HTP 1.1 Header
@@ -204,14 +202,14 @@ int Cluster::get_epoll_fd() const { return _epoll_fd; }
 // Returns respective server from each fd
 Server& Cluster::get_server_from_listening_fd(int listening_fd) {
 	if (_listening_fd_map.find(listening_fd) == _listening_fd_map.end())
-		throw ValueNotFoundError(int_to_string(listening_fd));
+		throw ValueNotFoundError(numberToString<int>(listening_fd));
 
 	return _servers[_listening_fd_map[listening_fd]];
 }
 
 Server& Cluster::get_server_from_connection_fd(int connection_fd) {
 	if (_connection_fd_map.find(connection_fd) == _connection_fd_map.end()) {
-		throw ValueNotFoundError(int_to_string(connection_fd));
+		throw ValueNotFoundError(numberToString<int>(connection_fd));
 	}
 	return _servers[_connection_fd_map[connection_fd]];
 }

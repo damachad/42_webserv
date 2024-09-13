@@ -13,9 +13,10 @@
 #ifndef CONFIGPARSER_HPP
 #define CONFIGPARSER_HPP
 
-#include "Webserv.hpp"
-
 class ServerContext;
+
+#include "ServerContext.hpp"
+#include "Webserv.hpp"
 
 class ConfigParser {
    private:

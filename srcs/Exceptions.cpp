@@ -6,11 +6,11 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 16:15:31 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:13:40 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "Exceptions.hpp"
 
 FileReadError::FileReadError(const std::string &str) throw() {
 	_message = "Unable to read from: " + str + '\n';
@@ -93,3 +93,25 @@ HTTPHeaderError::HTTPHeaderError(const std::string &str) throw() {
 const char *HTTPHeaderError::what() const throw() { return (_message.c_str()); }
 
 HTTPHeaderError::~HTTPHeaderError() throw() {}
+
+/* HTTP Response error for when there are errors during HTTP request
+ * interpretation */
+HTTPResponseError::HTTPResponseError(const short status) throw() {
+	std::map<short, std::string>::const_iterator itStatus =
+		STATUS_MESSAGES.find(status);
+	std::string message = (itStatus != STATUS_MESSAGES.end())
+							  ? itStatus->second
+							  : "Unknown status code";
+	std::string headers = "Date: " + getHttpDate() + "\r\n" +
+						  "Server: " + SERVER + "\r\n" +
+						  "Connection: close\r\n";	// close the connection?
+
+	_response = "HTTP/1.1 " + numberToString<int>(status) + message + "\r\n" +
+				headers + "\r\n";
+}
+
+const char *HTTPResponseError::what() const throw() {
+	return (_response.c_str());
+}
+
+HTTPResponseError::~HTTPResponseError() throw() {}

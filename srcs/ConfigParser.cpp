@@ -6,11 +6,13 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 16:59:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/09 17:27:35 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Webserv.hpp"
+#include "ConfigParser.hpp"
+
+#include "Exceptions.hpp"
 
 ConfigParser::ConfigParser(void) {}
 
@@ -103,6 +105,21 @@ std::vector<std::string> ConfigParser::tokenizeLine(std::string line) {
 	return (tokens);
 }
 
+static bool areListenEqual(const Listen &a, const Listen &b) {
+	return (a.port == b.port) && (a.IP == b.IP);
+}
+
+static bool hasDuplicates(const std::vector<Listen> &vec) {
+	for (size_t i = 0; i < vec.size(); ++i) {
+		for (size_t j = i + 1; j < vec.size(); ++j) {
+			if (areListenEqual(vec[i], vec[j])) {
+				return true;  // Duplicate found
+			}
+		}
+	}
+	return false;  // No duplicates
+}
+
 void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	std::string line;
 	std::vector<std::string>::iterator it;
@@ -127,6 +144,11 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 				server.processDirective(line);
 			startPos = block.tellg();
 		}
+		if (hasDuplicates(server.getNetworkAddress()))
+			throw ConfigError("Duplicate network addresses found.");
+		if (server.getRoot()
+				.empty())  // TODO: enforce root directive of set default?
+			throw ConfigError("No root directive present in server.");
 		_servers.push_back(server);
 	}
 }
@@ -182,8 +204,8 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 		 it != errorPages.end(); ++it)
 		std::cout << "  " << it->first << " : " << it->second << "\n";
 	std::cout << "Allowed Methods: ";
-	std::vector<Method> methods = _servers[serverNum].getAllowedMethods(route);
-	for (std::vector<Method>::const_iterator it = methods.begin();
+	std::set<Method> methods = _servers[serverNum].getAllowedMethods(route);
+	for (std::set<Method>::const_iterator it = methods.begin();
 		 it != methods.end(); ++it) {
 		switch (*it) {
 			case GET:
@@ -199,5 +221,10 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 				std::cout << "UNKNOWN ";
 		}
 	}
+	std::cout << std::endl;
+	std::cout << "Return: ";
+	std::pair<short, std::string> returns =
+		_servers[serverNum].getReturn(route);
+	if (returns.first) std::cout << returns.first << " : " << returns.second;
 	std::cout << std::endl;
 }
