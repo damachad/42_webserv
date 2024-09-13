@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "PostResponse.hpp"
-PostResponse::PostResponse(ServerContext* server, HTTP_Request* request)
+PostResponse::PostResponse(Server* server, HTTP_Request* request)
 	: AResponse(server, request) {}
 
 PostResponse::PostResponse(const PostResponse& src) : AResponse(src) {}

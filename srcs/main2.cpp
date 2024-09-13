@@ -24,8 +24,8 @@ int main(int argc, char **argv) {
 
 	try {
 		parser.loadConfigs();
-		std::vector<ServerContext> servers = parser.getServers();
-		for (std::vector<ServerContext>::const_iterator it = servers.begin();
+		std::vector<Server> servers = parser.getServers();
+		for (std::vector<Server>::const_iterator it = servers.begin();
 			 it != servers.end(); ++it)
 			std::cout << (*it) << "\n";
 		std::string route = "/test";

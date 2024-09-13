@@ -15,19 +15,18 @@
 
 #include "HTTPRequestParser.hpp"
 #include "Server.hpp"
-#include "ServerContext.hpp"
 #include "Webserv.hpp"
 
 #define BUFFER_SIZE 8096
 
-class ServerContext;
+class Server;
 class Server;
 struct HTTP_Request;
 
 class Cluster {
    public:
 	// Constructor; create a vector of servers from provided context vector
-	Cluster(const std::vector<ServerContext>& servers);
+	Cluster(const std::vector<Server>& servers);
 
 	// Destructor, closes _epoll_fd if it opened
 	~Cluster();
