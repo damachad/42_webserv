@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/09/13 12:54:31 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/13 13:10:07 by mde-sa--         ###   ########.fr       */
+/*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
+/*   Updated: 2024/09/13 13:23:44 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 #include "AResponse.hpp"
 
-PostResponse::PostResponse(ServerContext *server, HTTP_Request *request)
+PostResponse::PostResponse(Server *server, HTTP_Request *request)
 	: AResponse(server, request) {}
 
 PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}

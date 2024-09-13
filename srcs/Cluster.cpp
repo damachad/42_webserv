@@ -12,12 +12,15 @@
 
 #include "Cluster.hpp"
 
+#include "AResponse.hpp"
+#include "PostResponse.hpp"
+
 // Constructor
 // Create a vector of servers from provided context vector
-Cluster::Cluster(const std::vector<ServerContext>& servers)
+Cluster::Cluster(const std::vector<Server>& servers)
 	: _servers(), _listening_fd_map(), _connection_fd_map(), _epoll_fd(-1) {
 	//	std::cout << "Cluster Constructor called" << std::endl;
-	for (std::vector<ServerContext>::const_iterator it = servers.begin();
+	for (std::vector<Server>::const_iterator it = servers.begin();
 		 it != servers.end(); it++) {
 		_servers.push_back(*it);
 	}
@@ -53,7 +56,7 @@ void Cluster::setup_cluster(void) {
 		add_sockets_to_epoll(server);
 
 		// Adds ports to _listening_sockets and to _listening_fd_map
-		const std::vector<int> socks_listing = server.get_listening_sockets();
+		const std::vector<int> socks_listing = server.getListeningSockets();
 		for (std::vector<int>::const_iterator it = socks_listing.begin();
 			 it < socks_listing.end(); it++) {
 			_listening_sockets.push_back(*it);
@@ -65,7 +68,7 @@ void Cluster::setup_cluster(void) {
 
 // Adds sockets to epoll so they can be monitored
 void Cluster::add_sockets_to_epoll(const Server& server) {
-	std::vector<int> socket_list = server.get_listening_sockets();
+	std::vector<int> socket_list = server.getListeningSockets();
 
 	for (std::vector<int>::const_iterator it = socket_list.begin();
 		 it != socket_list.end(); it++) {
@@ -160,7 +163,7 @@ void Cluster::close_and_remove_socket(int connecting_socket_fd, int epoll_fd) {
 // Placeholder function to get response
 const std::string Cluster::get_response(const HTTP_Request& request,
 										const Server& server) {
-	std::vector<std::string> server_name = server.get_server_names();
+	std::vector<std::string> server_name = server.getServerName();
 
 	switch (request.method) {
 		case (GET):
@@ -172,7 +175,6 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 			// return std::string
 			break;
 		case (POST):
-			// std::string = resultado da classe PostResponse
 			// return std::string
 			break;
 		case (UNKNOWN):

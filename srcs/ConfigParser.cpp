@@ -126,7 +126,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	std::string firstWord;
 
 	for (it = blocks.begin(); it != blocks.end(); it++) {
-		ServerContext server;
+		Server server;
 		std::istringstream block(*it);
 		std::streampos startPos = block.tellg();
 		while (std::getline(block, line, ';')) {
@@ -170,9 +170,7 @@ void ConfigParser::loadConfigs() {
 	loadIntoContext(serverBlocks);
 }
 
-std::vector<ServerContext> ConfigParser::getServers(void) {
-	return (this->_servers);
-}
+std::vector<Server> ConfigParser::getServers(void) { return (this->_servers); }
 
 void ConfigParser::printLocationValues(unsigned int serverNum,
 									   const std::string &route) {

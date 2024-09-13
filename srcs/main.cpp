@@ -12,7 +12,7 @@
 
 #include "Cluster.hpp"
 #include "ConfigParser.hpp"
-#include "ServerContext.hpp"
+#include "Server.hpp"
 #include "Webserv.hpp"
 
 int main(int argc, char** argv) {
@@ -24,13 +24,13 @@ int main(int argc, char** argv) {
 	}
 	ConfigParser parser(argv[1]);
 
-	std::vector<ServerContext>
+	std::vector<Server>
 		servers;  // Defined outside the try block so it can be used later
 
 	try {
 		parser.loadConfigs();
 		servers = parser.getServers();
-		for (std::vector<ServerContext>::const_iterator it = servers.begin();
+		for (std::vector<Server>::const_iterator it = servers.begin();
 			 it != servers.end(); ++it)
 			std::cout << (*it) << "\n";
 		std::string route = "/test";

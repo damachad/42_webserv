@@ -130,7 +130,7 @@ AResponse::AResponse() {}
 
 AResponse::~AResponse() {}
 
-AResponse::AResponse(ServerContext* server, HTTP_Request* request)
+AResponse::AResponse(Server* server, HTTP_Request* request)
 	: _request(request), _server(server) {}
 
 AResponse::AResponse(const AResponse& src)
