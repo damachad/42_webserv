@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 14:51:25 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 15:48:18 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/13 16:09:52 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 
 class GetResponse : public AResponse {
    public:
-	GetResponse(const Server* server, const HTTP_Request* request);
+	GetResponse(const Server& server, const HTTP_Request& request);
 	GetResponse(const GetResponse& src);
 	~GetResponse();
 

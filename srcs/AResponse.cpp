@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 15:46:58 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/13 16:09:04 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,11 +126,9 @@ static std::map<std::string, std::string> initMimeTypes() {
 	return mimeTypes;
 }
 
-AResponse::AResponse() {}
-
 AResponse::~AResponse() {}
 
-AResponse::AResponse(const Server* server, const HTTP_Request* request)
+AResponse::AResponse(const Server& server, const HTTP_Request& request)
 	: _request(request), _server(server) {}
 
 AResponse::AResponse(const AResponse& src)
@@ -139,34 +137,26 @@ AResponse::AResponse(const AResponse& src)
 	  _server(src._server),
 	  _locationRoute(src._locationRoute) {}
 
-const AResponse& AResponse::operator=(const AResponse& src) {
-	_request = src._request;
-	_response = src._response;
-	_server = src._server;
-	_locationRoute = src._locationRoute;
-	return *this;
-}
-
 // Checks if Content-Lenght is present once and if request body size matches
 // this value and value of client_max_body_size
 short AResponse::checkSize() const {
-	if (_request->header_fields.count("Content-Length") ==
+	if (_request.header_fields.count("Content-Length") ==
 		0)			 // mandatory Content-Length header ?
 		return 411;	 // Length Required
-	if (_request->message_body.size() >
-		static_cast<size_t>(_server->getClientMaxBodySize(_locationRoute)))
+	if (_request.message_body.size() >
+		static_cast<size_t>(_server.getClientMaxBodySize(_locationRoute)))
 		return 413;	 // Request Entity Too Large
 	// How to handle multiple Content-Length values ?
-	if (_request->header_fields.count("Content-Length") > 1)
+	if (_request.header_fields.count("Content-Length") > 1)
 		return 400;	 // Bad Request
 	std::multimap<std::string, std::string>::const_iterator it =
-		_request->header_fields.find("Content-Length");
+		_request.header_fields.find("Content-Length");
 	size_t size = -1;
-	if (it != _request->header_fields.end()) {
+	if (it != _request.header_fields.end()) {
 		char* endPtr = NULL;
 		size = std::strtol(it->second.c_str(), &endPtr, 10);
 		if (*endPtr != '\0') return 400;
-		if (size != _request->message_body.size()) return 400;
+		if (size != _request.message_body.size()) return 400;
 	}
 	return 200;
 }
@@ -174,8 +164,8 @@ short AResponse::checkSize() const {
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
 	std::set<Method>::const_iterator it =
-		_server->getAllowedMethods(_locationRoute).find(_request->method);
-	if (it == _server->getAllowedMethods(_locationRoute).end())
+		_server.getAllowedMethods(_locationRoute).find(_request.method);
+	if (it == _server.getAllowedMethods(_locationRoute).end())
 		return 405;	 // Method Not Allowed
 	return 200;
 }
@@ -186,10 +176,10 @@ short AResponse::checkMethod() const {
 // routes, which means route must match the start of the URI
 void AResponse::setMatchLocationRoute() {
 	std::map<std::string, LocationContext> serverLocations =
-		_server->getLocations();
+		_server.getLocations();
 
 	std::map<std::string, LocationContext>::iterator it;
-	it = serverLocations.find(_request->uri);
+	it = serverLocations.find(_request.uri);
 	if (it != serverLocations.end()) {
 		_locationRoute = it->first;
 		return;
@@ -198,7 +188,7 @@ void AResponse::setMatchLocationRoute() {
 	size_t bestMatchLen = 0;
 	std::string bestMatchRoute;
 	for (it = serverLocations.begin(); it != serverLocations.end(); ++it) {
-		if (_request->uri.compare(0, it->first.size(), it->first) == 0) {
+		if (_request.uri.compare(0, it->first.size(), it->first) == 0) {
 			size_t match = it->first.size();
 			if (match > bestMatchLen) {
 				bestMatchLen = match;
@@ -211,8 +201,8 @@ void AResponse::setMatchLocationRoute() {
 
 // Returns path to look for resource in location, root + (uri - locationRoute)
 const std::string AResponse::getPath() const {
-	std::string root = _server->getRoot(_locationRoute);
-	return (assemblePath(root, _request->uri.substr(_locationRoute.size())));
+	std::string root = _server.getRoot(_locationRoute);
+	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
 }
 
 // Checks if file is a regular file and there are no problems opening it
@@ -248,7 +238,7 @@ bool AResponse::isDirectory(const std::string& path) const {
 
 // Checks if autoindex is on
 bool AResponse::hasAutoindex() const {
-	if (_server->getAutoIndex(_locationRoute) == TRUE)
+	if (_server.getAutoIndex(_locationRoute) == TRUE)
 		return true;
 	else
 		return false;
@@ -256,7 +246,7 @@ bool AResponse::hasAutoindex() const {
 
 // Returns an index file if it exists or NULL (empty string)
 const std::string AResponse::getIndexFile(const std::string& path) const {
-	std::vector<std::string> indexFiles = _server->getIndex(_locationRoute);
+	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
 	std::vector<std::string>::const_iterator it;
 	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
 		std::string filePath = assemblePath(path, *it);
@@ -309,7 +299,7 @@ void AResponse::loadCommonHeaders() {
 
 // Loads reponse struct with values of return
 void AResponse::loadReturn() {
-	std::pair<short, std::string> redirect = _server->getReturn(_locationRoute);
+	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
 	_response.body = redirect.second;
 	_response.status = redirect.first;
 	loadCommonHeaders();
@@ -322,7 +312,7 @@ void AResponse::loadReturn() {
 // Checks if there is a return directive
 //  TODO: Review check empty logic
 bool AResponse::hasReturn() const {
-	std::pair<short, std::string> redirect = _server->getReturn(_locationRoute);
+	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
 	if (redirect.second.empty()) return false;
 	return true;
 }
@@ -383,12 +373,12 @@ const std::string AResponse::getResponseStr() const {
 // returning it
 const std::string AResponse::loadErrorPage(short status) {
 	static std::map<short, std::string> error_pages =
-		_server->getErrorPages(_locationRoute);
+		_server.getErrorPages(_locationRoute);
 	_response.status = status;
 	std::map<short, std::string>::const_iterator it = error_pages.find(status);
 	if (it != error_pages.end()) {
 		std::string path =
-			assemblePath(_server->getRoot(_locationRoute), it->second);
+			assemblePath(_server.getRoot(_locationRoute), it->second);
 		if (checkFile(path) == 200) {
 			std::ifstream file(path.c_str());
 			_response.body.assign((std::istreambuf_iterator<char>(file)),
