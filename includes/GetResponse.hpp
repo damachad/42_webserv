@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 14:51:25 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 15:35:48 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/13 15:48:18 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,10 @@
 #define GETRESPONSE_HPP
 
 #include "AResponse.hpp"
-// #include "Webserv.hpp"
 
 class GetResponse : public AResponse {
    public:
-	GetResponse(Server* server, HTTP_Request* request);
+	GetResponse(const Server* server, const HTTP_Request* request);
 	GetResponse(const GetResponse& src);
 	~GetResponse();
 
