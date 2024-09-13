@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 15:23:35 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/13 15:35:46 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ GetResponse::~GetResponse() {}
 
 GetResponse::GetResponse(const GetResponse& src) : AResponse(src) {}
 
-GetResponse::GetResponse(ServerContext* server, HTTP_Request* request)
+GetResponse::GetResponse(Server* server, HTTP_Request* request)
 	: AResponse(server, request) {}
 
 // Loads response with contents of file and sets MIME type
