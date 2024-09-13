@@ -56,8 +56,7 @@ std::string getHttpDate() {
 	return std::string(buffer);
 }
 
-std::ostream& operator<<(std::ostream& outstream,
-						 const ServerContext configuration) {
+std::ostream& operator<<(std::ostream& outstream, const Server configuration) {
 	outstream << "Network Addresses: ";
 
 	std::vector<Listen> networkaddress = configuration.getNetworkAddress();
