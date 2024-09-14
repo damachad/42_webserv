@@ -6,14 +6,13 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:30:13 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/06 16:07:40 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/13 20:06:47 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef EXCEPTIONS_HPP
 #define EXCEPTIONS_HPP
 
-#include "AResponse.hpp"
 #include "Helpers.hpp"
 #include "Webserv.hpp"
 
