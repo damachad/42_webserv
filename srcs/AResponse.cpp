@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 20:08:41 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/14 10:01:13 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,13 +128,8 @@ static std::map<std::string, std::string> initMimeTypes() {
 
 AResponse::~AResponse() {}
 
-AResponse::AResponse(const Server& server, const char* request)
-	: _server(server) {
-	_request = HTTP_Request_Parser::parse_HTTP_request(std::string(request),
-													   _response.status);
-	// TODO: if _response.status (ie: if there is an error), create response
-	// here
-}
+AResponse::AResponse(const Server& server, const HTTP_Request& request)
+	: _request(request), _server(server) {}
 
 AResponse::AResponse(const AResponse& src)
 	: _request(src._request),

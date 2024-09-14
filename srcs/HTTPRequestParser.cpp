@@ -6,17 +6,17 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/13 20:03:25 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/14 09:56:12 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPRequestParser.hpp"
 
 const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
-	const std::string& request, short& status) {
+	const std::string& request, unsigned short& error_status) {
 	if (request.size() == 0) throw HTTPHeaderError("Empty Request");
 
-	(void)status;
+	(void)error_status;
 
 	// Struct to return
 	HTTP_Request HTTP;

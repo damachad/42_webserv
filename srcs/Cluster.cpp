@@ -6,13 +6,14 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/13 19:57:38 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/14 09:59:01 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
 
 #include "AResponse.hpp"
+#include "HTTPRequestParser.hpp"
 #include "PostResponse.hpp"
 
 // Constructor
@@ -126,12 +127,14 @@ void Cluster::run(void) {
 					close_and_remove_socket(events[i].data.fd, _epoll_fd);
 				// TODO: Remove from client_to_fd map ??
 				else {
-					// HTTP_Request request =
-					//	HTTP_Request_Parser::parse_HTTP_request(buffer_request);
-					//(void)request;
+					unsigned short error_status = 0;
+					HTTP_Request request =
+						HTTP_Request_Parser::parse_HTTP_request(buffer_request,
+																error_status);
+					(void)request;
 					//   Echo the data back (for example purposes)
 					std::string buffer_response = get_response(
-						buffer_request,
+						request, error_status,
 						_servers[_connection_fd_map[events[i].data.fd]]);
 					ssize_t sent =
 						send(events[i].data.fd, buffer_response.c_str(),
@@ -161,11 +164,13 @@ void Cluster::close_and_remove_socket(int connecting_socket_fd, int epoll_fd) {
 }
 
 // Placeholder function to get response
-const std::string Cluster::get_response(const char* buffer_request,
+const std::string Cluster::get_response(const HTTP_Request& request,
+										unsigned short& error_status,
 										const Server& server) {
 	std::vector<std::string> server_name = server.getServerName();
 
-	(void)buffer_request;
+	(void)error_status;
+	(void)request;
 
 	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
 	// Read html file to target, and get that to a body c-style STR

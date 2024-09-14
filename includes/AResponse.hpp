@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/13 20:05:33 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/14 10:00:47 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ class Server;
 class LocationContext;
 
 struct HTTP_Response {
-	short status;
+	unsigned short status;
 	std::multimap<std::string, std::string> headers;
 	std::string body;
 
@@ -31,7 +31,7 @@ struct HTTP_Response {
 
 class AResponse {
    public:
-	AResponse(const Server& server, const char* request);
+	AResponse(const Server& server, const HTTP_Request& request);
 	AResponse(const AResponse& src);
 	virtual ~AResponse();
 
