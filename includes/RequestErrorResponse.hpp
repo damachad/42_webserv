@@ -1,32 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   PostResponse.hpp                                   :+:      :+:    :+:   */
+/*   RequestErrorResponse.hpp                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/09/13 13:20:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 10:41:55 by mde-sa--         ###   ########.fr       */
+/*   Created: 2024/09/14 10:38:42 by mde-sa--          #+#    #+#             */
+/*   Updated: 2024/09/14 10:41:39 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef POSTRESPONSE_HPP
-#define POSTRESPONSE_HPP
+#ifndef REQUESTERRORRESPONSE_HPP
+#define REQUESTERRORRESPONSE_HPP
 
 #include "AResponse.hpp"
 #include "Webserv.hpp"
 
-class PostResponse : public AResponse {
+class RequestErrorResponse : public AResponse {
    public:
-	PostResponse(const Server& server, const HTTP_Request& request);
-	PostResponse(const PostResponse& src);
-	~PostResponse();
+	RequestErrorResponse(const Server& server, const HTTP_Request& request);
+	RequestErrorResponse(const RequestErrorResponse& src);
+	~RequestErrorResponse();
 
 	std::string generateResponse();
 
    private:
-	PostResponse();
-	PostResponse& operator=(const PostResponse& src);
+	RequestErrorResponse();
+	RequestErrorResponse& operator=(const RequestErrorResponse& src);
 };
 
 #endif
