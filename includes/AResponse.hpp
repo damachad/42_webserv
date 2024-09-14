@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/13 16:08:58 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/14 10:00:47 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,14 @@
 
 class Server;
 class LocationContext;
-struct HTTP_Request;
 
 struct HTTP_Response {
-	short status;
+	unsigned short status;
 	std::multimap<std::string, std::string> headers;
 	std::string body;
+
+	// NOTE: Default constructor to initialize the members
+	HTTP_Response() : status(0) {}
 };
 
 class AResponse {
@@ -38,7 +40,7 @@ class AResponse {
 	virtual std::string generateResponse() = 0;
 
    protected:
-	const HTTP_Request& _request;
+	HTTP_Request _request;
 	HTTP_Response _response;
 	const Server& _server;
 	std::string _locationRoute;

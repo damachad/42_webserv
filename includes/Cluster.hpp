@@ -6,14 +6,13 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:25 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/21 16:13:50 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/14 09:57:07 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CLUSTER_HPP
 #define CLUSTER_HPP
 
-#include "HTTPRequestParser.hpp"
 #include "Server.hpp"
 #include "Webserv.hpp"
 
@@ -63,6 +62,7 @@ class Cluster {
 
 	// Placeholder function to get response
 	const std::string get_response(const HTTP_Request& request,
+								   unsigned short& error_status,
 								   const Server& server);
 
 	// Vector of available servers
