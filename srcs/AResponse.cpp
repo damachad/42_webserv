@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/14 10:01:13 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/16 11:32:44 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -363,7 +363,7 @@ const std::string AResponse::getResponseStr() const {
 		headersStr += itHead->first + ": " + itHead->second + "\r\n";
 	}
 	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) +
-						   message + "\r\n" + headersStr + "\r\n" +
+						   " " + message + "\r\n" + headersStr + "\r\n" +
 						   _response.body;
 	return response;
 }
