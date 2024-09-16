@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/14 10:01:13 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/16 15:07:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -252,13 +252,15 @@ const std::string AResponse::getIndexFile(const std::string& path) const {
 		std::string filePath = assemblePath(path, *it);
 		if (checkFile(filePath) == 200) return filePath;
 	}
-	return NULL;
+	return "";
 }
 
 // Joins both string and ensures there is a '/' in the middle
 //  TODO: review edge cases (double '/')
 const std::string AResponse::assemblePath(const std::string& l,
 										  const std::string& r) const {
+	if (r.empty())
+		return l;
 	if ((l.at(l.size() - 1) == '/' && r.at(0) != '/') ||
 		(l.at(l.size() - 1) != '/' && r.at(0) == '/'))
 		return l + r;
@@ -317,21 +319,38 @@ bool AResponse::hasReturn() const {
 	return true;
 }
 
+// Helper function to extract and format the directory name
+static std::string getDirectoryName(const std::string& path) {
+    std::string dirName;
+    std::string::size_type endPos = path.find_last_not_of("/");
+    if (endPos == std::string::npos)
+        dirName = path;
+    std::string::size_type pos = path.find_last_of("/", endPos);
+    if (pos != std::string::npos) {
+        dirName = path.substr(pos, endPos - pos + 1);
+    }
+    return dirName;
+}
+
 // Loads response with a page containing directory listing for that location
+// TODO: Add file last modified date and size, format
 short AResponse::loadDirectoryListing(const std::string& path) {
-	DIR* dir = opendir(path.c_str());
-	if (dir == NULL) return 403;
-	struct dirent* entry;
-	while ((entry = readdir(dir)) != NULL) {
-		_response.body += std::string(entry->d_name) +
-						  "\n";	 // Print the name of each file/directory
-	}
-	closedir(dir);
-	loadCommonHeaders();
-	_response.headers.insert(
-		std::make_pair(std::string("Content-Type"), std::string("text/html")));
-	_response.status = 200;
-	return 200;
+    DIR* dir = opendir(path.c_str());
+    if (dir == NULL) return 403;
+    std::string dirName = getDirectoryName(path);
+    _response.body =
+        "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + dirName + "</title>\n</head>\n<body>\n<h1>Index of " + dirName + "</h1>\n<hr>\n<pre>";
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        _response.body += "<a href=\"" + std::string(entry->d_name) + "\">" + std::string(entry->d_name) + "</a>\n";
+    }
+    _response.body += "</pre>\n<hr>\n</body>\n</html>\n";
+    closedir(dir);
+    loadCommonHeaders();
+    _response.headers.insert(
+        std::make_pair(std::string("Content-Type"), std::string("text/html")));
+    _response.status = 200;
+    return 200;
 }
 
 // Loads response with contents of file and sets MIME type
@@ -362,7 +381,7 @@ const std::string AResponse::getResponseStr() const {
 		 itHead++) {
 		headersStr += itHead->first + ": " + itHead->second + "\r\n";
 	}
-	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) +
+	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) + " " +
 						   message + "\r\n" + headersStr + "\r\n" +
 						   _response.body;
 	return response;
