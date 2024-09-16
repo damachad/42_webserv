@@ -252,13 +252,14 @@ const std::string AResponse::getIndexFile(const std::string& path) const {
 		std::string filePath = assemblePath(path, *it);
 		if (checkFile(filePath) == 200) return filePath;
 	}
-	return NULL;
+	return "";
 }
 
 // Joins both string and ensures there is a '/' in the middle
 //  TODO: review edge cases (double '/')
 const std::string AResponse::assemblePath(const std::string& l,
 										  const std::string& r) const {
+	if (r.empty()) return l;
 	if ((l.at(l.size() - 1) == '/' && r.at(0) != '/') ||
 		(l.at(l.size() - 1) != '/' && r.at(0) == '/'))
 		return l + r;
@@ -362,7 +363,7 @@ const std::string AResponse::getResponseStr() const {
 		 itHead++) {
 		headersStr += itHead->first + ": " + itHead->second + "\r\n";
 	}
-	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) +
+	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) + " " +
 						   message + "\r\n" + headersStr + "\r\n" +
 						   _response.body;
 	return response;
