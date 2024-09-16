@@ -6,7 +6,7 @@
 #    By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/01 11:53:48 by damachad          #+#    #+#              #
-#    Updated: 2024/09/16 18:48:02 by mde-sa--         ###   ########.fr        #
+#    Updated: 2024/09/16 18:55:17 by mde-sa--         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -75,6 +75,10 @@ test: all
 	@./$(NAME)
 
 client:
+	c++ srcs/client.cpp -o client
+
+reclient:
+	rm client
 	c++ srcs/client.cpp -o client
 
 .PHONY: all clean fclean re
