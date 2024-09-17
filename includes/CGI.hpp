@@ -7,14 +7,17 @@
 
 class CGI {
    private:
-	std::map<const std::string, std::string> _CGIEnv;
-	HTTP_Request_Parser *request;
+	std::multimap<const std::string, std::string> _headerEnv;
+	HTTP_Request &_request;
 
    public:
-	CGI();
+	CGI(HTTP_Request &httpRequest);
 	~CGI();
 
-	std::string getCGIEnv(std::string key);
+	std::string getHeaderEnv(std::string key);
 
 	std::string getEnvVar(const char *key);
+
+	void fetchCookies(std::multimap<std::string, std::string> &headerEnv,
+					  HTTP_Request &request);
 };
