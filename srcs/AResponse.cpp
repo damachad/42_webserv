@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/17 10:30:01 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/17 13:44:14 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -364,11 +364,11 @@ std::string AResponse::addFileEntry(const std::string& name,
 		displayName = name;
 	std::string WP1;
 	if (displayName.length() < 51)
-		WP1 = std::string(51 - displayName.length(), ' ');  // Pad with spaces
+		WP1 = std::string(51 - displayName.length(), ' ');	// Pad with spaces
 	std::stringstream fileEntry;
 	std::string WS2 = "                   ";
-	fileEntry << "<a href=\"" + name + "\">" + displayName + "</a>" + WP1 + date + WS2 +
-					 size + "\n";
+	fileEntry << "<a href=\"" + name + "\">" + displayName + "</a>" + WP1 +
+					 date + WS2 + size + "\n";
 	return fileEntry.str();
 }
 
@@ -422,6 +422,43 @@ const std::string AResponse::getResponseStr() const {
 	return response;
 }
 
+static std::string loadDefaultErrorPage(short status) {
+	std::map<short, std::string>::const_iterator itStatus =
+		STATUS_MESSAGES.find(status);
+	std::string message = (itStatus != STATUS_MESSAGES.end())
+							  ? itStatus->second
+							  : "Unknown status code";
+	std::string response =
+		"<!DOCTYPE html>\n"
+		"<html lang=\"en\">\n"
+		"<head>\n"
+		"\t<meta charset=\"UTF-8\">\n"
+		"\t<meta name=\"viewport\" content=\"width=device-width, "
+		"initial-scale=1.0\">\n"
+		"\t<title>" +
+		message +
+		"</title>\n"
+		"\t<style>\n"
+		"\t\th1, p {\n"
+		"\t\t\ttext-align: center;\n"
+		"\t\t}\n"
+		"\t</style>\n"
+		"</head>\n"
+		"<body>\n"
+		"\t<div>\n"
+		"\t\t<h1>" +
+		numberToString<short>(status) + " " + message +
+		"</h1>\n"
+		"<hr>\n"
+		"\t\t<p>" +
+		SERVER +
+		"</p>\n"
+		"\t</div>\n"
+		"</body>\n"
+		"</html>";
+	return response;
+}
+
 // Loads response with respoective status code, gets personalized error page, if
 // it exists and calls getResponseStr() to convert struct to string before
 // returning it
@@ -439,6 +476,7 @@ const std::string AResponse::loadErrorPage(short status) {
 								  (std::istreambuf_iterator<char>()));
 		}
 	}
+	if (_response.body.empty()) _response.body = loadDefaultErrorPage(status);
 	loadCommonHeaders();
 	return getResponseStr();
 }
