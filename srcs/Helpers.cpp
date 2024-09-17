@@ -39,6 +39,16 @@ Method stringToMethod(const std::string& method) {
 		return UNKNOWN;
 }
 
+// Returns lowercase version of strin
+std::string toLower(const std::string& str) {
+	std::string lower_str = str;
+	for (std::string::iterator it = lower_str.begin(); it != lower_str.end();
+		 ++it) {
+		*it = std::tolower(static_cast<unsigned char>(*it));
+	}
+	return lower_str;
+}
+
 // returns http format date, e.g. "Thu, 05 Sep 2024 12:34:56 GMT"
 std::string getHttpDate() {
 	// Get the current time in seconds since the Epoch
