@@ -129,8 +129,9 @@ void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 
 // Checks validity of HTTP header fields
 bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
-	// NOTE: User-Agent is not a mandatory field, but helps for evaluation
-	if (HTTP.header_fields.count("user-agent") > 1) return false;
+	// NOTE: User-Agent is not a strictly mandatory field, but helps for
+	// evaluation
+	if (HTTP.header_fields.count("user-agent") != 1) return false;
 
 	std::string user_agent = HTTP.header_fields.find("user-agent")->second;
 

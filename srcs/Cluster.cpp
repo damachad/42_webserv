@@ -16,6 +16,7 @@
 #include "GetResponse.hpp"
 #include "HTTPRequestParser.hpp"
 #include "PostResponse.hpp"
+#include "RequestErrorResponse.hpp"
 
 // Constructor
 // Create a vector of servers from provided context vector
@@ -169,8 +170,29 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 										const Server& server) {
 	std::vector<std::string> server_name = server.getServerName();
 
-	(void)error_status;
-	(void)request;
+	std::string response;
+
+	AResponse* response_check;
+
+	if (error_status != OK)
+		response_check = new RequestErrorResponse(server, request);
+	else {
+		switch (static_cast<int>(request.method)) {
+			case (GET):
+				response_check = new GetResponse(server, request);
+				break;
+			case (POST):
+				response_check = new PostResponse(server, request);
+				break;
+			case (DELETE):
+				response_check = new DeleteResponse(server, request);
+				break;
+		}
+	}
+
+	// std::string response = response_check.get_http_response(); //TODO: Função
+	// de receber resposta?
+	delete response_check;
 
 	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
 	// Read html file to target, and get that to a body c-style STR
