@@ -10,19 +10,19 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "PostResponse.hpp"
+#include "AResponse.hpp"
 
-PostResponse::PostResponse(const Server& server, const HTTP_Request& request)
+PostResponse::PostResponse(const Server &server, const HTTP_Request &request)
 	: AResponse(server, request) {}
 
-PostResponse::PostResponse(const PostResponse& src) : AResponse(src) {}
+PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}
 
 PostResponse::~PostResponse() {}
 
 std::string PostResponse::generateResponse() {
-	std::string response("Hi");
+	std::string response("This is the response");
 
-	std::cout << response << std::endl;
+	std::cout << "Hi!" << std::endl;
 
 	return response;
 }

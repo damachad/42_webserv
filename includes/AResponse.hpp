@@ -33,7 +33,8 @@ class AResponse {
    public:
 	AResponse(const Server& server, const HTTP_Request& request);
 	AResponse(const AResponse& src);
-	virtual ~AResponse();
+	const AResponse& operator=(const AResponse& src);
+	~AResponse();
 
 	// Pure virtual method for generating the HTTP response
 	virtual std::string generateResponse() = 0;
@@ -70,7 +71,6 @@ class AResponse {
 
    private:
 	AResponse();
-	const AResponse& operator=(const AResponse& src);
 };
 
 #endif
