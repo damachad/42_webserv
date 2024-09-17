@@ -130,7 +130,7 @@ void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 // Checks validity of HTTP header fields
 bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	// NOTE: User-Agent is not a mandatory field, but helps for evaluation
-	if (HTTP.header_fields.count("user-agent") != 1) return false;
+	if (HTTP.header_fields.count("user-agent") > 1) return false;
 
 	std::string user_agent = HTTP.header_fields.find("user-agent")->second;
 
@@ -145,14 +145,16 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	}
 
 	// NOTE: Host is mandatory on HTTP 1.1
-	if (HTTP.header_fields.count("host") != 1) return false;
+	if ((HTTP.header_fields.count("host") != 1 &&
+		 HTTP.protocol_version == "HTTP/1.1") ||
+		HTTP.header_fields.count("host") > 1)
+		return false;
 
 	// NOTE: Immediately parses Content-Length, if it exists
 	if (HTTP.header_fields.count("content-length") > 1) return false;
 
-	if (HTTP.header_fields.find("content-length") != HTTP.header_fields.end()) {
-		size_t content_length =
-			static_cast<size_t>(stringToNumber<unsigned long>(
+	/*if (HTTP.header_fields.find("content-length") != HTTP.header_fields.end())
+	{ size_t content_length = static_cast<size_t>(stringToNumber<unsigned long>(
 				HTTP.header_fields.find("content-length")->second));
 		if (content_length >
 			static_cast<size_t>(std::numeric_limits<unsigned long>::max()))
@@ -161,7 +163,7 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	} else	// NOTE: If there is a body but not content-length
 	{
 		if (HTTP.message_body.size()) return false;
-	}
+	}*/
 
 	return true;
 }
