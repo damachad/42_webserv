@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/14 10:01:13 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/17 10:38:09 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -318,15 +318,82 @@ bool AResponse::hasReturn() const {
 	return true;
 }
 
+// Helper function to extract and format the directory name
+static std::string getDirectoryName(const std::string& path) {
+	std::string dirName;
+	std::string::size_type endPos = path.find_last_not_of("/");
+	if (endPos == std::string::npos) dirName = path;
+	std::string::size_type pos = path.find_last_of("/", endPos);
+	if (pos != std::string::npos) {
+		dirName = path.substr(pos, endPos - pos + 1);
+	}
+	return dirName + "/";
+}
+
+static std::string getLastModificationDate(const std::string& path) {
+	struct stat fileStat;
+	if (stat(path.c_str(), &fileStat) != 0) {
+		return "";	// Error handling or empty result
+	}
+	char dateBuffer[20];
+	struct tm* timeinfo = localtime(&fileStat.st_mtime);
+	std::strftime(dateBuffer, sizeof(dateBuffer), "%d-%b-%Y %H:%M", timeinfo);
+	return std::string(dateBuffer);
+}
+
+static std::string getFileSize(const std::string& path) {
+	struct stat fileStat;
+	if (stat(path.c_str(), &fileStat) != 0) {
+		return "";	// Error handling or empty result
+	}
+	size_t size = fileStat.st_size;
+	std::string sizeBuffer =
+		(S_ISDIR(fileStat.st_mode) ? "-" : numberToString<size_t>(size));
+	return sizeBuffer;
+}
+
+std::string AResponse::addFileEntry(const std::string& name,
+									const std::string& path) {
+	std::string fullPath = assemblePath(path, name);
+	std::string date = getLastModificationDate(fullPath);
+	std::string size = getFileSize(fullPath);
+	std::string displayName;
+	if (name.length() > 51)
+		displayName = name.substr(0, 49) + "..";  // Truncate and add ".."
+	else
+		displayName = name;
+	std::string WP1;
+	if (displayName.length() < 51)
+		WP1 = std::string(51 - displayName.length(), ' ');  // Pad with spaces
+	std::stringstream fileEntry;
+	std::string WS2 = "                   ";
+	fileEntry << "<a href=\"" + name + "\">" + displayName + "</a>" + WP1 + date + WS2 +
+					 size + "\n";
+	return fileEntry.str();
+}
+
 // Loads response with a page containing directory listing for that location
+// TODO: Add file last modified date and size, format
 short AResponse::loadDirectoryListing(const std::string& path) {
 	DIR* dir = opendir(path.c_str());
 	if (dir == NULL) return 403;
+	std::string dirName = getDirectoryName(path);
+	_response.body = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " +
+					 dirName + "</title>\n</head>\n<body>\n<h1>Index of " +
+					 dirName + "</h1>\n<hr>\n<pre>";
 	struct dirent* entry;
+	std::vector<std::string> entries;
 	while ((entry = readdir(dir)) != NULL) {
-		_response.body += std::string(entry->d_name) +
-						  "\n";	 // Print the name of each file/directory
+		entries.push_back(std::string(entry->d_name));
 	}
+	// Sort the vector alphabetically
+	std::sort(entries.begin(), entries.end());
+	for (std::vector<std::string>::iterator it = entries.begin();
+		 it != entries.end(); ++it) {
+		std::string entryName = *it;
+		_response.body += addFileEntry(entryName, path);
+	}
+	_response.body += "</pre>\n<hr>\n</body>\n</html>\n";
 	closedir(dir);
 	loadCommonHeaders();
 	_response.headers.insert(
@@ -334,20 +401,6 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	_response.status = 200;
 	return 200;
 }
-
-// Loads response with contents of file and sets MIME type
-//  NOTE: Used for GET
-// short AResponse::loadFile(const std::string& path) {
-// 	std::ifstream file(path.c_str());
-// 	if (!file.is_open()) return 500;
-// 	_response.body.assign((std::istreambuf_iterator<char>(file)),
-// 						  (std::istreambuf_iterator<char>()));
-// 	file.close();
-// 	loadCommonHeaders();
-// 	setMimeType(path);
-// 	_response.status = 200;
-// 	return 200;
-// }
 
 // Converts the response struct into a string (loading the status message) and
 // returns it
