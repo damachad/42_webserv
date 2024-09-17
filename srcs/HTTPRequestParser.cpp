@@ -6,17 +6,15 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 09:56:12 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/16 21:04:52 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPRequestParser.hpp"
 
-const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
-	const std::string& request, unsigned short& error_status) {
-	if (request.size() == 0) throw HTTPHeaderError("Empty Request");
-
-	(void)error_status;
+unsigned short HTTP_Request_Parser::parse_HTTP_request(
+	const std::string& buffer, HTTP_Request& request) {
+	if (buffer.size() == 0) throw HTTPHeaderError("Empty Request");
 
 	// Struct to return
 	HTTP_Request HTTP;
@@ -24,9 +22,6 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 	// Flags for parsing
 	bool request_line_is_parsed = false;
 	bool header_is_parsed = false;
-
-	std::istringstream request_stream(request);
-	std::string buffer;
 
 	while (std::getline(request_stream, buffer)) {
 		if (!request_line_is_parsed) {
@@ -45,7 +40,7 @@ const HTTP_Request HTTP_Request_Parser::parse_HTTP_request(
 
 	std::cout << "***Extracted HTTP***\n\n" << HTTP;
 
-	return HTTP;
+	return 1;
 }
 
 void HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,

@@ -6,7 +6,7 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 09:59:01 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/16 20:58:14 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,10 +127,10 @@ void Cluster::run(void) {
 					close_and_remove_socket(events[i].data.fd, _epoll_fd);
 				// TODO: Remove from client_to_fd map ??
 				else {
-					unsigned short error_status = 0;
-					HTTP_Request request =
+					HTTP_Request request;
+					unsigned short error_status =
 						HTTP_Request_Parser::parse_HTTP_request(buffer_request,
-																error_status);
+																request);
 					(void)request;
 					//   Echo the data back (for example purposes)
 					std::string buffer_response = get_response(

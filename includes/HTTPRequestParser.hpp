@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 09:56:14 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/16 21:01:30 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,8 @@ struct HTTP_Request {
 class HTTP_Request_Parser {
    public:
 	// Main function, parses request
-	static const HTTP_Request parse_HTTP_request(const std::string& request,
-												 unsigned short& error_status);
+	static unsigned short parse_HTTP_request(const std::string& buffer,
+											 HTTP_Request& request);
 
    private:
 	// Gets data HTTP_Request structure
