@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "AResponse.hpp"
+#include "PostResponse.hpp"
 
 PostResponse::PostResponse(const Server &server, const HTTP_Request &request)
 	: AResponse(server, request) {}

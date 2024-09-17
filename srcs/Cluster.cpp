@@ -13,6 +13,7 @@
 #include "Cluster.hpp"
 
 #include "AResponse.hpp"
+#include "DeleteResponse.hpp"
 #include "GetResponse.hpp"
 #include "HTTPRequestParser.hpp"
 #include "PostResponse.hpp"
@@ -190,9 +191,11 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 		}
 	}
 
+	(void)response_check;
 	// std::string response = response_check.get_http_response(); //TODO: Função
 	// de receber resposta?
-	delete response_check;
+	// delete response_check; //TODO: Ainda por definir como dar delete a
+	// response check?!
 
 	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
 	// Read html file to target, and get that to a body c-style STR
