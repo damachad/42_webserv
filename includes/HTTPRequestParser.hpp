@@ -47,23 +47,18 @@ class HTTP_Request_Parser {
    private:
 	// Gets data HTTP_Request structure
 	static bool add_req_line(HTTP_Request& HTTP, const std::string& first_line);
-
 	static bool add_header_fields(HTTP_Request& HTTP, const std::string& line);
 	static void add_message_body(HTTP_Request& HTTP, const std::string& line);
-	static std::string decode(const std::string& encoded);
+	static bool check_validity_of_header_fields(HTTP_Request& HTTP);
 	static void extract_queries(HTTP_Request& HTTP);
 
-	// Self-explanatory bools to check HTTP Requests' request line
-	static bool whitespaces_are_valid(const std::string& first_line,
-									  unsigned int limit);
+	// Auxiliary functions for above functions
 	static std::string trim(const std::string& str);
+	static std::string decode(const std::string& encoded);
 	static bool method_is_valid(const std::string& method);
 	static bool url_is_valid(const std::string& url);
 	static bool protocol_version_is_valid(
 		const ::std::string& protocol_version);
-
-	// Checks validity of HTTP header fields
-	static bool check_validity_of_header_fields(HTTP_Request& HTTP);
 
 	// Private constructor and destructor: class is not instanciable
 	HTTP_Request_Parser();

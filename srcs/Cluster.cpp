@@ -132,7 +132,6 @@ void Cluster::run(void) {
 					unsigned short error_status =
 						HTTP_Request_Parser::parse_HTTP_request(buffer_request,
 																request);
-					(void)request;
 					//   Echo the data back (for example purposes)
 					std::string buffer_response = get_response(
 						request, error_status,
