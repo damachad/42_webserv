@@ -52,8 +52,6 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 
 	extract_queries(HTTP);
 
-	std::cout << "***Extracted HTTP***\n\n" << HTTP;
-
 	return OK;
 }
 
