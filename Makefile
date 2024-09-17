@@ -6,7 +6,7 @@
 #    By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/01 11:53:48 by damachad          #+#    #+#              #
-#    Updated: 2024/09/16 18:55:17 by mde-sa--         ###   ########.fr        #
+#    Updated: 2024/09/17 08:35:53 by damachad         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -41,7 +41,8 @@ OBJ_DIR		= objs
 
 NAME 		= webserv
 FILES 		= main Helpers ConfigParser Exceptions Cluster utils \
-            LocationContext Server HTTPRequestParser AResponse
+            LocationContext Server HTTPRequestParser AResponse \
+			GetResponse
 SRC 		= $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILES)))
 OBJ 		= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILES)))
 

@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Cluster.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/16 20:58:14 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/17 08:57:51 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
 
 #include "AResponse.hpp"
+#include "GetResponse.hpp"
 #include "HTTPRequestParser.hpp"
 #include "PostResponse.hpp"
 
