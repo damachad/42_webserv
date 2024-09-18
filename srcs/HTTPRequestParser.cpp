@@ -136,9 +136,9 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	std::string user_agent = HTTP.header_fields.find("user-agent")->second;
 
 	bool has_curl = user_agent.find("curl") != std::string::npos;
-	bool has_mozilla = user_agent.find("mozilla") != std::string::npos;
-	bool has_firefox = user_agent.find("firefox") != std::string::npos;
-	bool has_siege = user_agent.find("siege") != std::string::npos;
+	bool has_mozilla = user_agent.find("Mozilla") != std::string::npos;
+	bool has_firefox = user_agent.find("Firefox") != std::string::npos;
+	bool has_siege = user_agent.find("Siege") != std::string::npos;
 
 	// Checks that the request is from Curl, Mozilla Firefox or Mozilla Siege
 	if (!(has_curl || (has_mozilla && (has_firefox || has_siege)))) {
