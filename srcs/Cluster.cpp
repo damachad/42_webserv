@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/18 14:53:51 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/18 15:11:24 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,7 +176,7 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 	AResponse* response_check;
 
 	if (error_status != OK)
-		response_check = new RequestErrorResponse(server, request);
+		response_check = new RequestErrorResponse(server, request, error_status);
 	else {
 		switch (static_cast<int>(request.method)) {
 			case (GET):
