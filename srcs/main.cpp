@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/18 11:16:24 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:33:00 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
 		//  parser.printLocationValues(serverNum, route);
 	} catch (std::exception& e) {
 		std::cerr << e.what();
+		return 1;
 	}
 
 	// Initializes the Server Cluster
