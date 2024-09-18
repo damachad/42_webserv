@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/18 11:40:48 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:53:51 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,23 +175,21 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 
 	AResponse* response_check;
 
-	(void)error_status;
-	// std::cout << "error_status: " << error_status << "\n";
-	// if (error_status != OK)
-	// 	response_check = new RequestErrorResponse(server, request);
-	// else {
-	switch (static_cast<int>(request.method)) {
-		case (GET):
-			response_check = new GetResponse(server, request);
-			break;
-		case (POST):
-			response_check = new PostResponse(server, request);
-			break;
-		case (DELETE):
-			response_check = new DeleteResponse(server, request);
-			break;
+	if (error_status != OK)
+		response_check = new RequestErrorResponse(server, request);
+	else {
+		switch (static_cast<int>(request.method)) {
+			case (GET):
+				response_check = new GetResponse(server, request);
+				break;
+			case (POST):
+				response_check = new PostResponse(server, request);
+				break;
+			case (DELETE):
+				response_check = new DeleteResponse(server, request);
+				break;
+		}
 	}
-	// }
 
 	// (void)response_check;
 	// std::string response = response_check.get_http_response(); //TODO: Função
