@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/18 14:33:00 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/18 16:08:23 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,13 @@
 
 int main(int argc, char** argv) {
 	// Get config
-	if (argc != 2) {
-		// load default conf file ?
-		std::cout << "Usage: ./webserv [configuration file]";
+	if (argc > 2) {
+		std::cout << "Usage: ./webserv [configuration file]\n";
 		return (1);
 	}
-	ConfigParser parser(argv[1]);
+	ConfigParser parser("conf/default2.conf");
+	if (argc == 2)
+		parser = ConfigParser(argv[1]);
 
 	std::vector<Server>
 		servers;  // Defined outside the try block so it can be used later
