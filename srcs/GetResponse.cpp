@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 16:09:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/18 11:16:18 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,9 @@ short GetResponse::loadFile(const std::string& path) {
 
 std::string GetResponse::generateResponse() {
 	setMatchLocationRoute();
-	short status = checkSize();
-	if (status != 200) return loadErrorPage(status);
+	short status;
+	// status = checkSize();
+	// if (status != 200) return loadErrorPage(status);
 	status = checkMethod();
 	if (status != 200) return loadErrorPage(status);
 	if (hasReturn()) {
