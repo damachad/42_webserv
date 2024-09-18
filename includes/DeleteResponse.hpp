@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   DeleteResponse.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:20:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/13 15:48:14 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:31:03 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,11 @@ class DeleteResponse : public AResponse {
 	DeleteResponse(const DeleteResponse& src);
 	~DeleteResponse();
 
+	bool isDirectoryEmpty(const std::string& path);
+
 	std::string generateResponse();
+	short deleteFile(const std::string& path);
+	short deleteDirectory(const std::string& path);
 
    private:
 	DeleteResponse();
