@@ -4,19 +4,20 @@ CGI::CGI(HTTP_Request &httpRequest) : _request(httpRequest) {}
 
 CGI::~CGI() {}
 
-bool isSingleValueHeader(std::string &key) {
+bool CGI::isSingleValueHeader(std::string &key) {
 	if (key == "Accept" || key == "Accept-Encoding" || key == "Cache-Control" ||
 		key == "Set-Cookie" || key == "Via" || key == "Forewarded")
 		return false;
 	return true;
 }
 
-void CGI::fetchCookies(std::multimap<std::string, std::string> &headerEnv,
-					   HTTP_Request &request) {
+std::string CGI::getQueryFields() {}
+
+void CGI::fetchCookies() {
 	for (std::multimap<std::string, std::string>::const_iterator it =
-			 request.header_fields.begin();
-		 it != request.header_fields.end(); ++it) {
-		if (it->first == "Set-Cookie") {
+			 _request.header_fields.begin();
+		 it != _request.header_fields.end(); ++it) {
+		if (it->first == "Cookie") {
 			std::string cookieHeader = it->second;
 
 			size_t pos = cookieHeader.find('=');
@@ -24,7 +25,8 @@ void CGI::fetchCookies(std::multimap<std::string, std::string> &headerEnv,
 				std::string cookieName = cookieHeader.substr(0, pos);
 				std::string cookieValue = cookieHeader.substr(pos + 1);
 
-				headerEnv.insert(std::make_pair(cookieName, cookieValue));
+				// Store the cookies in the _headerEnv map
+				_headerEnv.insert(std::make_pair(cookieName, cookieValue));
 			}
 		}
 	}
