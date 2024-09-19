@@ -22,25 +22,6 @@ std::string CGI::getQueryFields() {
 	return queryString;
 }
 
-void CGI::fetchCookies() {
-	for (std::multimap<std::string, std::string>::const_iterator it =
-			 _request.header_fields.begin();
-		 it != _request.header_fields.end(); ++it) {
-		if (it->first == "Cookie") {
-			std::string cookieHeader = it->second;
-
-			size_t pos = cookieHeader.find('=');
-			if (pos != std::string::npos) {
-				std::string cookieName = cookieHeader.substr(0, pos);
-				std::string cookieValue = cookieHeader.substr(pos + 1);
-
-				// Store the cookies in the _headerEnv map
-				_headerEnv.insert(std::make_pair(cookieName, cookieValue));
-			}
-		}
-	}
-}
-
 std::string CGI::getHeaderEnvValue(std::string key) {
 	// Find the range of values associated with the key
 	std::pair<std::multimap<std::string, std::string>::iterator,
@@ -71,4 +52,31 @@ std::string CGI::getHeaderEnvValue(std::string key) {
 std::string CGI::getEnvVar(const char *key) {
 	const char *pair = getenv(key);
 	return (pair != NULL) ? std::string(pair) : "";
+}
+
+std::string CGI::fetchCookies() {
+	std::string result;
+
+	for (std::multimap<std::string, std::string>::const_iterator it =
+			 _request.header_fields.begin();
+		 it != _request.header_fields.end(); ++it) {
+		if (it->first == "Cookie") {
+			if (!result.empty()) {
+				result += "; ";
+			}
+			result += it->second;
+		}
+	}
+
+	return result;
+}
+
+void CGI::setCGIEnv() {
+	setenv("REQUEST_METHOD", std::to_string(_request.method).c_str(), 1);
+	setenv("CONTENT_TYPE", getHeaderEnv("Content-Type").c_str(), 1);
+	setenv("CONTENT_LENGTH", getHeaderEnvValue("Content-Length").c_str(), 1);
+	setenv("QUERY_STRING", getQueryFields().c_str(), 1);
+	setenv("SCRIPT_NAME", _request.uri.c_str(), 1);
+	setenv("SERVER_PROTOCOL", _request.protocol_version.c_str(), 1);
+	setenv("HTTP_COOKIE", )
 }

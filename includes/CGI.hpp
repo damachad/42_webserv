@@ -19,6 +19,6 @@ class CGI {
 
 	std::string getHeaderEnvValue(std::string key);
 	std::string getEnvVar(const char *key);
-	void fetchCookies();
-					  HTTP_Request &request);
+	std::string fetchCookies();
+	void setCGIEnv();
 };
