@@ -30,7 +30,7 @@ void CGI::fetchCookies(std::multimap<std::string, std::string> &headerEnv,
 	}
 }
 
-std::string CGI::getHeaderEnv(std::string key) {
+std::string CGI::getHeaderEnvValue(std::string key) {
 	// Find the range of values associated with the key
 	std::pair<std::multimap<std::string, std::string>::iterator,
 			  std::multimap<std::string, std::string>::iterator>

@@ -14,7 +14,7 @@ class CGI {
 	CGI(HTTP_Request &httpRequest);
 	~CGI();
 
-	std::string getHeaderEnv(std::string key);
+	std::string getHeaderEnvValue(std::string key);
 
 	std::string getEnvVar(const char *key);
 
