@@ -20,9 +20,17 @@ PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}
 PostResponse::~PostResponse() {}
 
 std::string PostResponse::generateResponse() {
-	std::string response("This is the response");
+	setMatchLocationRoute();  // NOTE: Check if needed
+	unsigned short status;
 
-	std::cout << "Hi!" << std::endl;
+	status = checkSize();
+	if (status != 200) return loadErrorPage(status);
 
-	return response;
+	status = checkClientBodySize();
+	if (status != 200) return loadErrorPage(status);
+
+	status = checkMethod();
+	if (status != 200) return loadErrorPage(status);
+
+	return "HI";
 }

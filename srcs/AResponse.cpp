@@ -170,6 +170,15 @@ short AResponse::checkMethod() const {
 	return 200;
 }
 
+// Check if message body size is, at most, the maximum allowed body size
+short AResponse::checkClientBodySize() const {
+	size_t max_body_size = _server.getClientMaxBodySize();
+
+	if (_request.message_body.size() > max_body_size) return 413;
+
+	return 200;
+}
+
 // Sets locationRoute by matching uri to every location locationRoute is empty
 // if there is no location match
 //  NOTE: If REGEX is not considered, NGINX does prefix match for the location
@@ -416,8 +425,8 @@ const std::string AResponse::getResponseStr() const {
 		 itHead++) {
 		headersStr += itHead->first + ": " + itHead->second + "\r\n";
 	}
-	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) + " " +
-						   message + "\r\n" + headersStr + "\r\n" +
+	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) +
+						   " " + message + "\r\n" + headersStr + "\r\n" +
 						   _response.body;
 	return response;
 }
