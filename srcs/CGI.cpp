@@ -11,7 +11,16 @@ bool CGI::isSingleValueHeader(std::string &key) {
 	return true;
 }
 
-std::string CGI::getQueryFields() {}
+std::string CGI::getQueryFields() {
+	std::string queryString;
+	for (std::multimap<std::string, std::string>::const_iterator it =
+			 _request.query_fields.begin();
+		 it != _request.query_fields.end(); ++it) {
+		if (!queryString.empty()) queryString += "&";
+		queryString += it->first + "=" + it->second;
+	}
+	return queryString;
+}
 
 void CGI::fetchCookies() {
 	for (std::multimap<std::string, std::string>::const_iterator it =
