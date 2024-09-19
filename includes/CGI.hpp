@@ -1,6 +1,9 @@
 #pragma once
+#include <unistd.h>
+
 #include <cstdlib>
 #include <map>
+#include <stdexcept>
 #include <string>
 
 #include "HTTPRequestParser.hpp"
@@ -21,4 +24,5 @@ class CGI {
 	std::string getEnvVar(const char *key);
 	std::string fetchCookies();
 	void setCGIEnv();
+	std::string executeCGI(const std::string &scriptPath);
 };

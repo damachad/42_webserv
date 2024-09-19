@@ -78,5 +78,46 @@ void CGI::setCGIEnv() {
 	setenv("QUERY_STRING", getQueryFields().c_str(), 1);
 	setenv("SCRIPT_NAME", _request.uri.c_str(), 1);
 	setenv("SERVER_PROTOCOL", _request.protocol_version.c_str(), 1);
-	setenv("HTTP_COOKIE", )
+	setenv("HTTP_COOKIE", fetchCookies().c_str(), 1);
+	// Adicionar ou reomver de acordo com os requesitios do nosso server
+}
+
+std::string CGI::executeCGI(const std::string &scriptPath) {
+	int pipeIn[2];
+	int pipeOut[2];
+
+	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
+		throw std::runtime_error("Pipe creation failed");
+
+	pid_t pid = fork();
+	if (pid == -1) throw std::runtime_error("Fork failed");
+
+	if (pid == 0) {
+		dup2(pipeIn[0], STDIN_FILENO);
+		dup2(pipeOut[1], STDOUT_FILENO);
+		close(pipeIn[1]);
+		close(pipeOut[0]);
+		setCGIEnv();
+		char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
+		if (execve(scriptPath.c_str(), argv, environ) == -1)
+			throw std::runtime_error("Exec failed");
+	} else {
+		close(pipeIn[0]);
+		close(pipeOut[1]);
+		if (!_request.message_body.empty())
+			write(pipeIn[1], _request.message_body.c_str(),
+				  _request.message_body.size());
+		close(pipeIn[1]);
+
+		std::string cgiOutput;
+		char buffer[1024];
+		ssize_t bytesRead;
+		while ((bytesRead = read(pipeOut[0], buffer, sizeof(buffer))) > 0)
+			cgiOutput.append(buffer, bytesRead);
+	}
+	close(pipeOut[0]);
+
+	waitpid(pid, NULL, 0);
+
+	return cgiOutput;
 }
