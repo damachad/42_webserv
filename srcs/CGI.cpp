@@ -1,5 +1,7 @@
 #include "CGI.hpp"
 
+#include <stdexcept>
+
 CGI::CGI(HTTP_Request &httpRequest) : _request(httpRequest) {}
 
 CGI::~CGI() {}
@@ -143,6 +145,20 @@ void CGI::handleCGIResponse() {
 	if (pos != std::string::npos) {
 		std::string headers = cgiOutput.substr(0, pos);
 		std::string body = cgiOutput.substr(pos + 4);
+		std::multimap<std::string, std::string> headerEnv =
+			parseCGIHeaders(headers);
+
+		if (headerEnv.find("Content-Type") == headerEnv.end()) {
+			throw std::runtime_error("Missing 'Content-Type' in CGI headers.");
+		}
+
+		// criar funcao para lancar erro caso nao encontre o parametro
+		// necessario
+
+		std::cout << body;
+	} else {
+		std::cerr << "Error: Malformed CGI output, no valid headers found."
+				  << std::endl;
 	}
 }
 
