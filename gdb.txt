@@ -1,0 +1,366 @@
+
+$10 = "POST /upload HTTP/1.1\r\nHost: localhost:9999\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\nContent-Length: 205\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "22d72d50aef35d2a\r\n\r\n", '-' <repeats 26 times>, "22d72d50aef35d2a\r\nContent-Disposition: form-data; name=\"file\"; filename=\"samplefile\"\r\nContent-Type: application/octet-stream\r\n\r\nhi\n\r\n", '-' <repeats 26 times>, "22d72d50aef35d2a--\r\n"
+Starting program: /home/miguel/Coding/42Porto/CommonCore/Webserv/webserv conf/default2.conf
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 2, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:9999\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\nContent-Length: 205\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "f98d0a7c976b2a07\r\n\r\n", HTTP=...) at srcs/HTTPRequestParser.cpp:18
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+Continuing.
+
+Breakpoint 5, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:9999\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\nContent-Length: 205\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "f98d0a7c976b2a07\r\n\r\n", HTTP=...) at srcs/HTTPRequestParser.cpp:47
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+$11 = ""
+
+Breakpoint 4, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:9999\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\nContent-Length: 205\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "f98d0a7c976b2a07\r\n\r\n", HTTP=...) at srcs/HTTPRequestParser.cpp:53
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+Starting program: /home/miguel/Coding/42Porto/CommonCore/Webserv/webserv conf/default2.conf
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 2, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:9999\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\nContent-Length: 205\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "65618d000bba6375\r\n\r\n", HTTP=...) at srcs/HTTPRequestParser.cpp:18
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+
+Breakpoint 5, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:9999\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\nContent-Length: 205\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "65618d000bba6375\r\n\r\n", HTTP=...) at srcs/HTTPRequestParser.cpp:47
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+
+Breakpoint 4, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:9999\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\nContent-Length: 205\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "65618d000bba6375\r\n\r\n", HTTP=...) at srcs/HTTPRequestParser.cpp:53
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+$12 = (HTTP_Request &) @0x7fffffffbf80: {method = POST, uri = "/upload", protocol_version = "HTTP/1.1", header_fields = std::multimap with 5 elements = {["accept"] = "*/*", 
+    ["content-length"] = "205", ["content-type"] = "multipart/form-data; boundary=", '-' <repeats 24 times>, "65618d000bba6375", ["host"] = "localhost:9999", 
+    ["user-agent"] = "curl/7.81.0"}, query_fields = std::multimap with 0 elements, message_body = ""}
+Starting program: /home/miguel/Coding/42Porto/CommonCore/Webserv/webserv conf/default2.conf
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 2, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:9999\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\nContent-Length: 205\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437\r\n\r\n", HTTP=...) at srcs/HTTPRequestParser.cpp:18
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = ""
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "POST /upload HTTP/1.1\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "POST /upload HTTP/1.1\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "POST /upload HTTP/1.1\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "POST /upload HTTP/1.1\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "POST /upload HTTP/1.1"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "POST /upload HTTP/1.1"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "POST /upload HTTP/1.1"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "POST /upload HTTP/1.1"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Host: localhost:9999\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Host: localhost:9999\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Host: localhost:9999\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Host: localhost:9999\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Host: localhost:9999"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Host: localhost:9999"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Host: localhost:9999"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Host: localhost:9999"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "User-Agent: curl/7.81.0\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "User-Agent: curl/7.81.0\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "User-Agent: curl/7.81.0\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "User-Agent: curl/7.81.0\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "User-Agent: curl/7.81.0"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "User-Agent: curl/7.81.0"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "User-Agent: curl/7.81.0"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "User-Agent: curl/7.81.0"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Accept: */*\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Accept: */*\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Accept: */*\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Accept: */*\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Accept: */*"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Accept: */*"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Accept: */*"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Accept: */*"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Length: 205\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Length: 205\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Length: 205\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Length: 205\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Length: 205"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Length: 205"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Length: 205"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Length: 205"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "Content-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "bd44636271312437"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = "\r"
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = ""
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = ""
+1: HTTP.message_body = ""
+2: HTTP.message_body.size() = 0
+3: buffer = ""

@@ -140,24 +140,24 @@ AResponse::AResponse(const AResponse& src)
 // Checks if Content-Lenght is present once and if request body size matches
 // this value and value of client_max_body_size
 short AResponse::checkSize() const {
-	if (_request.header_fields.count("Content-Length") ==
+	if (_request.header_fields.count("content-length") ==
 		0)			 // mandatory Content-Length header ?
 		return 411;	 // Length Required
 	if (_request.message_body.size() >
 		static_cast<size_t>(_server.getClientMaxBodySize(_locationRoute)))
 		return 413;	 // Request Entity Too Large
 	// How to handle multiple Content-Length values ?
-	if (_request.header_fields.count("Content-Length") > 1)
+	if (_request.header_fields.count("content-length") > 1)
 		return 400;	 // Bad Request
-	std::multimap<std::string, std::string>::const_iterator it =
-		_request.header_fields.find("Content-Length");
-	size_t size = -1;
-	if (it != _request.header_fields.end()) {
-		char* endPtr = NULL;
-		size = std::strtol(it->second.c_str(), &endPtr, 10);
-		if (*endPtr != '\0') return 400;
-		if (size != _request.message_body.size()) return 400;
-	}
+	// std::multimap<std::string, std::string>::const_iterator it =
+	//	_request.header_fields.find("content-length");
+	//  size_t size = -1;
+	//  if (it != _request.header_fields.end()) {
+	//	char* endPtr = NULL;
+	//  size = std::strtol(it->second.c_str(), &endPtr, 10);
+	//	if (*endPtr != '\0') return 400;
+	//  if (size != _request.message_body.size()) return 400;
+	//	}
 	return 200;
 }
 

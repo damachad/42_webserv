@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	// std::cout << server_cluster;
+	std::cout << server_cluster;
 
 	server_cluster.run();
 

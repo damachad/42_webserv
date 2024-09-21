@@ -20,7 +20,7 @@ PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}
 PostResponse::~PostResponse() {}
 
 std::string PostResponse::generateResponse() {
-	setMatchLocationRoute();  // NOTE: Check if needed
+	setMatchLocationRoute();
 	unsigned short status;
 
 	status = checkSize();
@@ -31,6 +31,10 @@ std::string PostResponse::generateResponse() {
 
 	status = checkMethod();
 	if (status != 200) return loadErrorPage(status);
+
+	// Ver Client Body Buffer Size??
+	//
+	//
 
 	return "HI";
 }

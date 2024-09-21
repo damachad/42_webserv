@@ -117,7 +117,7 @@ void Cluster::run(void) {
 					throw ClusterRunError("epoll_ctl");
 			} else {
 				// Handle I/O on connected socket
-				char buffer_request[BUFFER_SIZE];
+				char buffer_request[BUFFER_SIZE] = {};
 				ssize_t count = read(events[i].data.fd, buffer_request,
 									 sizeof(buffer_request));
 				if (count == -1) {
@@ -176,7 +176,8 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 	AResponse* response_check;
 
 	if (error_status != OK)
-		response_check = new RequestErrorResponse(server, request, error_status);
+		response_check =
+			new RequestErrorResponse(server, request, error_status);
 	else {
 		switch (static_cast<int>(request.method)) {
 			case (GET):
