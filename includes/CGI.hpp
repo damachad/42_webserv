@@ -1,9 +1,10 @@
 #pragma once
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <cstdlib>
 #include <map>
-#include <stdexcept>
 #include <string>
 
 #include "HTTPRequestParser.hpp"

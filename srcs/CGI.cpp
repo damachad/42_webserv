@@ -71,9 +71,15 @@ std::string CGI::fetchCookies() {
 	return result;
 }
 
+std::string intToString(int value) {
+	std::stringstream ss;
+	ss << value;
+	return ss.str();
+}
+
 void CGI::setCGIEnv() {
-	setenv("REQUEST_METHOD", std::to_string(_request.method).c_str(), 1);
-	setenv("CONTENT_TYPE", getHeaderEnv("Content-Type").c_str(), 1);
+	setenv("REQUEST_METHOD", intToString(_request.method).c_str(), 1);
+	setenv("CONTENT_TYPE", getHeaderEnvValue("Content-Type").c_str(), 1);
 	setenv("CONTENT_LENGTH", getHeaderEnvValue("Content-Length").c_str(), 1);
 	setenv("QUERY_STRING", getQueryFields().c_str(), 1);
 	setenv("SCRIPT_NAME", _request.uri.c_str(), 1);
@@ -85,6 +91,7 @@ void CGI::setCGIEnv() {
 std::string CGI::executeCGI(const std::string &scriptPath) {
 	int pipeIn[2];
 	int pipeOut[2];
+	std::string cgiOutput;
 
 	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
 		throw std::runtime_error("Pipe creation failed");
@@ -109,7 +116,6 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 				  _request.message_body.size());
 		close(pipeIn[1]);
 
-		std::string cgiOutput;
 		char buffer[1024];
 		ssize_t bytesRead;
 		while ((bytesRead = read(pipeOut[0], buffer, sizeof(buffer))) > 0)
