@@ -127,3 +127,15 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 
 	return cgiOutput;
 }
+
+std::string CGI::getCGIScriptPath() {
+	std::string basePath = "/var/www/cgi-bin/";	 // para ser discutido em grupo
+	std::string scriptName = _request.uri;
+
+	return basePath + scriptName;
+}
+
+void CGI::handleCGIResponse() {
+	std::string getCGIScriptPath();
+	std::string cgiOutput = executeCGI();
+}

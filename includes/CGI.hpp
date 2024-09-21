@@ -16,14 +16,16 @@ class CGI {
 
 	bool isSingleValueHeader(std::string &key);
 	std::string getQueryFields();
+	std::string getHeaderEnvValue(std::string key);
+	std::string getEnvVar(const char *key);
+	std::string fetchCookies();
+	void setCGIEnv();
+	std::string getCGIScriptPath();
+	std::string executeCGI(const std::string &scriptPath);
 
    public:
 	CGI(HTTP_Request &httpRequest);
 	~CGI();
 
-	std::string getHeaderEnvValue(std::string key);
-	std::string getEnvVar(const char *key);
-	std::string fetchCookies();
-	void setCGIEnv();
-	std::string executeCGI(const std::string &scriptPath);
+	void handleCGIResponse();
 };
