@@ -38,7 +38,7 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 		else if (buffer != "\r" && !header_is_parsed) {
 			if (!add_header_fields(HTTP, buffer)) return BAD_REQUEST;
 		}  // Notes end of header fields
-		else if (buffer == "\r" || buffer == "") {
+		else if (buffer == "\r" || buffer.empty()) {
 			header_is_parsed = true;
 			break;
 		}
@@ -46,9 +46,10 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 
 	if (header_is_parsed) {
 		// Read the rest of the stream as the message body
-		std::string remaining_body;
-		std::getline(buffer_stream, remaining_body, '\0');	// Read until EOF
-		HTTP.message_body.append(remaining_body);			// Append the body
+		std::string remaining_body(
+			(std::istreambuf_iterator<char>(buffer_stream)),
+			std::istreambuf_iterator<char>());
+		HTTP.message_body = remaining_body;	 // Append the body
 	}
 
 	extract_queries(HTTP);
