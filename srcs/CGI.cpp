@@ -85,7 +85,7 @@ void CGI::setCGIEnv() {
 	setenv("SCRIPT_NAME", _request.uri.c_str(), 1);
 	setenv("SERVER_PROTOCOL", _request.protocol_version.c_str(), 1);
 	setenv("HTTP_COOKIE", fetchCookies().c_str(), 1);
-	// Adicionar ou reomver de acordo com os requesitios do nosso server
+	// Adicionar ou remover de acordo com os requesitios do nosso server
 }
 
 std::string CGI::executeCGI(const std::string &scriptPath) {
@@ -136,6 +136,29 @@ std::string CGI::getCGIScriptPath() {
 }
 
 void CGI::handleCGIResponse() {
-	std::string getCGIScriptPath();
-	std::string cgiOutput = executeCGI();
+	std::string scriptPath = getCGIScriptPath();
+	std::string cgiOutput = executeCGI(scriptPath);
+
+	size_t pos = cgiOutput.find("\r\n\r\n");
+	if (pos != std::string::npos) {
+		std::string headers = cgiOutput.substr(0, pos);
+		std::string body = cgiOutput.substr(pos + 4);
+	}
+}
+
+std::multimap<std::string, std::string> CGI::parseCGIHeaders(
+	const std::string &headers) {
+	std::multimap<std::string, std::string> headerEnv;
+	std::istringstream stream(headers);
+	std::string line;
+
+	while (std::getline(stream, line)) {
+		size_t colonPos = line.find(": ");
+		if (colonPos != std::string::npos) {
+			std::string key = line.substr(0, colonPos);
+			std::string value = line.substr(colonPos + 2);
+			headerEnv.insert(std::make_pair(key, value));
+		}
+	}
+	return headerEnv;
 }

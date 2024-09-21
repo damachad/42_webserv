@@ -11,7 +11,6 @@
 
 class CGI {
    private:
-	std::multimap<const std::string, std::string> _headerEnv;
 	HTTP_Request &_request;
 
 	bool isSingleValueHeader(std::string &key);
@@ -19,9 +18,11 @@ class CGI {
 	std::string getHeaderEnvValue(std::string key);
 	std::string getEnvVar(const char *key);
 	std::string fetchCookies();
-	void setCGIEnv();
 	std::string getCGIScriptPath();
 	std::string executeCGI(const std::string &scriptPath);
+	void setCGIEnv();
+	std::multimap<std::string, std::string> parseCGIHeaders(
+		const std::string &headers);
 
    public:
 	CGI(HTTP_Request &httpRequest);
