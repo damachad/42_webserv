@@ -32,28 +32,43 @@ std::string PostResponse::generateResponse() {
 	status = checkMethod();
 	if (status != 200) return loadErrorPage(status);
 
+	status = checkBody();
+	if (status != 200) return loadErrorPage(status);
+
+	status = upload_file();
+	if (status != 200) return loadErrorPage(status);
 	// Ver Client Body Buffer Size??
 	//
 	//
-
-	this->upload_file();
 	return "HI";
 }
 
-void PostResponse::upload_file() {
-	const std::string boundary = get_boundary();
+short PostResponse::upload_file() { return 200; }
 
-	const std::vector<std::multimap<std::string, std::string> > multipart_body =
-		get_multipart_body(boundary);
+short PostResponse::checkBody() {
+	_boundary = get_boundary();
+	if (_boundary.empty()) return 400;
+
+	_multipart_body = get_multipart_body(_boundary);
+	if (_multipart_body.empty()) return 400;
+
+	return 200;
 }
 
-// Returns boundary
+// Returns boundary, returns empty if no boundary. Also checks content-type
+// exists.
 const std::string PostResponse::get_boundary() {
-	const std::string message_body = _request.message_body;
-	const std::string content_type =
-		_request.header_fields.find("content-type")->second;
-	const std::string boundary =
-		content_type.substr(content_type.find("boundary=") + 9);
+	std::multimap<std::string, std::string>::const_iterator
+		content_type_header_field = _request.header_fields.find("content-type");
+	if (content_type_header_field == _request.header_fields.end()) return "";
+
+	const std::string content_type = content_type_header_field->second;
+	if (content_type.empty()) return "";
+
+	size_t boundary_position = content_type.find("boundary=");
+	if (boundary_position == std::string::npos) return "";
+
+	const std::string boundary = content_type.substr(boundary_position + 9);
 
 	return boundary;
 }
@@ -66,6 +81,8 @@ PostResponse::get_multipart_body(const std::string &boundary) {
 	std::string end_boundary = full_boundary + "--";
 
 	size_t start_boundary_position = _request.message_body.find(full_boundary);
+	if (start_boundary_position == std::string::npos) return multipart_body;
+
 	while (start_boundary_position != std::string::npos) {
 		start_boundary_position += full_boundary.length() + 2;
 		size_t end_boundary_position =
@@ -74,6 +91,8 @@ PostResponse::get_multipart_body(const std::string &boundary) {
 		if (_request.message_body.find(end_boundary, start_boundary_position) ==
 			start_boundary_position)
 			break;
+
+		if (end_boundary_position == std::string::npos) return multipart_body;
 
 		std::string subpart = _request.message_body.substr(
 			start_boundary_position,
@@ -111,7 +130,8 @@ const std::multimap<std::string, std::string> PostResponse::extract_fields(
 		if (colon_pos != std::string::npos) {
 			std::string first = field.substr(0, colon_pos);
 			std::string second = field.substr(colon_pos + 2);
-			submap.insert(std::make_pair(first, second));
+			if (!first.empty() && !second.empty())
+				submap.insert(std::make_pair(first, second));
 		}
 
 		start_separator = end_separator + 2;
@@ -119,7 +139,7 @@ const std::multimap<std::string, std::string> PostResponse::extract_fields(
 	}
 
 	submap.insert(
-		std::make_pair("Filebody", body.substr(0, body.length() - 2)));
+		std::make_pair("_File Contents", body.substr(0, body.length() - 2)));
 
 	return submap;
 }
