@@ -152,13 +152,12 @@ void CGI::handleCGIResponse() {
 			throw std::runtime_error("Missing 'Content-Type' in CGI headers.");
 		}
 
-		// criar funcao para lancar erro caso nao encontre o parametro
-		// necessario
+		// Adicionar todos os parametros a verificar
 
 		std::cout << body;
 	} else {
-		std::cerr << "Error: Malformed CGI output, no valid headers found."
-				  << std::endl;
+		throw std::runtime_error(
+			"Error: Malformed CGI output, no valid headers found.");
 	}
 }
 
