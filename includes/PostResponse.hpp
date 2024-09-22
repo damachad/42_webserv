@@ -29,11 +29,11 @@ class PostResponse : public AResponse {
 	PostResponse& operator=(const PostResponse& src);
 
 	short checkBody();
-	short upload_file();
-	const std::string get_boundary();
+	short uploadFile();
+	const std::string getBoundary();
 	const std::vector<std::multimap<std::string, std::string> >
-	get_multipart_body(const std::string& boundary);
-	const std::multimap<std::string, std::string> extract_fields(
+	getMultipartBody(const std::string& boundary);
+	const std::multimap<std::string, std::string> extractFields(
 		const std::string& subpart);
 
 	std::vector<std::multimap<std::string, std::string> > _multipart_body;

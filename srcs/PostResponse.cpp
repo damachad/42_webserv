@@ -35,7 +35,7 @@ std::string PostResponse::generateResponse() {
 	status = checkBody();
 	if (status != 200) return loadErrorPage(status);
 
-	status = upload_file();
+	status = uploadFile();
 	if (status != 200) return loadErrorPage(status);
 	// Ver Client Body Buffer Size??
 	//
@@ -43,13 +43,13 @@ std::string PostResponse::generateResponse() {
 	return "HI";
 }
 
-short PostResponse::upload_file() { return 200; }
+short PostResponse::uploadFile() { return 200; }
 
 short PostResponse::checkBody() {
-	_boundary = get_boundary();
+	_boundary = getBoundary();
 	if (_boundary.empty()) return 400;
 
-	_multipart_body = get_multipart_body(_boundary);
+	_multipart_body = getMultipartBody(_boundary);
 	if (_multipart_body.empty()) return 400;
 
 	return 200;
@@ -57,7 +57,7 @@ short PostResponse::checkBody() {
 
 // Returns boundary, returns empty if no boundary. Also checks content-type
 // exists.
-const std::string PostResponse::get_boundary() {
+const std::string PostResponse::getBoundary() {
 	std::multimap<std::string, std::string>::const_iterator
 		content_type_header_field = _request.header_fields.find("content-type");
 	if (content_type_header_field == _request.header_fields.end()) return "";
@@ -75,7 +75,7 @@ const std::string PostResponse::get_boundary() {
 
 // Gets entire multipart as one contiguous vector
 const std::vector<std::multimap<std::string, std::string> >
-PostResponse::get_multipart_body(const std::string &boundary) {
+PostResponse::getMultipartBody(const std::string &boundary) {
 	std::vector<std::multimap<std::string, std::string> > multipart_body;
 	std::string full_boundary = "--" + boundary;
 	std::string end_boundary = full_boundary + "--";
@@ -98,8 +98,7 @@ PostResponse::get_multipart_body(const std::string &boundary) {
 			start_boundary_position,
 			end_boundary_position - start_boundary_position);
 
-		std::multimap<std::string, std::string> submap =
-			extract_fields(subpart);
+		std::multimap<std::string, std::string> submap = extractFields(subpart);
 		if (submap.empty()) break;
 		multipart_body.push_back(submap);
 
@@ -110,7 +109,7 @@ PostResponse::get_multipart_body(const std::string &boundary) {
 }
 
 // Gets submap for each part of the body
-const std::multimap<std::string, std::string> PostResponse::extract_fields(
+const std::multimap<std::string, std::string> PostResponse::extractFields(
 	const std::string &subpart) {
 	std::multimap<std::string, std::string> submap;
 
