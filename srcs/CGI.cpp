@@ -1,7 +1,5 @@
 #include "CGI.hpp"
 
-#include <stdexcept>
-
 CGI::CGI(HTTP_Request &httpRequest) : _request(httpRequest) {}
 
 CGI::~CGI() {}
@@ -25,16 +23,13 @@ std::string CGI::getQueryFields() {
 }
 
 std::string CGI::getHeaderEnvValue(std::string key) {
-	// Find the range of values associated with the key
 	std::pair<std::multimap<std::string, std::string>::iterator,
 			  std::multimap<std::string, std::string>::iterator>
-		range;
-	range = _request.header_fields.equal_range(key);
+		range = _request.header_fields.equal_range(key);
 
 	if (isSingleValueHeader(key)) {
-		// If there are values associated with the key, return the first one
 		if (range.first != range.second) {
-			return range.first->second;	 // Return the first matching value
+			return range.first->second;
 		}
 	} else {
 		std::string result;
@@ -45,10 +40,9 @@ std::string CGI::getHeaderEnvValue(std::string key) {
 			}
 			result += it->second;
 		}
-
 		return result;
 	}
-	return "";	// Return an empty string if the key is not found
+	return "";
 }
 
 std::string CGI::getEnvVar(const char *key) {
@@ -58,7 +52,6 @@ std::string CGI::getEnvVar(const char *key) {
 
 std::string CGI::fetchCookies() {
 	std::string result;
-
 	for (std::multimap<std::string, std::string>::const_iterator it =
 			 _request.header_fields.begin();
 		 it != _request.header_fields.end(); ++it) {
@@ -69,7 +62,6 @@ std::string CGI::fetchCookies() {
 			result += it->second;
 		}
 	}
-
 	return result;
 }
 
@@ -80,14 +72,64 @@ std::string intToString(int value) {
 }
 
 void CGI::setCGIEnv() {
-	setenv("REQUEST_METHOD", intToString(_request.method).c_str(), 1);
-	setenv("CONTENT_TYPE", getHeaderEnvValue("Content-Type").c_str(), 1);
-	setenv("CONTENT_LENGTH", getHeaderEnvValue("Content-Length").c_str(), 1);
-	setenv("QUERY_STRING", getQueryFields().c_str(), 1);
-	setenv("SCRIPT_NAME", _request.uri.c_str(), 1);
-	setenv("SERVER_PROTOCOL", _request.protocol_version.c_str(), 1);
-	setenv("HTTP_COOKIE", fetchCookies().c_str(), 1);
-	// Adicionar ou remover de acordo com os requesitios do nosso server
+	try {
+		if (setenv("REQUEST_METHOD", intToString(_request.method).c_str(), 1) !=
+			0) {
+			throw std::runtime_error(
+				"Error: Failed to set REQUEST_METHOD environment variable.");
+		}
+
+		std::string contentType = getHeaderEnvValue("Content-Type");
+		if (contentType.empty()) {
+			throw std::runtime_error("Error: Missing 'Content-Type' header.");
+		}
+		if (setenv("CONTENT_TYPE", contentType.c_str(), 1) != 0) {
+			throw std::runtime_error(
+				"Error: Failed to set CONTENT_TYPE environment variable.");
+		}
+
+		std::string contentLength = getHeaderEnvValue("Content-Length");
+		if (contentLength.empty()) {
+			throw std::runtime_error("Error: Missing 'Content-Length' header.");
+		}
+		if (setenv("CONTENT_LENGTH", contentLength.c_str(), 1) != 0) {
+			throw std::runtime_error(
+				"Error: Failed to set CONTENT_LENGTH environment variable.");
+		}
+
+		std::string queryString = getQueryFields();
+		if (queryString.empty()) {
+			throw std::runtime_error("Error: Missing query string.");
+		}
+
+		if (setenv("QUERY_STRING", queryString.c_str(), 1) != 0) {
+			throw std::runtime_error(
+				"Error: Failed to set QUERY_STRING environment variable.");
+		}
+
+		if (setenv("SCRIPT_NAME", _request.uri.c_str(), 1) != 0) {
+			throw std::runtime_error(
+				"Error: Failed to set SCRIPT_NAME environment variable.");
+		}
+
+		if (setenv("SERVER_PROTOCOL", _request.protocol_version.c_str(), 1) !=
+			0) {
+			throw std::runtime_error(
+				"Error: Failed to set SERVER_PROTOCOL environment variable.");
+		}
+
+		std::string cookies = fetchCookies();
+		if (!cookies.empty()) {
+			if (setenv("HTTP_COOKIE", cookies.c_str(), 1) != 0) {
+				throw std::runtime_error(
+					"Error: Failed to set HTTP_COOKIE environment variable.");
+			}
+		}
+
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		throw;
+	}
 }
 
 std::string CGI::executeCGI(const std::string &scriptPath) {
@@ -131,7 +173,8 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 }
 
 std::string CGI::getCGIScriptPath() {
-	std::string basePath = "/var/www/cgi-bin/";	 // para ser discutido em grupo
+	std::string basePath =
+		"/var/www/cgi-bin/";  // Para discutir com a equipa se isto faz sentido!
 	std::string scriptName = _request.uri;
 
 	return basePath + scriptName;
@@ -152,8 +195,6 @@ void CGI::handleCGIResponse() {
 			throw std::runtime_error("Missing 'Content-Type' in CGI headers.");
 		}
 
-		// Adicionar todos os parametros a verificar
-
 		std::cout << body;
 	} else {
 		throw std::runtime_error(
@@ -161,19 +202,24 @@ void CGI::handleCGIResponse() {
 	}
 }
 
-std::multimap<std::string, std::string> CGI::parseCGIHeaders(
-	const std::string &headers) {
+std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 	std::multimap<std::string, std::string> headerEnv;
-	std::istringstream stream(headers);
-	std::string line;
+	for (std::multimap<std::string, std::string>::const_iterator it =
+			 _request.header_fields.begin();
+		 it != _request.header_fields.end(); ++it) {
+		std::string key = it->first;
+		std::string value = it->second;
 
-	while (std::getline(stream, line)) {
-		size_t colonPos = line.find(": ");
-		if (colonPos != std::string::npos) {
-			std::string key = line.substr(0, colonPos);
-			std::string value = line.substr(colonPos + 2);
-			headerEnv.insert(std::make_pair(key, value));
+		if (key == "Content-Type" && value.empty()) {
+			throw std::runtime_error("Error: Missing 'Content-Type' header.");
 		}
+		if (key == "Content-Length" && value.empty()) {
+			throw std::runtime_error("Error: Missing 'Content-Length' header.");
+		}
+
+		headerEnv.insert(std::make_pair(key, value));
 	}
 	return headerEnv;
 }
+
+std::multimap<std::string, std::string> CGI::parseCGIHeaders(const std::string
