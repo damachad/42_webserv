@@ -12,6 +12,8 @@
 
 #include "PostResponse.hpp"
 
+#include <sys/stat.h>
+
 PostResponse::PostResponse(const Server &server, const HTTP_Request &request)
 	: AResponse(server, request) {}
 
@@ -43,7 +45,26 @@ std::string PostResponse::generateResponse() {
 	return "HI";
 }
 
-short PostResponse::uploadFile() { return 200; }
+short PostResponse::uploadFile() {
+	extractFile();
+
+	std::string directory = "file_uploads/";
+	std::string target = directory + _file_to_upload.file_name;
+
+	int file_fd =
+		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
+	if (file_fd == -1) return (500);  // TODO: Adjust error
+
+	size_t bytes_to_write = _file_to_upload.file_contents.size();
+
+	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
+		-1)
+		return 500;	 // TODO: Adjust error, as well as binary octet stream
+
+	if (close(file_fd) == -1) return (500);	 // TODO: Adjust error
+
+	return 200;
+}
 
 short PostResponse::checkBody() {
 	_boundary = getBoundary();
@@ -116,7 +137,7 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 	size_t header_end = subpart.find("\r\n\r\n");
 	if (header_end == std::string::npos) return submap;
 
-	std::string headers = subpart.substr(0, header_end);
+	std::string headers = subpart.substr(0, header_end + 2);
 	std::string body = subpart.substr(header_end + 4);
 
 	size_t start_separator = 0;
@@ -141,4 +162,58 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 		std::make_pair("_File Contents", body.substr(0, body.length() - 2)));
 
 	return submap;
+}
+
+short PostResponse::extractFile() {
+	std::string content_disposition =
+		_multipart_body[0].find("Content-Disposition")->second;
+
+	_file_to_upload.name = extractFieldValue(content_disposition, "name");
+
+	_file_to_upload.file_name =
+		extractFieldValue(content_disposition, "filename");
+
+	_file_to_upload.content_type =
+		_multipart_body[0].find("Content-Type")->second;
+
+	_file_to_upload.file_contents =
+		_multipart_body[0].find("_File Contents")->second;
+
+	return 200;
+}
+
+// Function to extract the value of a specified key (either "name" or
+// "filename")
+std::string PostResponse::extractFieldValue(const std::string &header,
+											const std::string &field) {
+	std::string key = field + "=";
+	size_t start = header.find(key);
+
+	if (start == std::string::npos) return "";
+
+	start += key.length();
+
+	bool inQuotes = false;
+	if (header[start] == '"') {
+		inQuotes = true;
+		start++;
+	}
+
+	size_t end = start;
+	while (end < header.length()) {
+		if (inQuotes) {
+			if (header[end] == '"') {
+				inQuotes = false;
+				break;
+			}
+
+		} else {
+			if (header[end] == ';') break;
+		}
+		end++;
+	}
+
+	if (inQuotes && end < header.length() && header[end] == '"') end++;
+
+	return header.substr(start, end - start);
 }
