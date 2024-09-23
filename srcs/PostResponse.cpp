@@ -39,10 +39,8 @@ std::string PostResponse::generateResponse() {
 
 	status = uploadFile();
 	if (status != 200) return loadErrorPage(status);
-	// Ver Client Body Buffer Size??
-	//
-	//
-	return "HI";
+
+	return getResponseStr();
 }
 
 short PostResponse::uploadFile() {

@@ -173,63 +173,6 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request,
 	}
 }
 
-/*for (int i = 0; i < n; ++i) {
-	if (std::find(_listening_sockets.begin(),
-_listening_sockets.end(), events[i].data.fd) !=
-_listening_sockets.end()) {
-		// New connection on listening socket
-		int client_fd = accept(events[i].data.fd, NULL, NULL);
-		if (client_fd == -1) throw ClusterSetupError("accept");
-
-		// Sets connection as non_blocking
-		set_socket_to_non_blocking(client_fd);
-
-		// Adds to client_fd -> server map
-		_connection_fd_map[client_fd] =
-			_listening_fd_map[events[i].data.fd];
-
-		struct epoll_event client_event;
-		client_event.events =
-			EPOLLIN | EPOLLOUT | EPOLLET;  // Ready for input,
-output,
-										   // and in
-Edge-Triggered-Mode client_event.data.fd = client_fd; if
-(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) ==
--1) throw ClusterRunError("epoll_ctl"); } else {
-		// Handle I/O on connected socket
-		char buffer_request[BUFFER_SIZE] = {};
-		ssize_t count = read(events[i].data.fd, buffer_request,
-							 sizeof(buffer_request));
-		if (count == -1) {
-			if (errno != EAGAIN) {
-				close_and_remove_socket(events[i].data.fd,
-_epoll_fd); throw ClusterRunError("read failed");
-			}
-		} else if (count == 0)
-			// Connection closed
-			close_and_remove_socket(events[i].data.fd, _epoll_fd);
-		// TODO: Remove from client_to_fd map ??
-		else {
-			HTTP_Request request;
-			unsigned short error_status =
-				HTTP_Request_Parser::parse_HTTP_request(buffer_request,
-														request);
-			//   Echo the data back (for example purposes)
-			std::string buffer_response = get_response(
-				request, error_status,
-				_servers[_connection_fd_map[events[i].data.fd]]);
-			ssize_t sent =
-				send(events[i].data.fd, buffer_response.c_str(),
-					 buffer_response.size(), 0);
-			// ssize_t sent = send(events[i].data.fd, buffer, count,
-0); if (sent == -1 && errno != EAGAIN) {
-				close_and_remove_socket(events[i].data.fd,
-_epoll_fd); throw ClusterRunError("send failed");
-			}
-		}
-	}
-}*/
-
 // Sets sockets to non-blocking-mode
 void Cluster::set_socket_to_non_blocking(int socket_fd) {
 	int flags = fcntl(socket_fd, F_GETFL, 0);

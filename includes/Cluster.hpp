@@ -17,7 +17,6 @@
 #include "Webserv.hpp"
 
 #define BUFFER_SIZE 8096
-#define HTTP_REQUEST_COMPLETE 1000	  // TODO: CHANGE
 #define HTTP_REQUEST_INCOMPLETE 2000  // TODO: CHANGE
 
 class Server;
