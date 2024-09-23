@@ -155,7 +155,11 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request,
 	unsigned short error_status = HTTP_Request_Parser::parse_HTTP_request(
 		_client_buffer_map[client_fd], request);
 
-	if (error_status != HTTP_REQUEST_INCOMPLETE) {
+	if (error_status == CONTINUE &&
+		(request.method == GET || request.method == POST))
+		;  // Send continue message
+
+	if (error_status != CONTINUE) {
 		std::string buffer_response = get_response(
 			request, error_status, _servers[_connection_fd_map[client_fd]]);
 
@@ -166,9 +170,10 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request,
 			throw ClusterRunError("send failed");
 		}
 		close_and_remove_socket(client_fd, _epoll_fd);
+
 		// Clear buffer after processing the request
 		_client_buffer_map[client_fd].clear();
-	} else if (error_status == HTTP_REQUEST_INCOMPLETE) {
+	} else if (error_status == CONTINUE && request.method == POST) {
 		// Wait for more data;
 	}
 }
@@ -213,34 +218,6 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 		}
 	}
 
-	// (void)response_check;
-	// std::string response = response_check.get_http_response(); //TODO:
-	// Função de receber resposta? delete response_check; //TODO: Ainda por
-	// definir como dar delete a response check?!
-
-	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
-	// Read html file to target, and get that to a body c-style STR
-	/*std::string target = request.uri;
-	if (target == "/") target = "/index.html";
-	target = "resources" + target;
-	std::ifstream filestream(target.c_str());
-	std::stringstream buffer;
-	buffer << filestream.rdbuf();
-	std::string body = buffer.str();
-
-	std::string body_len =
-	numberToString<int>(static_cast<int>(body.size()));
-
-	std::string response =
-		"HTTP/1.1 200 OK\r\n"  // HTP 1.1 Header
-		"Content-Type: text/html; charset=UTF-8\r\n"
-		"Content-Length: " +
-		body_len +	// Body Length
-		"\r\n"
-		"\r\n" +
-		body;  // Body content;
-
-	return response;*/
 	return response_check->generateResponse();
 }
 
