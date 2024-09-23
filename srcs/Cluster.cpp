@@ -94,63 +94,141 @@ void Cluster::run(void) {
 		if (n == -1) throw ClusterSetupError("epoll_wait");
 
 		for (int i = 0; i < n; ++i) {
-			if (std::find(_listening_sockets.begin(), _listening_sockets.end(),
-						  events[i].data.fd) != _listening_sockets.end()) {
-				// New connection on listening socket
-				int client_fd = accept(events[i].data.fd, NULL, NULL);
-				if (client_fd == -1) throw ClusterSetupError("accept");
+			int fd = events[i].data.fd;
 
-				// Sets connection as non_blocking
-				set_socket_to_non_blocking(client_fd);
-
-				// Adds to client_fd -> server map
-				_connection_fd_map[client_fd] =
-					_listening_fd_map[events[i].data.fd];
-
-				struct epoll_event client_event;
-				client_event.events =
-					EPOLLIN | EPOLLOUT | EPOLLET;  // Ready for input, output,
-												   // and in Edge-Triggered-Mode
-				client_event.data.fd = client_fd;
-				if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd,
-							  &client_event) == -1)
-					throw ClusterRunError("epoll_ctl");
-			} else {
-				// Handle I/O on connected socket
-				char buffer_request[BUFFER_SIZE] = {};
-				ssize_t count = read(events[i].data.fd, buffer_request,
-									 sizeof(buffer_request));
-				if (count == -1) {
-					if (errno != EAGAIN) {
-						close_and_remove_socket(events[i].data.fd, _epoll_fd);
-						throw ClusterRunError("read failed");
-					}
-				} else if (count == 0)
-					// Connection closed
-					close_and_remove_socket(events[i].data.fd, _epoll_fd);
-				// TODO: Remove from client_to_fd map ??
-				else {
-					HTTP_Request request;
-					unsigned short error_status =
-						HTTP_Request_Parser::parse_HTTP_request(buffer_request,
-																request);
-					//   Echo the data back (for example purposes)
-					std::string buffer_response = get_response(
-						request, error_status,
-						_servers[_connection_fd_map[events[i].data.fd]]);
-					ssize_t sent =
-						send(events[i].data.fd, buffer_response.c_str(),
-							 buffer_response.size(), 0);
-					// ssize_t sent = send(events[i].data.fd, buffer, count, 0);
-					if (sent == -1 && errno != EAGAIN) {
-						close_and_remove_socket(events[i].data.fd, _epoll_fd);
-						throw ClusterRunError("send failed");
-					}
-				}
-			}
+			if (isListeningSocket(fd))
+				handleNewConnection(fd);
+			else
+				handleClientRequest(fd);
 		}
 	}
 }
+
+bool Cluster::isListeningSocket(int fd) {
+	return std::find(_listening_sockets.begin(), _listening_sockets.end(),
+					 fd) != _listening_sockets.end();
+}
+
+void Cluster::handleNewConnection(int listening_fd) {
+	int client_fd = accept(listening_fd, NULL, NULL);
+	if (client_fd == -1) throw ClusterSetupError("accept");
+
+	set_socket_to_non_blocking(client_fd);
+	_connection_fd_map[client_fd] = _listening_fd_map[listening_fd];
+
+	struct epoll_event client_event;
+	client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+	client_event.data.fd = client_fd;
+
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1)
+		throw ClusterRunError("epoll_ctl");
+}
+
+void Cluster::handleClientRequest(int client_fd) {
+	char buffer_request[BUFFER_SIZE] = {};
+	ssize_t count = read(client_fd, buffer_request, sizeof(buffer_request));
+
+	if (count == -1) {
+		if (errno != EAGAIN) {
+			close_and_remove_socket(client_fd, _epoll_fd);
+			throw ClusterRunError("read failed");
+		}
+		return;	 // No data to read, just return
+	}
+
+	if (count == 0) {
+		// Connection closed
+		close_and_remove_socket(client_fd, _epoll_fd);
+		return;
+	}
+
+	std::string request(buffer_request, BUFFER_SIZE);
+	processRequest(client_fd, request, count);
+}
+
+void Cluster::processRequest(int client_fd, const std::string& buffer_request,
+							 ssize_t count) {
+	// Assume we have a buffer for the client
+	_client_buffer_map[client_fd].append(buffer_request.c_str(), count);
+
+	HTTP_Request request;
+	unsigned short error_status = HTTP_Request_Parser::parse_HTTP_request(
+		_client_buffer_map[client_fd], request);
+
+	if (error_status != HTTP_REQUEST_INCOMPLETE) {
+		std::string buffer_response = get_response(
+			request, error_status, _servers[_connection_fd_map[client_fd]]);
+
+		ssize_t sent =
+			send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
+		if (sent == -1 && errno != EAGAIN) {
+			close_and_remove_socket(client_fd, _epoll_fd);
+			throw ClusterRunError("send failed");
+		}
+		close_and_remove_socket(client_fd, _epoll_fd);
+		// Clear buffer after processing the request
+		_client_buffer_map[client_fd].clear();
+	} else if (error_status == HTTP_REQUEST_INCOMPLETE) {
+		// Wait for more data;
+	}
+}
+
+/*for (int i = 0; i < n; ++i) {
+	if (std::find(_listening_sockets.begin(),
+_listening_sockets.end(), events[i].data.fd) !=
+_listening_sockets.end()) {
+		// New connection on listening socket
+		int client_fd = accept(events[i].data.fd, NULL, NULL);
+		if (client_fd == -1) throw ClusterSetupError("accept");
+
+		// Sets connection as non_blocking
+		set_socket_to_non_blocking(client_fd);
+
+		// Adds to client_fd -> server map
+		_connection_fd_map[client_fd] =
+			_listening_fd_map[events[i].data.fd];
+
+		struct epoll_event client_event;
+		client_event.events =
+			EPOLLIN | EPOLLOUT | EPOLLET;  // Ready for input,
+output,
+										   // and in
+Edge-Triggered-Mode client_event.data.fd = client_fd; if
+(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) ==
+-1) throw ClusterRunError("epoll_ctl"); } else {
+		// Handle I/O on connected socket
+		char buffer_request[BUFFER_SIZE] = {};
+		ssize_t count = read(events[i].data.fd, buffer_request,
+							 sizeof(buffer_request));
+		if (count == -1) {
+			if (errno != EAGAIN) {
+				close_and_remove_socket(events[i].data.fd,
+_epoll_fd); throw ClusterRunError("read failed");
+			}
+		} else if (count == 0)
+			// Connection closed
+			close_and_remove_socket(events[i].data.fd, _epoll_fd);
+		// TODO: Remove from client_to_fd map ??
+		else {
+			HTTP_Request request;
+			unsigned short error_status =
+				HTTP_Request_Parser::parse_HTTP_request(buffer_request,
+														request);
+			//   Echo the data back (for example purposes)
+			std::string buffer_response = get_response(
+				request, error_status,
+				_servers[_connection_fd_map[events[i].data.fd]]);
+			ssize_t sent =
+				send(events[i].data.fd, buffer_response.c_str(),
+					 buffer_response.size(), 0);
+			// ssize_t sent = send(events[i].data.fd, buffer, count,
+0); if (sent == -1 && errno != EAGAIN) {
+				close_and_remove_socket(events[i].data.fd,
+_epoll_fd); throw ClusterRunError("send failed");
+			}
+		}
+	}
+}*/
 
 // Sets sockets to non-blocking-mode
 void Cluster::set_socket_to_non_blocking(int socket_fd) {
@@ -193,10 +271,9 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 	}
 
 	// (void)response_check;
-	// std::string response = response_check.get_http_response(); //TODO: Função
-	// de receber resposta?
-	// delete response_check; //TODO: Ainda por definir como dar delete a
-	// response check?!
+	// std::string response = response_check.get_http_response(); //TODO:
+	// Função de receber resposta? delete response_check; //TODO: Ainda por
+	// definir como dar delete a response check?!
 
 	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
 	// Read html file to target, and get that to a body c-style STR
@@ -208,7 +285,8 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 	buffer << filestream.rdbuf();
 	std::string body = buffer.str();
 
-	std::string body_len = numberToString<int>(static_cast<int>(body.size()));
+	std::string body_len =
+	numberToString<int>(static_cast<int>(body.size()));
 
 	std::string response =
 		"HTTP/1.1 200 OK\r\n"  // HTP 1.1 Header

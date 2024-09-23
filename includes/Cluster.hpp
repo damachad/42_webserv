@@ -17,6 +17,8 @@
 #include "Webserv.hpp"
 
 #define BUFFER_SIZE 8096
+#define HTTP_REQUEST_COMPLETE 1000	  // TODO: CHANGE
+#define HTTP_REQUEST_INCOMPLETE 2000  // TODO: CHANGE
 
 class Server;
 class Server;
@@ -41,6 +43,11 @@ class Cluster {
 
 	// Sets an infinite loop to listen to incoming connections
 	void run();
+	bool isListeningSocket(int fd);
+	void handleNewConnection(int listening_fd);
+	void handleClientRequest(int client_fd);
+	void processRequest(int client_fd, const std::string& buffer_request,
+						ssize_t count);
 
 	// Getters for private member data
 	const std::vector<Server>& get_server_list() const;
@@ -68,8 +75,11 @@ class Cluster {
 	// Vector of available servers
 	std::vector<Server> _servers;
 
-	// Vector of all listening fds;
+	// Vector of all listening fds
 	std::vector<int> _listening_sockets;
+
+	// Buffer map for all clients
+	std::map<int, std::string> _client_buffer_map;
 
 	// Map that relates listening_fd to respective index on _server
 	std::map<int, int> _listening_fd_map;
