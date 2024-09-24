@@ -1,7 +1,9 @@
 #include "CGI.hpp"
 #include <sys/wait.h>
 
-CGI::CGI(HTTP_Request &httpRequest) : _request(httpRequest) {}
+std::map<pid_t, time_t> pidStartTimeMap;
+
+CGI::CGI(const HTTP_Request &httpRequest) : _request(httpRequest) {}
 
 CGI::~CGI() {}
 
@@ -25,8 +27,8 @@ std::string CGI::getQueryFields() {
 }
 
 std::string CGI::getHeaderEnvValue(std::string key) {
-  std::pair<std::multimap<std::string, std::string>::iterator,
-            std::multimap<std::string, std::string>::iterator>
+  std::pair<std::multimap<std::string, std::string>::const_iterator,
+            std::multimap<std::string, std::string>::const_iterator>
       range = _request.header_fields.equal_range(key);
 
   if (isSingleValueHeader(key)) {
@@ -35,7 +37,7 @@ std::string CGI::getHeaderEnvValue(std::string key) {
     }
   } else {
     std::string result;
-    for (std::multimap<std::string, std::string>::iterator it = range.first;
+    for (std::multimap<std::string, std::string>::const_iterator it = range.first;
          it != range.second; ++it) {
       if (!result.empty()) {
         result += ", ";
@@ -82,22 +84,22 @@ void CGI::setCGIEnv() {
     }
 
     std::string contentType = getHeaderEnvValue("Content-Type");
-    if (contentType.empty()) {
-      throw std::runtime_error("Error: Missing 'Content-Type' header.");
-    }
+    // if (contentType.empty()) {
+    //   throw std::runtime_error("Error: Missing 'Content-Type' header.");
+    // }
     if (setenv("CONTENT_TYPE", contentType.c_str(), 1) != 0) {
       throw std::runtime_error(
           "Error: Failed to set CONTENT_TYPE environment variable.");
     }
 
     std::string contentLength = getHeaderEnvValue("Content-Length");
-    if (contentLength.empty()) {
-      throw std::runtime_error("Error: Missing 'Content-Length' header.");
-    }
-    if (setenv("CONTENT_LENGTH", contentLength.c_str(), 1) != 0) {
-      throw std::runtime_error(
-          "Error: Failed to set CONTENT_LENGTH environment variable.");
-    }
+    // if (contentLength.empty()) {
+    //   throw std::runtime_error("Error: Missing 'Content-Length' header.");
+    // }
+    // if (setenv("CONTENT_LENGTH", contentLength.c_str(), 1) != 0) {
+    //   throw std::runtime_error(
+    //       "Error: Failed to set CONTENT_LENGTH environment variable.");
+    // }
 
     std::string queryString = getQueryFields();
     if (setenv("QUERY_STRING", queryString.c_str(), 1) != 0) {
@@ -148,6 +150,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     close(pipeOut[0]);
     setCGIEnv();
     char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
+    std::cerr << "path: " << scriptPath << std::endl; //TESTE
     if (execve(scriptPath.c_str(), argv, environ) == -1)
       throw std::runtime_error("Exec failed");
   } else {
@@ -217,7 +220,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 
 std::string CGI::getCGIScriptPath() {
   std::string basePath =
-      "/var/www/cgi-bin/"; // Para discutir com a equipa se isto faz sentido!
+      "/home/tiaferna/42_Projects/Webserv/resources"; // Para discutir com a equipa se isto faz sentido!
   std::string scriptName = _request.uri;
 
   return basePath + scriptName;
@@ -248,36 +251,38 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
     std::string key = it->first;
     std::string value = it->second;
 
-    if (key == "Content-Type" && value.empty()) {
-      throw std::runtime_error("Error: Missing 'Content-Type' header.");
-    }
-    if (key == "Content-Length" && value.empty()) {
-      throw std::runtime_error("Error: Missing 'Content-Length' header.");
-    }
+    // if (key == "Content-Type" && value.empty()) {
+    //   throw std::runtime_error("Error: Missing 'Content-Type' header.");
+    // }
+    // if (key == "Content-Length" && value.empty()) {
+    //   throw std::runtime_error("Error: Missing 'Content-Length' header.");
+    // }
 
     headerEnv.insert(std::make_pair(key, value));
   }
   return headerEnv;
 }
 
-void CGI::handleCGIResponse() {
+std::string CGI::handleCGIResponse() {
   std::string scriptPath = getCGIScriptPath();
   std::string cgiOutput = executeCGI(scriptPath);
-
+std::cout << "cgiOutput: " << cgiOutput << " _" << std::endl; //TESTE
   size_t pos = cgiOutput.find("\r\n\r\n");
-  if (pos != std::string::npos) {
+  // if (pos != std::string::npos) {
     std::string headers = cgiOutput.substr(0, pos);
-    std::string body = cgiOutput.substr(pos + 4);
+    std::string message = "HTTP/1.1 200 OK\r\n" + cgiOutput;
     std::multimap<std::string, std::string> headerEnv =
         parseCGIHeaders(headers);
 
-    if (headerEnv.find("Content-Type") == headerEnv.end()) {
-      throw std::runtime_error("Missing 'Content-Type' in CGI headers.");
-    }
+    // if (headerEnv.find("Content-Type") == headerEnv.end()) {
+    //   throw std::runtime_error("Missing 'Content-Type' in CGI headers.");
+    // }
+  
+    return message;
+  // } else {
+  //   throw std::runtime_error(
+  //       "Error: Malformed CGI output, no valid headers found.");
+  // }
 
-    std::cout << body;
-  } else {
-    throw std::runtime_error(
-        "Error: Malformed CGI output, no valid headers found.");
-  }
+  // return "400 - DEU MERDA";
 }

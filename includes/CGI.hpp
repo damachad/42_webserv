@@ -13,11 +13,11 @@
 
 #include "HTTPRequestParser.hpp"
 
-std::map<pid_t, time_t> pidStartTimeMap;
+extern std::map<pid_t, time_t> pidStartTimeMap;
 
 class CGI {
 private:
-  HTTP_Request &_request;
+  const HTTP_Request &_request;
 
   bool isSingleValueHeader(std::string &key);
   std::string getQueryFields();
@@ -32,8 +32,8 @@ private:
   std::multimap<std::string, std::string> parseRequestHeaders();
 
 public:
-  CGI(HTTP_Request &httpRequest);
+  CGI(const HTTP_Request &httpRequest);
   ~CGI();
 
-  void handleCGIResponse();
+  std::string handleCGIResponse();
 };
