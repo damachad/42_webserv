@@ -163,12 +163,17 @@ short AResponse::checkSize() const {
 
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
-	std::set<Method>::const_iterator it =
-		_server.getAllowedMethods(_locationRoute).find(_request.method);
-	if (it == _server.getAllowedMethods(_locationRoute).end())
-		return 405;	 // Method Not Allowed
-	return 200;
+    // Store the allowed methods in a local variable
+    const std::set<Method> allowedMethods = _server.getAllowedMethods(_locationRoute);
+    // Find the request method in the allowed methods
+    std::set<Method>::const_iterator it = allowedMethods.find(_request.method);
+    // Check if the method is not allowed
+    if (it == allowedMethods.end()) {
+        return 405;  // Method Not Allowed
+    }
+    return 200;  // OK
 }
+
 
 // Check if message body size is, at most, the maximum allowed body size
 short AResponse::checkClientBodySize() const {
