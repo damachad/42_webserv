@@ -180,26 +180,21 @@ std::string CGI::getCGIScriptPath() {
 	return basePath + scriptName;
 }
 
-void CGI::handleCGIResponse() {
-	std::string scriptPath = getCGIScriptPath();
-	std::string cgiOutput = executeCGI(scriptPath);
+std::multimap<std::string, std::string> CGI::parseCGIHeaders(
+	const std::string &headers) {
+	std::multimap<std::string, std::string> headerEnv;
+	std::istringstream stream(headers);
+	std::string line;
 
-	size_t pos = cgiOutput.find("\r\n\r\n");
-	if (pos != std::string::npos) {
-		std::string headers = cgiOutput.substr(0, pos);
-		std::string body = cgiOutput.substr(pos + 4);
-		std::multimap<std::string, std::string> headerEnv =
-			parseCGIHeaders(headers);
-
-		if (headerEnv.find("Content-Type") == headerEnv.end()) {
-			throw std::runtime_error("Missing 'Content-Type' in CGI headers.");
+	while (std::getline(stream, line)) {
+		size_t colonPos = line.find(": ");
+		if (colonPos != std::string::npos) {
+			std::string key = line.substr(0, colonPos);
+			std::string value = line.substr(colonPos + 2);
+			headerEnv.insert(std::make_pair(key, value));
 		}
-
-		std::cout << body;
-	} else {
-		throw std::runtime_error(
-			"Error: Malformed CGI output, no valid headers found.");
 	}
+	return headerEnv;
 }
 
 std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
@@ -222,4 +217,24 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 	return headerEnv;
 }
 
-std::multimap<std::string, std::string> CGI::parseCGIHeaders(const std::string
+void CGI::handleCGIResponse() {
+	std::string scriptPath = getCGIScriptPath();
+	std::string cgiOutput = executeCGI(scriptPath);
+
+	size_t pos = cgiOutput.find("\r\n\r\n");
+	if (pos != std::string::npos) {
+		std::string headers = cgiOutput.substr(0, pos);
+		std::string body = cgiOutput.substr(pos + 4);
+		std::multimap<std::string, std::string> headerEnv =
+			parseCGIHeaders(headers);
+
+		if (headerEnv.find("Content-Type") == headerEnv.end()) {
+			throw std::runtime_error("Missing 'Content-Type' in CGI headers.");
+		}
+
+		std::cout << body;
+	} else {
+		throw std::runtime_error(
+			"Error: Malformed CGI output, no valid headers found.");
+	}
+}
