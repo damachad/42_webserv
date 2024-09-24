@@ -6,7 +6,7 @@ import os
 def main():
     # Set the content type for the response
     print("Content-Type: text/html")    
-    print()  # End of headers
+    print("\r\n\r\n")  # End of headers
 
     # Print the HTML start
     print("<html>")
