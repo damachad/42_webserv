@@ -1,4 +1,5 @@
 #include "CGI.hpp"
+#include <sys/wait.h>
 
 CGI::CGI(HTTP_Request &httpRequest) : _request(httpRequest) {}
 
@@ -99,10 +100,6 @@ void CGI::setCGIEnv() {
     }
 
     std::string queryString = getQueryFields();
-    if (queryString.empty()) {
-      throw std::runtime_error("Error: Missing query string.");
-    }
-
     if (setenv("QUERY_STRING", queryString.c_str(), 1) != 0) {
       throw std::runtime_error(
           "Error: Failed to set QUERY_STRING environment variable.");
@@ -156,6 +153,10 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
   } else {
     close(pipeIn[0]);
     close(pipeOut[1]);
+
+    time_t startTime = time(NULL);
+    pidStartTimeMap[pid] = startTime;
+
     if (!_request.message_body.empty())
       write(pipeIn[1], _request.message_body.c_str(),
             _request.message_body.size());
@@ -163,12 +164,53 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 
     char buffer[1024];
     ssize_t bytesRead;
-    while ((bytesRead = read(pipeOut[0], buffer, sizeof(buffer))) > 0)
-      cgiOutput.append(buffer, bytesRead);
+
+    fd_set readFds;
+    struct timeval timeout;
+
+    while (true) {
+      timeout.tv_sec = 0;
+      timeout.tv_usec = 5000000;
+
+      FD_ZERO(&readFds);
+      FD_SET(pipeOut[0], &readFds);
+
+      int activity = select(pipeOut[0] + 1, &readFds, NULL, NULL, &timeout);
+
+      if (activity < 0) {
+        if (errno == EINTR)
+          std::cerr << "Select call interrupted by a singnal." << std::endl;
+        else
+          std::cerr << "Select error: " << strerror(errno) << std::endl;
+      } else if (activity == 0) {
+        // Timeout occurred
+        std::cout << "Select time out." << std::endl;
+      } else if (activity > 0) {
+        bytesRead = read(pipeOut[0], buffer, sizeof(buffer));
+        if (bytesRead > 0)
+          cgiOutput.append(buffer, bytesRead);
+      }
+
+      time_t currentTime = time(NULL);
+
+      if (currentTime - pidStartTimeMap[pid] > 5) {
+        std::cerr << "CGI script taking too long, killing process. \n";
+        kill(pid, SIGKILL);
+        waitpid(pid, NULL, 0);
+        pidStartTimeMap.erase(pid);
+        throw std::runtime_error("CGI execution timed out");
+      }
+
+      int status;
+      pid_t result = waitpid(pid, &status, WNOHANG);
+
+      if (result == pid) {
+        pidStartTimeMap.erase(pid);
+        break;
+      }
+    }
   }
   close(pipeOut[0]);
-
-  waitpid(pid, NULL, 0);
 
   return cgiOutput;
 }

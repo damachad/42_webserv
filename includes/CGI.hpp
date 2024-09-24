@@ -13,6 +13,8 @@
 
 #include "HTTPRequestParser.hpp"
 
+std::map<pid_t, time_t> pidStartTimeMap;
+
 class CGI {
 private:
   HTTP_Request &_request;
