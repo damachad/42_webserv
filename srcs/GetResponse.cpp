@@ -23,13 +23,21 @@ GetResponse::GetResponse(const Server& server, const HTTP_Request& request)
 
 // Loads response with contents of file and sets MIME type
 short GetResponse::loadFile(const std::string& path) {
+	// se o path acabar em '.py' chamar cgi.executeCGI(path)
+		// _response.headers.insert(
+		// std::make_pair(std::string("Content-Type"), cgi.getHeaderEnvValue("Content-Type")));
+		// ...
+		// ...
+		// _response.body = responde.substr(apos \r\n\r\n);
+		// {
 	std::ifstream file(path.c_str());
 	if (!file.is_open()) return 500;
 	_response.body.assign((std::istreambuf_iterator<char>(file)),
 						  (std::istreambuf_iterator<char>()));
 	file.close();
-	loadCommonHeaders();
 	setMimeType(path);
+	// }
+	loadCommonHeaders();
 	_response.status = 200;
 	return 200;
 }
