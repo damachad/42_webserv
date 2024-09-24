@@ -6,18 +6,18 @@
 /*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:25 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/21 16:13:50 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/14 09:57:07 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CLUSTER_HPP
 #define CLUSTER_HPP
 
-#include "HTTPRequestParser.hpp"
 #include "Server.hpp"
 #include "Webserv.hpp"
 
 #define BUFFER_SIZE 8096
+#define HTTP_REQUEST_INCOMPLETE 2000  // TODO: CHANGE
 
 class Server;
 class Server;
@@ -42,6 +42,11 @@ class Cluster {
 
 	// Sets an infinite loop to listen to incoming connections
 	void run();
+	bool isListeningSocket(int fd);
+	void handleNewConnection(int listening_fd);
+	void handleClientRequest(int client_fd);
+	void processRequest(int client_fd, const std::string& buffer_request,
+						ssize_t count);
 
 	// Getters for private member data
 	const std::vector<Server>& get_server_list() const;
@@ -63,13 +68,17 @@ class Cluster {
 
 	// Placeholder function to get response
 	const std::string get_response(const HTTP_Request& request,
+								   unsigned short& error_status,
 								   const Server& server);
 
 	// Vector of available servers
 	std::vector<Server> _servers;
 
-	// Vector of all listening fds;
+	// Vector of all listening fds
 	std::vector<int> _listening_sockets;
+
+	// Buffer map for all clients
+	std::map<int, std::string> _client_buffer_map;
 
 	// Map that relates listening_fd to respective index on _server
 	std::map<int, int> _listening_fd_map;

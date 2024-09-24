@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/10 11:30:46 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/13 20:04:31 by mde-sa--         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,10 @@
 #include <fstream>	 // For file streams
 #include <iomanip>	 // For iomanip for encoding
 #include <iostream>	 // For cout
+#include <limits>
 #include <sstream>
 #include <typeinfo>	 // For typeid
+
 // STL
 #include <algorithm>
 #include <map>

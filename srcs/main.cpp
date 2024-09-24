@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 15:04:17 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:33:00 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,14 +30,15 @@ int main(int argc, char** argv) {
 	try {
 		parser.loadConfigs();
 		servers = parser.getServers();
-		for (std::vector<Server>::const_iterator it = servers.begin();
-			 it != servers.end(); ++it)
-			std::cout << (*it) << "\n";
-		std::string route = "/test";
+		// for (std::vector<Server>::const_iterator it = servers.begin();
+		// 	 it != servers.end(); ++it)
+		// 	std::cout << (*it) << "\n";
+		// std::string route = "/test";
 		// unsigned int serverNum = 0;
 		//  parser.printLocationValues(serverNum, route);
 	} catch (std::exception& e) {
 		std::cerr << e.what();
+		return 1;
 	}
 
 	// Initializes the Server Cluster
