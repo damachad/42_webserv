@@ -4,24 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DELETE Request Test</title>
+</head>
+<body>
+    <h1>Delete File</h1>
+
+    <!-- Form to select file -->
+    <input type="file" id="fileInput">
+    <button onclick="deleteFile()">Delete File</button>
+
+    <p id="response"></p>
+
     <script>
-        function sendDeleteRequest() {
-            fetch('/your_delete_endpoint', {
-                method: 'DELETE'
+        function deleteFile() {
+            const fileInput = document.getElementById('fileInput');
+            
+            if (fileInput.files.length === 0) {
+                alert('Please select a file');
+                return;
+            }
+            
+            const fileName = fileInput.files[0].name;
+
+            // Send DELETE request with the file name
+            fetch('https://localhost:999', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ fileName: fileName })
             })
-            .then(response => {
-                if (response.ok) {
-                    alert("DELETE request successful!");
-                } else {
-                    alert("Error sending DELETE request.");
-                }
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = data.message || 'File deleted successfully!';
+            })
+            .catch(error => {
+                document.getElementById('response').innerText = 'Error deleting file';
+                console.error('Error:', error);
             });
         }
     </script>
-</head>
-<body>
-    <h1>Test DELETE Request</h1>
-    <button onclick="sendDeleteRequest()">Send DELETE Request</button>
     <br><br>
     <a href="index.html">Back to Index</a>
 </body>

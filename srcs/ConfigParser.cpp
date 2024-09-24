@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/09 17:27:35 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/24 11:28:23 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,6 +149,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 		if (server.getRoot()
 				.empty())  // TODO: enforce root directive of set default?
 			throw ConfigError("No root directive present in server.");
+			// TODO: if no upload_store, unable to upload, or set default?
 		_servers.push_back(server);
 	}
 }
@@ -225,4 +226,5 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 		_servers[serverNum].getReturn(route);
 	if (returns.first) std::cout << returns.first << " : " << returns.second;
 	std::cout << std::endl;
+	std::cout << "Upload Store: " << _servers[serverNum].getUpload(route) << '\n';
 }

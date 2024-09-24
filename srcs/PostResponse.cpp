@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   PostResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 10:41:19 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/24 11:44:20 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,9 @@ std::string PostResponse::generateResponse() {
 
 short PostResponse::uploadFile() {
 	extractFile();
-
+	
+	// std::string directory = _server.getUpload(); 
+	// TODO: if upload_store empty, return error or have a default?
 	std::string directory = "file_uploads/";
 	std::string target = directory + _file_to_upload.file_name;
 
