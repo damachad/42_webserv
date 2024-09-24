@@ -18,6 +18,7 @@
 #include "HTTPRequestParser.hpp"
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
+#include "CGI.hpp"
 
 // Constructor
 // Create a vector of servers from provided context vector
@@ -204,6 +205,11 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 	if (error_status != OK)
 		response_check =
 			new RequestErrorResponse(server, request, error_status);
+	else if (request.uri.length() > 3 && request.uri.substr(request.uri.length() - 3) == ".py")
+	{
+		CGI cgi(request);
+		return cgi.handleCGIResponse();
+	}
 	else {
 		switch (static_cast<int>(request.method)) {
 			case (GET):
