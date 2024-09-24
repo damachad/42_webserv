@@ -37,8 +37,8 @@ class Server {
 	std::map<short, std::string> _errorPages;
 	std::map<std::string, LocationContext> _locations;
 	std::pair<short, std::string> _return;
-	// std::string _uploadDir;	// Is this necessary ?
-	// Later add redirect and cgi related variables
+	std::string _uploadStore;
+	// Later add cgi related variables
 	typedef void (Server::*DirectiveHandler)(std::vector<std::string> &);
 	std::map<std::string, DirectiveHandler> _directiveMap;
 
@@ -65,6 +65,7 @@ class Server {
 	std::map<short, std::string> getErrorPages() const;
 	std::map<std::string, LocationContext> getLocations() const;
 	std::pair<short, std::string> getReturn() const;
+	std::string getUpload() const;
 
 	std::string getRoot(const std::string &route) const;
 	std::vector<std::string> getIndex(const std::string &route) const;
@@ -74,6 +75,7 @@ class Server {
 	std::map<short, std::string> getErrorPages(const std::string &route) const;
 	std::set<Method> getAllowedMethods(const std::string &route) const;
 	std::pair<short, std::string> getReturn(const std::string &route) const;
+	std::string getUpload(const std::string &route) const;
 
 	std::vector<int> getListeningSockets(void) const;
 
@@ -87,6 +89,7 @@ class Server {
 	void handleCliMaxSize(std::vector<std::string> &tokens);
 	void handleAutoIndex(std::vector<std::string> &tokens);
 	void handleReturn(std::vector<std::string> &tokens);
+	void handleUpload(std::vector<std::string> &tokens);
 
 	void initializeDirectiveMap();
 	void processDirective(std::string &line);
