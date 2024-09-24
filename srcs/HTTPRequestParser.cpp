@@ -30,23 +30,26 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 	bool header_is_parsed = false;
 
 	while (std::getline(buffer_stream, buffer)) {
-		// Removes end "\r"
-		if (!buffer.empty() && buffer[buffer.size() - 1] == '\r') {
-			buffer.erase(buffer.size() - 1);
-		}
 		// Parses request line
 		if (!request_line_is_parsed) {
 			if (!add_req_line(HTTP, buffer)) return BAD_REQUEST;
 			request_line_is_parsed = true;
 		}  // Parses header fields
-		else if (!buffer.empty() && !header_is_parsed) {
+		else if (buffer != "\r" && !header_is_parsed) {
 			if (!add_header_fields(HTTP, buffer)) return BAD_REQUEST;
 		}  // Notes end of header fields
-		else if (buffer.empty()) {
+		else if (buffer == "\r" || buffer.empty()) {
 			header_is_parsed = true;
-		}  // Parses the remaining body
-		else
-			add_message_body(HTTP, buffer);
+			break;
+		}
+	}
+
+	if (header_is_parsed) {
+		// Read the rest of the stream as the message body
+		std::string remaining_body(
+			(std::istreambuf_iterator<char>(buffer_stream)),
+			std::istreambuf_iterator<char>());
+		HTTP.message_body = remaining_body;	 // Append the body
 	}
 
 	extract_queries(HTTP);
@@ -77,8 +80,8 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 		return false;
 
 	HTTP.method = stringToMethod(method);
-	HTTP.uri = url;
-	HTTP.protocol_version = protocol_version;
+	HTTP.uri = trim(url);
+	HTTP.protocol_version = trim(protocol_version);
 
 	return true;
 }
@@ -124,7 +127,10 @@ bool HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 // Fields without validation
 void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 										   const std::string& line) {
-	if (!line.empty()) HTTP.message_body += line;
+	if (!line.empty()) {
+		HTTP.message_body += line;
+		HTTP.message_body += "\r\n";
+	}
 }
 
 // Checks validity of HTTP header fields
@@ -138,7 +144,7 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	bool has_curl = user_agent.find("curl") != std::string::npos;
 	bool has_mozilla = user_agent.find("Mozilla") != std::string::npos;
 	bool has_firefox = user_agent.find("Firefox") != std::string::npos;
-	bool has_siege = user_agent.find("Siege") != std::string::npos;
+	bool has_siege = user_agent.find("siege") != std::string::npos;
 
 	// Checks that the request is from Curl, Mozilla Firefox or Mozilla Siege
 	if (!(has_curl || (has_mozilla && (has_firefox || has_siege)))) {

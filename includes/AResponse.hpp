@@ -47,6 +47,7 @@ class AResponse {
 
 	// Validators
 	short checkSize() const;
+	short checkClientBodySize() const;
 	short checkMethod() const;
 	short checkFile(const std::string& path) const;
 	bool hasAutoindex() const;

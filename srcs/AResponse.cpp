@@ -140,17 +140,17 @@ AResponse::AResponse(const AResponse& src)
 // Checks if Content-Lenght is present once and if request body size matches
 // this value and value of client_max_body_size
 short AResponse::checkSize() const {
-	if (_request.header_fields.count("Content-Length") ==
+	if (_request.header_fields.count("content-length") ==
 		0)			 // mandatory Content-Length header ?
 		return 411;	 // Length Required
 	if (_request.message_body.size() >
 		static_cast<size_t>(_server.getClientMaxBodySize(_locationRoute)))
 		return 413;	 // Request Entity Too Large
 	// How to handle multiple Content-Length values ?
-	if (_request.header_fields.count("Content-Length") > 1)
+	if (_request.header_fields.count("content-length") > 1)
 		return 400;	 // Bad Request
 	std::multimap<std::string, std::string>::const_iterator it =
-		_request.header_fields.find("Content-Length");
+		_request.header_fields.find("content-length");
 	size_t size = -1;
 	if (it != _request.header_fields.end()) {
 		char* endPtr = NULL;
@@ -167,6 +167,15 @@ short AResponse::checkMethod() const {
 		_server.getAllowedMethods(_locationRoute).find(_request.method);
 	if (it == _server.getAllowedMethods(_locationRoute).end())
 		return 405;	 // Method Not Allowed
+	return 200;
+}
+
+// Check if message body size is, at most, the maximum allowed body size
+short AResponse::checkClientBodySize() const {
+	size_t max_body_size = _server.getClientMaxBodySize();
+
+	if (_request.message_body.size() > max_body_size) return 413;
+
 	return 200;
 }
 
@@ -416,8 +425,8 @@ const std::string AResponse::getResponseStr() const {
 		 itHead++) {
 		headersStr += itHead->first + ": " + itHead->second + "\r\n";
 	}
-	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) + " " +
-						   message + "\r\n" + headersStr + "\r\n" +
+	std::string response = "HTTP/1.1 " + numberToString<int>(_response.status) +
+						   " " + message + "\r\n" + headersStr + "\r\n" +
 						   _response.body;
 	return response;
 }
