@@ -14,25 +14,24 @@
 #include "HTTPRequestParser.hpp"
 
 class CGI {
-   private:
-	HTTP_Request &_request;
+private:
+  HTTP_Request &_request;
 
-	bool isSingleValueHeader(std::string &key);
-	std::string getQueryFields();
-	std::string getHeaderEnvValue(std::string key);
-	std::string getEnvVar(const char *key);
-	std::string fetchCookies();
-	void setCGIEnv();
-	std::string executeCGI(const std::string &scriptPath);
-	std::string getCGIScriptPath();
-	std::multimap<std::string, std::string> parseCGIHeaders(
-		const std::string &headers);
-	std::multimap<std::string, std::string> parseRequestHeaders();
+  bool isSingleValueHeader(std::string &key);
+  std::string getQueryFields();
+  std::string getHeaderEnvValue(std::string key);
+  std::string getEnvVar(const char *key);
+  std::string fetchCookies();
+  void setCGIEnv();
+  std::string executeCGI(const std::string &scriptPath);
+  std::string getCGIScriptPath();
+  std::multimap<std::string, std::string>
+  parseCGIHeaders(const std::string &headers);
+  std::multimap<std::string, std::string> parseRequestHeaders();
 
-   public:
-	CGI(HTTP_Request &httpRequest);
-	~CGI();
+public:
+  CGI(HTTP_Request &httpRequest);
+  ~CGI();
 
-	void handleCGIResponse();
-	
+  void handleCGIResponse();
 };
