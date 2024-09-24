@@ -3,21 +3,28 @@
 /*                                                        :::      ::::::::   */
 /*   Cluster.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/21 16:14:51 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/24 10:33:42 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
 
+#include "AResponse.hpp"
+#include "DeleteResponse.hpp"
+#include "GetResponse.hpp"
+#include "HTTPRequestParser.hpp"
+#include "PostResponse.hpp"
+#include "RequestErrorResponse.hpp"
+
 // Constructor
 // Create a vector of servers from provided context vector
-Cluster::Cluster(const std::vector<ServerContext>& servers)
+Cluster::Cluster(const std::vector<Server>& servers)
 	: _servers(), _listening_fd_map(), _connection_fd_map(), _epoll_fd(-1) {
 	//	std::cout << "Cluster Constructor called" << std::endl;
-	for (std::vector<ServerContext>::const_iterator it = servers.begin();
+	for (std::vector<Server>::const_iterator it = servers.begin();
 		 it != servers.end(); it++) {
 		_servers.push_back(*it);
 	}
@@ -53,7 +60,7 @@ void Cluster::setup_cluster(void) {
 		add_sockets_to_epoll(server);
 
 		// Adds ports to _listening_sockets and to _listening_fd_map
-		const std::vector<int> socks_listing = server.get_listening_sockets();
+		const std::vector<int> socks_listing = server.getListeningSockets();
 		for (std::vector<int>::const_iterator it = socks_listing.begin();
 			 it < socks_listing.end(); it++) {
 			_listening_sockets.push_back(*it);
@@ -65,7 +72,7 @@ void Cluster::setup_cluster(void) {
 
 // Adds sockets to epoll so they can be monitored
 void Cluster::add_sockets_to_epoll(const Server& server) {
-	std::vector<int> socket_list = server.get_listening_sockets();
+	std::vector<int> socket_list = server.getListeningSockets();
 
 	for (std::vector<int>::const_iterator it = socket_list.begin();
 		 it != socket_list.end(); it++) {
@@ -87,60 +94,87 @@ void Cluster::run(void) {
 		if (n == -1) throw ClusterSetupError("epoll_wait");
 
 		for (int i = 0; i < n; ++i) {
-			if (std::find(_listening_sockets.begin(), _listening_sockets.end(),
-						  events[i].data.fd) != _listening_sockets.end()) {
-				// New connection on listening socket
-				int client_fd = accept(events[i].data.fd, NULL, NULL);
-				if (client_fd == -1) throw ClusterSetupError("accept");
+			int fd = events[i].data.fd;
 
-				// Sets connection as non_blocking
-				set_socket_to_non_blocking(client_fd);
-
-				// Adds to client_fd -> server map
-				_connection_fd_map[client_fd] =
-					_listening_fd_map[events[i].data.fd];
-
-				struct epoll_event client_event;
-				client_event.events =
-					EPOLLIN | EPOLLOUT | EPOLLET;  // Ready for input, output,
-												   // and in Edge-Triggered-Mode
-				client_event.data.fd = client_fd;
-				if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd,
-							  &client_event) == -1)
-					throw ClusterRunError("epoll_ctl");
-			} else {
-				// Handle I/O on connected socket
-				char buffer_request[BUFFER_SIZE];
-				ssize_t count = read(events[i].data.fd, buffer_request,
-									 sizeof(buffer_request));
-				if (count == -1) {
-					if (errno != EAGAIN) {
-						close_and_remove_socket(events[i].data.fd, _epoll_fd);
-						throw ClusterRunError("read failed");
-					}
-				} else if (count == 0)
-					// Connection closed
-					close_and_remove_socket(events[i].data.fd, _epoll_fd);
-				// TODO: Remove from client_to_fd map ??
-				else {
-					HTTP_Request request =
-						HTTP_Request_Parser::parse_HTTP_request(buffer_request);
-					(void)request;
-					//  Echo the data back (for example purposes)
-					std::string buffer_response = get_response(
-						request,
-						_servers[_connection_fd_map[events[i].data.fd]]);
-					ssize_t sent =
-						send(events[i].data.fd, buffer_response.c_str(),
-							 buffer_response.size(), 0);
-					// ssize_t sent = send(events[i].data.fd, buffer, count, 0);
-					if (sent == -1 && errno != EAGAIN) {
-						close_and_remove_socket(events[i].data.fd, _epoll_fd);
-						throw ClusterRunError("send failed");
-					}
-				}
-			}
+			if (isListeningSocket(fd))
+				handleNewConnection(fd);
+			else
+				handleClientRequest(fd);
 		}
+	}
+}
+
+bool Cluster::isListeningSocket(int fd) {
+	return std::find(_listening_sockets.begin(), _listening_sockets.end(),
+					 fd) != _listening_sockets.end();
+}
+
+void Cluster::handleNewConnection(int listening_fd) {
+	int client_fd = accept(listening_fd, NULL, NULL);
+	if (client_fd == -1) throw ClusterSetupError("accept");
+
+	set_socket_to_non_blocking(client_fd);
+	_connection_fd_map[client_fd] = _listening_fd_map[listening_fd];
+
+	struct epoll_event client_event;
+	client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+	client_event.data.fd = client_fd;
+
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1)
+		throw ClusterRunError("epoll_ctl");
+}
+
+void Cluster::handleClientRequest(int client_fd) {
+	char buffer_request[BUFFER_SIZE] = {};
+	ssize_t count = read(client_fd, buffer_request, sizeof(buffer_request));
+
+	if (count == -1) {
+		if (errno != EAGAIN) {
+			close_and_remove_socket(client_fd, _epoll_fd);
+			throw ClusterRunError("read failed");
+		}
+		return;	 // No data to read, just return
+	}
+
+	if (count == 0) {
+		// Connection closed
+		close_and_remove_socket(client_fd, _epoll_fd);
+		return;
+	}
+
+	std::string request(buffer_request, BUFFER_SIZE);
+	processRequest(client_fd, request, count);
+}
+
+void Cluster::processRequest(int client_fd, const std::string& buffer_request,
+							 ssize_t count) {
+	// Assume we have a buffer for the client
+	_client_buffer_map[client_fd].append(buffer_request.c_str(), count);
+
+	HTTP_Request request;
+	unsigned short error_status = HTTP_Request_Parser::parse_HTTP_request(
+		_client_buffer_map[client_fd], request);
+
+	// if (error_status == CONTINUE &&
+	// 	(request.method == GET || request.method == POST))
+	// 	;  // Send continue message
+
+	if (error_status != CONTINUE) {
+		std::string buffer_response = get_response(
+			request, error_status, _servers[_connection_fd_map[client_fd]]);
+
+		ssize_t sent =
+			send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
+		if (sent == -1 && errno != EAGAIN) {
+			close_and_remove_socket(client_fd, _epoll_fd);
+			throw ClusterRunError("send failed");
+		}
+		close_and_remove_socket(client_fd, _epoll_fd);
+
+		// Clear buffer after processing the request
+		_client_buffer_map[client_fd].clear();
+	} else if (error_status == CONTINUE && request.method == POST) {
+		// Wait for more data;
 	}
 }
 
@@ -159,49 +193,32 @@ void Cluster::close_and_remove_socket(int connecting_socket_fd, int epoll_fd) {
 
 // Placeholder function to get response
 const std::string Cluster::get_response(const HTTP_Request& request,
+										unsigned short& error_status,
 										const Server& server) {
-	std::vector<std::string> server_name = server.get_server_names();
+	std::vector<std::string> server_name = server.getServerName();
 
-	switch (request.method) {
-		case (GET):
-			// std::string = resultado da classe GetResponse
-			// return std::string
-			break;
-		case (DELETE):
-			// std::string = resultado da classe DeleteResponse
-			// return std::string
-			break;
-		case (POST):
-			// std::string = resultado da classe PostResponse
-			// return std::string
-			break;
-		case (UNKNOWN):
-			// Provavelmente impossível de acontecer???
-			break;
+	std::string response;
+
+	AResponse* response_check;
+
+	if (error_status != OK)
+		response_check =
+			new RequestErrorResponse(server, request, error_status);
+	else {
+		switch (static_cast<int>(request.method)) {
+			case (GET):
+				response_check = new GetResponse(server, request);
+				break;
+			case (POST):
+				response_check = new PostResponse(server, request);
+				break;
+			case (DELETE):
+				response_check = new DeleteResponse(server, request);
+				break;
+		}
 	}
 
-	// NOTE: Isto irá desaparecer, fica só como placeholder para testes
-	// Read html file to target, and get that to a body c-style STR
-	std::string target = request.uri;
-	if (target == "/") target = "/index.html";
-	target = "resources" + target;
-	std::ifstream filestream(target.c_str());
-	std::stringstream buffer;
-	buffer << filestream.rdbuf();
-	std::string body = buffer.str();
-
-	std::string body_len = numberToString<int>(static_cast<int>(body.size()));
-
-	std::string response =
-		"HTTP/1.1 200 OK\r\n"  // HTP 1.1 Header
-		"Content-Type: text/html; charset=UTF-8\r\n"
-		"Content-Length: " +
-		body_len +	// Body Length
-		"\r\n"
-		"\r\n" +
-		body;  // Body content;
-
-	return response;
+	return response_check->generateResponse();
 }
 
 // Getters for private member data

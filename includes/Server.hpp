@@ -1,58 +1,104 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
+/*   Server.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/08/19 14:44:29 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 14:57:44 by mde-sa--         ###   ########.fr       */
+/*   Created: 2024/08/21 11:37:41 by damachad          #+#    #+#             */
+/*   Updated: 2024/08/29 14:13:58 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "Exceptions.hpp"
-#include "ServerContext.hpp"
+class LocationContext;
+
+#include "LocationContext.hpp"
 #include "Webserv.hpp"
 
-class Server {
-   public:
-	// Constructor, creates server from configuration file
-	Server(const ServerContext& configuration);
-
-	// Destructor, closes all listening sockets
-	~Server();
-
-	// Sets up Server and adds sockets to _listening_sockets
-	void setup_server(void);
-
-	// Getters for private member data
-	const std::vector<std::string>& get_server_names() const;
-	const std::vector<Listen>& get_network_addresses() const;
-	const std::vector<int>& get_listening_sockets() const;
-
-   private:
-	// Server's names in config
-	const std::vector<std::string> _server_names;
-
-	// Server's network addresses (IP and Port)
-	const std::vector<Listen> _network_addresses;
-
-	// Server's listening fds (opened by socket)
-	std::vector<int> _listening_sockets;
-
-	// Server's sockaddr vector
-	std::vector<struct sockaddr_in> _sockaddr_vector;
-
-	// Constructors (not to be used)
-	Server();
-	const Server& operator=(const Server& copy);
-	// Server(const Server& copy); NOTE: Needed for Cluster[i] access!
+struct Listen {
+	std::string IP;
+	std::string port;
 };
 
-// Outputs Server's Hostname and Ports
-std::ostream& operator<<(std::ostream& outstream, const Server& server);
+class Server {
+   private:
+	// Server Context Data
+	std::vector<Listen> _network_address;
+	std::vector<std::string> _serverName;
+	std::string _root;
+	std::vector<std::string> _index;
+	State _autoIndex;
+	long _clientMaxBodySize;
+	std::vector<std::string> _tryFiles;
+	std::set<Method> _allowedMethods;
+	std::map<short, std::string> _errorPages;
+	std::map<std::string, LocationContext> _locations;
+	std::pair<short, std::string> _return;
+	std::string _uploadStore;
+	// Later add cgi related variables
+	typedef void (Server::*DirectiveHandler)(std::vector<std::string> &);
+	std::map<std::string, DirectiveHandler> _directiveMap;
+
+	// Connection data
+	std::vector<int> _listening_sockets;
+	std::vector<struct sockaddr_in> _sockaddr_vector;
+
+   public:
+	Server();
+	Server(const Server &src);
+	~Server();
+
+	Server &operator=(const Server &src);
+
+	// Getters
+	std::vector<Listen> getNetworkAddress() const;
+	std::vector<std::string> getServerName() const;
+	std::string getRoot() const;
+	std::vector<std::string> getIndex() const;
+	State getAutoIndex() const;
+	long getClientMaxBodySize() const;
+	std::vector<std::string> getTryFiles() const;
+	std::set<Method> getAllowedMethods() const;
+	std::map<short, std::string> getErrorPages() const;
+	std::map<std::string, LocationContext> getLocations() const;
+	std::pair<short, std::string> getReturn() const;
+	std::string getUpload() const;
+
+	std::string getRoot(const std::string &route) const;
+	std::vector<std::string> getIndex(const std::string &route) const;
+	State getAutoIndex(const std::string &route) const;
+	long getClientMaxBodySize(const std::string &route) const;
+	std::vector<std::string> getTryFiles(const std::string &route) const;
+	std::map<short, std::string> getErrorPages(const std::string &route) const;
+	std::set<Method> getAllowedMethods(const std::string &route) const;
+	std::pair<short, std::string> getReturn(const std::string &route) const;
+	std::string getUpload(const std::string &route) const;
+
+	std::vector<int> getListeningSockets(void) const;
+
+	// Handlers for directives
+	void handleListen(std::vector<std::string> &tokens);
+	void handleServerName(std::vector<std::string> &tokens);
+	void handleRoot(std::vector<std::string> &tokens);
+	void handleIndex(std::vector<std::string> &tokens);
+	void handleTryFiles(std::vector<std::string> &tokens);
+	void handleErrorPage(std::vector<std::string> &tokens);
+	void handleCliMaxSize(std::vector<std::string> &tokens);
+	void handleAutoIndex(std::vector<std::string> &tokens);
+	void handleReturn(std::vector<std::string> &tokens);
+	void handleUpload(std::vector<std::string> &tokens);
+
+	void initializeDirectiveMap();
+	void processDirective(std::string &line);
+	void processLocation(std::string block, size_t start, size_t end);
+
+	// Server setup function
+	void setup_server(void);
+};
+
+std::ostream &operator<<(std::ostream &os, const Server &context);
 
 #endif

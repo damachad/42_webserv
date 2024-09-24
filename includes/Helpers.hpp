@@ -15,7 +15,7 @@
 
 class Server;
 
-#include "ServerContext.hpp"
+#include "Server.hpp"
 #include "Webserv.hpp"
 
 enum e_server_code {
@@ -73,6 +73,7 @@ enum e_server_code {
 std::string boolToString(bool value);
 std::string methodToString(Method method);
 Method stringToMethod(const std::string& method);
+std::string toLower(const std::string& str);
 
 template <typename T>
 std::string numberToString(T value) {

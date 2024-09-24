@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:37:41 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/29 14:13:37 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/24 11:13:03 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,8 @@ class LocationContext {
 	std::set<Method> _allowedMethods;
 	std::map<short, std::string> _errorPages;
 	std::pair<short, std::string> _return;
-	// std::string _uploadDir;	// Is this necessary ?
-	// Later add redirect and cgi related variables
+	std::string _uploadStore;
+	// Later add cgi related variables
 	typedef void (LocationContext::*DirectiveHandler)(
 		std::vector<std::string> &);
 	std::map<std::string, DirectiveHandler> _directiveMap;
@@ -49,6 +49,7 @@ class LocationContext {
 	std::set<Method> getAllowedMethods() const;
 	std::map<short, std::string> getErrorPages() const;
 	std::pair<short, std::string> getReturn() const;
+	std::string getUpload() const;
 
 	// Handlers for directives
 	void handleRoot(std::vector<std::string> &tokens);
@@ -59,6 +60,7 @@ class LocationContext {
 	void handleCliMaxSize(std::vector<std::string> &tokens);
 	void handleAutoIndex(std::vector<std::string> &tokens);
 	void handleReturn(std::vector<std::string> &tokens);
+	void handleUpload(std::vector<std::string> &tokens);
 
 	void initializeDirectiveMap();
 	void processDirective(std::string &line);

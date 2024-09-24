@@ -7,13 +7,11 @@
 </head>
 <body>
     <h1>Test POST Request</h1>
-    <form action="/your_post_endpoint" method="POST">
-        <label for="postInput">Enter something for POST request:</label>
-        <input type="text" id="postInput" name="postInput">
-        <button type="submit">Submit POST Request</button>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="file">Choose a file to upload:</label><br><br>
+        <input type="file" id="file" name="file" required><br><br>
+        <input type="submit" value="Upload">
     </form>
-    <br>
-    <a href="index.html">Back to Index</a>
 </body>
 </html>
 
