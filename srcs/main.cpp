@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/18 16:08:23 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/24 10:33:39 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	std::cout << server_cluster;
+	// std::cout << server_cluster;
 
 	server_cluster.run();
 
