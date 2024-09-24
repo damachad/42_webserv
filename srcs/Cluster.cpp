@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/18 15:11:24 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/24 10:33:42 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,9 +155,9 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request,
 	unsigned short error_status = HTTP_Request_Parser::parse_HTTP_request(
 		_client_buffer_map[client_fd], request);
 
-	if (error_status == CONTINUE &&
-		(request.method == GET || request.method == POST))
-		;  // Send continue message
+	// if (error_status == CONTINUE &&
+	// 	(request.method == GET || request.method == POST))
+	// 	;  // Send continue message
 
 	if (error_status != CONTINUE) {
 		std::string buffer_response = get_response(
