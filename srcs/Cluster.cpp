@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/24 10:33:42 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/25 14:28:08 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,8 +197,6 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 										const Server& server) {
 	std::vector<std::string> server_name = server.getServerName();
 
-	std::string response;
-
 	AResponse* response_check;
 
 	if (error_status != OK)
@@ -217,8 +215,10 @@ const std::string Cluster::get_response(const HTTP_Request& request,
 				break;
 		}
 	}
-
-	return response_check->generateResponse();
+	std::string response = response_check->generateResponse();
+	delete response_check;
+	
+	return response;
 }
 
 // Getters for private member data
