@@ -83,7 +83,6 @@ void CGI::setCGIEnv() {
 			throw std::runtime_error(
 				"Error: Failed to set REQUEST_METHOD environment variable.");
 		}
-
 		std::string contentType = getHeaderEnvValue("Content-Type");
 		// if (contentType.empty()) {
 		//   throw std::runtime_error("Error: Missing 'Content-Type' header.");
@@ -94,14 +93,13 @@ void CGI::setCGIEnv() {
 		}
 
 		std::string contentLength = getHeaderEnvValue("Content-Length");
-		// if (contentLength.empty()) {
-		//   throw std::runtime_error("Error: Missing 'Content-Length'
-		//   header.");
+		// if (_request.method == POST && contentLength.empty()) {
+		//   throw std::runtime_error("Error: Missing 'Content-Length' header.");
 		// }
-		// if (setenv("CONTENT_LENGTH", contentLength.c_str(), 1) != 0) {
-		//   throw std::runtime_error(
-		//       "Error: Failed to set CONTENT_LENGTH environment variable.");
-		// }
+		if (setenv("CONTENT_LENGTH", contentLength.c_str(), 1) != 0) {
+		  throw std::runtime_error(
+		      "Error: Failed to set CONTENT_LENGTH environment variable.");
+		}
 
 		std::string queryString = getQueryFields();
 		if (setenv("QUERY_STRING", queryString.c_str(), 1) != 0) {
@@ -138,6 +136,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 	int pipeIn[2];
 	int pipeOut[2];
 	std::string cgiOutput;
+		std::cout << "The method sent is: " << intToString(_request.method).c_str() << std::endl; // TESTE
 
 	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
 		throw std::runtime_error("Pipe creation failed");
@@ -218,7 +217,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 		}
 	}
 	close(pipeOut[0]);
-
+	// std::cout << cgiOutput	<< std::endl; //TESTE
 	return cgiOutput;
 }
 
@@ -273,7 +272,6 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 std::string CGI::handleCGIResponse() {
 	std::string scriptPath = getCGIScriptPath();
 	std::string cgiOutput = executeCGI(scriptPath);
-	std::cout << "cgiOutput: " << cgiOutput << " _" << std::endl;  // TESTE
 	size_t pos = cgiOutput.find("\r\n\r\n");
 	// if (pos != std::string::npos) {
 	std::string headers = cgiOutput.substr(0, pos);

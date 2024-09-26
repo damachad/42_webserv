@@ -14,6 +14,8 @@
 
 #include <sys/stat.h>
 
+#include "CGI.hpp"
+
 PostResponse::PostResponse(const Server &server, const HTTP_Request &request)
 	: AResponse(server, request) {}
 
@@ -40,13 +42,33 @@ std::string PostResponse::generateResponse() {
 	status = uploadFile();
 	if (status != 200) return loadErrorPage(status);
 
+	if (_request.uri.length() > 3 &&
+		_request.uri.substr(_request.uri.length() - 3) == ".py") {
+		CGI cgi(_request);
+		std::string cgiResponse = cgi.executeCGI(_request.uri);
+		_response.headers.insert(
+			std::make_pair(std::string("Content-Type"),
+						   std::string(cgi.getHeaderEnvValue("Content-Type"))));
+		std::cout << "!!Content-type: " << cgi.getHeaderEnvValue("Content-Type")
+				  << std::endl;	 // TESTE
+		size_t bodyPos = cgiResponse.find("\r\n\r\n");
+		std::string responseString = "HTTP/1.1 200 OK\r\n";
+		if (bodyPos != std::string::npos) {
+			responseString += cgiResponse.substr(bodyPos + 4);
+			std::cout << "RESPONSE STRING IS" << std::endl
+					  << std::endl
+					  << responseString << std::endl;  // TESTE
+			return responseString;
+		}
+	}
+
 	return getResponseStr();
 }
 
 short PostResponse::uploadFile() {
 	extractFile();
-	
-	// std::string directory = _server.getUpload(); 
+
+	// std::string directory = _server.getUpload();
 	// TODO: if upload_store empty, return error or have a default?
 	std::string directory = "file_uploads/";
 	std::string target = directory + _file_to_upload.file_name;
