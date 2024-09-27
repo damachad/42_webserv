@@ -14,12 +14,16 @@
 
 #include "Helpers.hpp"
 
+static int response_status = OK;
+
 unsigned short HTTP_Request_Parser::parse_HTTP_request(
 	const std::string& buffer_request, HTTP_Request& HTTP) {
 	if (buffer_request.empty() ||
-		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos)
-		return BAD_REQUEST;	 // TODO: Check what happens with empty
-							 // requests....... client on nginx hangs :x
+		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos) {
+		response_status = BAD_REQUEST;
+		return response_status;
+	}  // TODO: Check what happens with empty
+	// requests....... client on nginx hangs :x
 
 	// Buffers for parsing
 	std::stringstream buffer_stream(buffer_request);
@@ -32,11 +36,11 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 	while (std::getline(buffer_stream, buffer)) {
 		// Parses request line
 		if (!request_line_is_parsed) {
-			if (!add_req_line(HTTP, buffer)) return BAD_REQUEST;
+			if (!add_req_line(HTTP, buffer)) return response_status;
 			request_line_is_parsed = true;
 		}  // Parses header fields
 		else if (buffer != "\r" && !header_is_parsed) {
-			if (!add_header_fields(HTTP, buffer)) return BAD_REQUEST;
+			if (!add_header_fields(HTTP, buffer)) return response_status;
 		}  // Notes end of header fields
 		else if (buffer == "\r" || buffer.empty()) {
 			header_is_parsed = true;
@@ -53,9 +57,12 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 	}
 
 	extract_queries(HTTP);
-	if (!check_validity_of_header_fields(HTTP)) return BAD_REQUEST;
+	if (!check_validity_of_header_fields(HTTP)) return response_status;
 
-	return OK;
+	// if (HTTP.header_fields.find("expect") != HTTP.header_fields.end())
+	//	return check_expect_validity(HTTP);
+
+	return response_status;
 }
 
 bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
@@ -66,21 +73,31 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 
 	std::string method;
 	line_stream >> method;
-	if (method.size() == 0 || !method_is_valid(method)) return false;
+	if (method.size() == 0 || !method_is_valid(method)) {
+		response_status = METHOD_NOT_ALLOWED;
+		return false;
+	}
 
 	std::string url;
 	line_stream >> url;
-	url = decode(url);
-	if (url.size() == 0 || !url_is_valid(url)) return false;
+	std::string decoded_uri = decode(url);
+	if (decoded_uri.size() == 0 ||
+		!url_is_valid(decoded_uri)) {  // TODO: URL SIZE
+		response_status = BAD_REQUEST;
+		return false;
+	}
 
 	std::string protocol_version;
 	line_stream >> protocol_version;
 	if (protocol_version.size() == 0 ||
-		!protocol_version_is_valid(protocol_version))
+		!protocol_version_is_valid(protocol_version)) {
+		response_status = HTTP_VERSION_NOT_SUPPORTED;
 		return false;
+	}
 
 	HTTP.method = stringToMethod(method);
 	HTTP.uri = trim(url);
+	HTTP.decoded_uri = decoded_uri;
 	HTTP.protocol_version = trim(protocol_version);
 
 	return true;
@@ -91,7 +108,10 @@ bool HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 	size_t colon_pos = line.find(':');
 
 	// Validate the presence of colon
-	if (colon_pos == std::string::npos) return false;
+	if (colon_pos == std::string::npos) {
+		response_status = BAD_REQUEST;
+		return false;
+	}
 
 	// Extract key and value
 	std::string key = line.substr(0, colon_pos);
@@ -103,7 +123,10 @@ bool HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 		0, comma_separated_values.find_first_not_of(" \n\r\t"));
 
 	// Validate the key and value (if needed)
-	if (key.empty() || comma_separated_values.empty()) return false;
+	if (key.empty() || comma_separated_values.empty()) {
+		response_status = BAD_REQUEST;
+		return false;
+	}
 
 	// Normalize key to lowercase
 	key = toLower(key);
@@ -137,7 +160,10 @@ void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	// NOTE: User-Agent is not a strictly mandatory field, but helps for
 	// evaluation
-	if (HTTP.header_fields.count("user-agent") != 1) return false;
+	if (HTTP.header_fields.count("user-agent") != 1) {
+		response_status = BAD_REQUEST;
+		return false;
+	}
 
 	std::string user_agent = HTTP.header_fields.find("user-agent")->second;
 
@@ -148,31 +174,51 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 
 	// Checks that the request is from Curl, Mozilla Firefox or Mozilla Siege
 	if (!(has_curl || (has_mozilla && (has_firefox || has_siege)))) {
+		response_status = BAD_REQUEST;
 		return false;
 	}
 
 	// NOTE: Host is mandatory on HTTP 1.1
 	if ((HTTP.header_fields.count("host") != 1 &&
 		 HTTP.protocol_version == "HTTP/1.1") ||
-		HTTP.header_fields.count("host") > 1)
+		HTTP.header_fields.count("host") > 1) {
+		response_status = BAD_REQUEST;
 		return false;
+	}
 
-	// NOTE: Immediately parses Content-Length, if it exists
-	if (HTTP.header_fields.count("content-length") > 1) return false;
+	// Only one content-length is allowed
+	if (HTTP.header_fields.count("content-length") > 1) {
+		response_status = BAD_REQUEST;
+		return false;
+	}
 
-	/*if (HTTP.header_fields.find("content-length") != HTTP.header_fields.end())
-	{ size_t content_length = static_cast<size_t>(stringToNumber<unsigned long>(
+	// Checks if content-length is bigger than body, or if a body exists with no
+	// content length
+	if (HTTP.header_fields.find("content-length") != HTTP.header_fields.end()) {
+		size_t content_length =
+			static_cast<size_t>(stringToNumber<unsigned long>(
 				HTTP.header_fields.find("content-length")->second));
-		if (content_length >
-			static_cast<size_t>(std::numeric_limits<unsigned long>::max()))
+		if (content_length != HTTP.message_body.size()) {
+			response_status = PAYLOAD_TOO_LARGE;
 			return false;
-		if (content_length != HTTP.message_body.size()) return false;
-	} else	// NOTE: If there is a body but not content-length
+		}
+	} else	// If there is no content-length
 	{
-		if (HTTP.message_body.size()) return false;
-	}*/
+		if (HTTP.message_body.size())  // If there is a body
+		{
+			response_status = LENGTH_REQUIRED;
+			return false;
+		}
+	}
 
 	return true;
+}
+
+unsigned short HTTP_Request_Parser::check_expect_validity(HTTP_Request& HTTP) {
+	if (HTTP.header_fields.find("expect")->second != "100-continue")
+		return BAD_REQUEST;
+
+	return CONTINUE;
 }
 
 void HTTP_Request_Parser::extract_queries(HTTP_Request& HTTP) {
@@ -253,6 +299,9 @@ bool HTTP_Request_Parser::url_is_valid(const std::string& url) {
 		(std::count(url.begin(), url.end(), '=') !=
 		 std::count(url.begin(), url.end(), '&') + 1))
 		return false;
+
+	// URL_MAX_SIZE should not be bigger than default value
+	if (url.size() > URL_MAX_SIZE) return false;
 
 	return true;
 }
