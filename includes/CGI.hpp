@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "AResponse.hpp"
 #include "HTTPRequestParser.hpp"
 
 extern std::map<pid_t, time_t> pidStartTimeMap;
@@ -18,6 +19,8 @@ extern std::map<pid_t, time_t> pidStartTimeMap;
 class CGI {
 private:
   const HTTP_Request &_request;
+  HTTP_Response &_response;
+  const std::string &_path;
 
   bool isSingleValueHeader(std::string &key);
   std::string getQueryFields();
@@ -30,10 +33,11 @@ private:
   std::multimap<std::string, std::string> parseRequestHeaders();
 
 public:
-  CGI(const HTTP_Request &httpRequest);
+  CGI(const HTTP_Request &httpRequest, HTTP_Response &httpResponse,
+      const std::string &path);
   ~CGI();
 
-  std::string handleCGIResponse();
+  void handleCGIResponse();
   std::string executeCGI(const std::string &scriptPath);
   std::string getHeaderEnvValue(std::string key);
 };

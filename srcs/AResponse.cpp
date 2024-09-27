@@ -151,12 +151,14 @@ short AResponse::checkSize() const {
 		return 400;	 // Bad Request
 	std::multimap<std::string, std::string>::const_iterator it =
 		_request.header_fields.find("content-length");
-	size_t size = -1;
+	size_t size = 0;
 	if (it != _request.header_fields.end()) {
 		char* endPtr = NULL;
 		size = std::strtol(it->second.c_str(), &endPtr, 10);
 		if (*endPtr != '\0') return 400;
-		if (size != _request.message_body.size()) return 400;
+		// if (size != _request.message_body.size()) { 
+		// 	std::cout << "size: " << size << ", body_size: " << _request.message_body.length() << "\n";
+		// 	return 400;}
 	}
 	return 200;
 }

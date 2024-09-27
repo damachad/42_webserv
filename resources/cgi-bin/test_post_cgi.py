@@ -6,7 +6,7 @@ import urllib.parse
 
 def main():
     # Set the content type for the response
-    print("Content-Type: text/html")    
+    print("content-type: text/html")
     print("\r\n\r\n")  # End of headers
 
     # Print the HTML start

@@ -70,8 +70,8 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 
 	std::string url;
 	line_stream >> url;
-	url = decode(url);
 	if (url.size() == 0 || !url_is_valid(url)) return false;
+	url = decode(url);
 
 	std::string protocol_version;
 	line_stream >> protocol_version;
