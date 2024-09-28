@@ -23,7 +23,7 @@ RequestErrorResponse::RequestErrorResponse(const RequestErrorResponse& src)
 RequestErrorResponse::~RequestErrorResponse() {}
 
 std::string RequestErrorResponse::generateResponse() {
-	if (_error_status == 100) return loadContinueMessage;
+	// if (_error_status == 100) return loadContinueMessage;
 
 	return loadErrorPage(_error_status);
 }

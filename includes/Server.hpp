@@ -21,6 +21,19 @@ class LocationContext;
 struct Listen {
 	std::string IP;
 	std::string port;
+
+	bool operator<(const Listen &other) const {
+		if (IP != other.IP) return IP < other.IP;
+
+		return port < other.port;
+	}
+
+	// Default Constructor
+	Listen() {};
+
+	// Constructor with IP and Port
+	Listen(const std::string &ip, const std::string &port_number)
+		: IP(ip), port(port_number) {};
 };
 
 class Server {

@@ -22,8 +22,7 @@ int main(int argc, char** argv) {
 		return (1);
 	}
 	ConfigParser parser("conf/default2.conf");
-	if (argc == 2)
-		parser = ConfigParser(argv[1]);
+	if (argc == 2) parser = ConfigParser(argv[1]);
 
 	std::vector<Server>
 		servers;  // Defined outside the try block so it can be used later
@@ -45,6 +44,12 @@ int main(int argc, char** argv) {
 	// Initializes the Server Cluster
 	Cluster server_cluster(servers);
 
+	if (server_cluster.hasDuplicateVirtualServers()) {
+		std::cerr << "Invalid conf file. Repeated IP/Port/ServerName configs"
+				  << std::endl;
+		return 1;
+	}
+
 	// Attempts to Setup the Cluster
 	try {
 		server_cluster.setup_cluster();
@@ -52,11 +57,11 @@ int main(int argc, char** argv) {
 		std::cerr << e.what() << std::endl;
 		return 1;
 	}
+	/*
+			// std::cout << server_cluster;
 
-	// std::cout << server_cluster;
-
-	server_cluster.run();
-
+			server_cluster.run();
+		*/
 	/*
 		// Grab a connection from the queue
 		socklen_t addrlen = sizeof(sockaddr);

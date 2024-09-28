@@ -21,6 +21,21 @@
 class Server;
 struct HTTP_Request;
 
+struct VirtualServer {
+	std::string IP;
+	std::string port;
+	std::string server_name;
+	const Server* server;
+
+	// Comparison operator for std::set
+	bool operator<(const VirtualServer& other) const {
+		// Compare based on IP, port, and server_name
+		if (IP != other.IP) return IP < other.IP;
+		if (port != other.port) return port < other.port;
+		return server_name < other.server_name;
+	}
+};
+
 class Cluster {
    public:
 	// Constructor; create a vector of servers from provided context vector
@@ -32,11 +47,15 @@ class Cluster {
 	// Accesses ith server of _server array when asking Cluster[i]
 	const Server& operator[](unsigned int index) const;
 
-	// Sets up _epoll_fd, fills _listening_fd_map and instructs setup_server()
-	void setup_cluster(void);
+	// Checks there are repeated virtual addresses with the same contents
+	bool hasDuplicateVirtualServers() const;
 
-	// Adds socket to epoll so they can be monitored
-	void add_sockets_to_epoll(const Server& server);
+	// Sets up _epoll_fd, fills _listening_fd_map and instructs setup_server()
+	void create_epoll_instance(void);
+	void setup_cluster(void);
+	int create_and_bind_socket(const std::string& IP, const std::string& port);
+	void start_listening(int sock_fd);
+	void add_sockets_to_epoll(int sock_fd);
 
 	// Sets an infinite loop to listen to incoming connections
 	void run();
@@ -47,15 +66,23 @@ class Cluster {
 						ssize_t count);
 
 	// Getters for private member data
-	const std::vector<Server>& get_server_list() const;
+	const std::vector<const Server*>& get_server_list() const;
+	const std::vector<VirtualServer> get_virtual_server_list() const;
 	const std::vector<int>& get_listening_sockets() const;
-	const std::map<int, int>& get_listening_fd_map() const;
-	const std::map<int, int>& get_connection_fd_map() const;
+	const std::map<int, std::vector<const Server*> >& get_listening_fd_map()
+		const;
+	const std::map<int, std::vector<const Server*> >& get_connection_fd_map()
+		const;
 	int get_epoll_fd() const;
 
 	// Returns respective server from each fd
-	Server& get_server_from_listening_fd(int listening_fd);
-	Server& get_server_from_connection_fd(int connection_fd);
+	const std::vector<const Server*>& get_server_from_listening_fd(
+		int listening_fd);
+	const std::vector<const Server*>& get_server_from_connection_fd(
+		int connection_fd);
+
+	// Reorders _virtual_servers so it contains no-IP elements last
+	void reorderVirtualServers();
 
    private:
 	// Sets sockets to non-blocking-mode
@@ -70,7 +97,10 @@ class Cluster {
 								   const Server& server);
 
 	// Vector of available servers
-	std::vector<Server> _servers;
+	std::vector<const Server*> _servers;
+
+	// Vector of all virtual servers
+	std::vector<VirtualServer> _virtual_servers;
 
 	// Vector of all listening fds
 	std::vector<int> _listening_sockets;
@@ -78,11 +108,11 @@ class Cluster {
 	// Buffer map for all clients
 	std::map<int, std::string> _client_buffer_map;
 
-	// Map that relates listening_fd to respective index on _server
-	std::map<int, int> _listening_fd_map;
+	// Map that relates listening_fd to respective server pointer
+	std::map<int, std::vector<const Server*> > _listening_fd_map;
 
 	// Map that relates _connection_fd to respective index on _server
-	std::map<int, int> _connection_fd_map;
+	std::map<int, std::vector<const Server*> > _connection_fd_map;
 
 	// _epoll_fd for epoll()
 	int _epoll_fd;
