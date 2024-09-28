@@ -52,6 +52,7 @@ class Cluster {
 
 	// Sets up _epoll_fd, fills _listening_fd_map and instructs setup_server()
 	void create_epoll_instance(void);
+	std::set<Listen> trimVirtualServers();
 	void setup_cluster(void);
 	int create_and_bind_socket(const std::string& IP, const std::string& port);
 	void start_listening(int sock_fd);

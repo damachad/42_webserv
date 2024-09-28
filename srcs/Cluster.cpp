@@ -153,50 +153,57 @@ void Cluster::add_sockets_to_epoll(int sock_fd) {
 		throw ClusterSetupError("epoll_ctl");
 }
 
-bool hasIP(const VirtualServer& vs) { return !vs.IP.empty(); }
+// Trimms repeated addresses (server names, conflicting IP:port and port
+// configs)
+std::set<Listen> Cluster::trimVirtualServers() {
+	std::vector<VirtualServer> virtual_server_copy = _virtual_servers;
 
-void Cluster::reorderVirtualServers() {
-	std::stable_partition(_virtual_servers.begin(), _virtual_servers.end(),
-						  hasIP);
+	std::set<std::string> ports_to_remove;
+
+	for (std::vector<VirtualServer>::const_iterator vs_it =
+			 virtual_server_copy.begin();
+		 vs_it != virtual_server_copy.end(); vs_it++) {
+		if (vs_it->IP.empty()) ports_to_remove.insert(vs_it->port);
+	}
+
+	for (std::vector<VirtualServer>::iterator vs_it =
+			 virtual_server_copy.begin();
+		 vs_it != virtual_server_copy.end();) {
+		if (ports_to_remove.count(vs_it->port) > 0 && !(vs_it->IP.empty()))
+			vs_it = virtual_server_copy.erase(vs_it);
+		else
+			vs_it++;
+	}
+
+	std::set<Listen> trimmedVirtualServers;
+
+	for (std::vector<VirtualServer>::const_iterator vs_it =
+			 virtual_server_copy.begin();
+		 vs_it != virtual_server_copy.end(); vs_it++) {
+		Listen address(vs_it->IP, vs_it->port);
+		trimmedVirtualServers.insert(address);
+	}
+
+	return trimmedVirtualServers;
 }
 
 // Sets up listening sockets
 void Cluster::setup_cluster(void) {
 	create_epoll_instance();  // Creates epoll instance
 
-	// Map that takes note of used fds
-	std::map<Listen, int> used_fds;
+	std::set<Listen> trimmed_servers = trimVirtualServers();
 
-	reorderVirtualServers();
-
-	for (std::vector<VirtualServer>::const_iterator it =
-			 _virtual_servers.begin();
-		 it != _virtual_servers.end(); it++) {
+	for (std::set<Listen>::const_iterator it = trimmed_servers.begin();
+		 it != trimmed_servers.end(); it++) {
 		Listen address(it->IP, it->port);
-		if (used_fds.find(address) !=
-			used_fds.end())	 // If fd has already been used, add it to map
-		{
-			int sock_fd = used_fds[address];
-			_listening_fd_map[sock_fd].push_back(it->server);
-		} else {
-			// Create, bind and set up a new socket
-			int sock_fd = create_and_bind_socket(it->IP, it->port);
+		// Create, bind and set up a new socket
+		int sock_fd = create_and_bind_socket(it->IP, it->port);
 
-			// Starts listening to socket
-			start_listening(sock_fd);
+		// Starts listening to socket
+		start_listening(sock_fd);
 
-			// Adds socket to epoll for monitoring
-			add_sockets_to_epoll(sock_fd);
-
-			// Track IP:Port <-> socket combination
-			used_fds[address] = sock_fd;
-
-			// Track listening_port -> Server
-			_listening_fd_map.insert(std::make_pair(
-				sock_fd, std::vector<const Server*>(
-							 1, it->server)));	// Add sock_fd and server to
-												// listening fd map
-		}
+		// Adds socket to epoll for monitoring
+		add_sockets_to_epoll(sock_fd);
 	}
 }
 
