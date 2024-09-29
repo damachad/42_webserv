@@ -156,7 +156,7 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request,
 		_client_buffer_map[client_fd], request);
 
 	// if (error_status == CONTINUE &&
-	// 	(request.method == GET || request.method == POST))
+	// 	(request.method == GET || request.method == DELETE))
 	// 	;  // Send continue message
 
 	if (error_status != CONTINUE) {

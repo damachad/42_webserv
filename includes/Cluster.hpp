@@ -14,12 +14,10 @@
 #define CLUSTER_HPP
 
 #include "Server.hpp"
-#include "Webserv.hpp"
 
 #define BUFFER_SIZE 8096
 #define HTTP_REQUEST_INCOMPLETE 2000  // TODO: CHANGE
 
-class Server;
 class Server;
 struct HTTP_Request;
 
