@@ -14,14 +14,27 @@
 #define CLUSTER_HPP
 
 #include "Server.hpp"
-#include "Webserv.hpp"
 
 #define BUFFER_SIZE 8096
 #define HTTP_REQUEST_INCOMPLETE 2000  // TODO: CHANGE
 
 class Server;
-class Server;
 struct HTTP_Request;
+
+struct VirtualServer {
+	std::string IP;
+	std::string port;
+	std::string server_name;
+	const Server* server;
+
+	// Comparison operator for std::set
+	bool operator<(const VirtualServer& other) const {
+		// Compare based on IP, port, and server_name
+		if (IP != other.IP) return IP < other.IP;
+		if (port != other.port) return port < other.port;
+		return server_name < other.server_name;
+	}
+};
 
 class Cluster {
    public:
@@ -34,57 +47,69 @@ class Cluster {
 	// Accesses ith server of _server array when asking Cluster[i]
 	const Server& operator[](unsigned int index) const;
 
-	// Sets up _epoll_fd, fills _listening_fd_map and instructs setup_server()
-	void setup_cluster(void);
+	// Checks there are repeated virtual addresses with the same contents
+	bool hasDuplicateVirtualServers() const;
 
-	// Adds socket to epoll so they can be monitored
-	void add_sockets_to_epoll(const Server& server);
+	// Sets up listening sockets
+	void setupCluster(void);
 
 	// Sets an infinite loop to listen to incoming connections
 	void run();
-	bool isListeningSocket(int fd);
-	void handleNewConnection(int listening_fd);
-	void handleClientRequest(int client_fd);
-	void processRequest(int client_fd, const std::string& buffer_request,
-						ssize_t count);
 
 	// Getters for private member data
-	const std::vector<Server>& get_server_list() const;
-	const std::vector<int>& get_listening_sockets() const;
-	const std::map<int, int>& get_listening_fd_map() const;
-	const std::map<int, int>& get_connection_fd_map() const;
-	int get_epoll_fd() const;
-
-	// Returns respective server from each fd
-	Server& get_server_from_listening_fd(int listening_fd);
-	Server& get_server_from_connection_fd(int connection_fd);
+	const std::vector<const Server*>& getServerList() const;
+	const std::vector<VirtualServer> getVirtualServerList() const;
+	const std::vector<int>& getListeningSockets() const;
+	const std::map<int, std::vector<const Server*> >& getListeningFdMap() const;
+	const std::map<int, std::vector<const Server*> >& getConnectionFdMap()
+		const;
+	int getEpollFd() const;
 
    private:
-	// Sets sockets to non-blocking-mode
-	static void set_socket_to_non_blocking(int socket_fd);
+	// Functions for setupCluster()
+	//// Creates epoll instance
+	void createEpollInstance(void);
+	//// Gets list of sockets needed
+	std::set<Listen> trimVirtualServers();
+	//// Creates sockets and binds to them
+	int createAndBindSocket(const std::string& IP, const std::string& port);
+	//// Starts listening to incoming connections
+	void startListening(int sock_fd);
+	//// Adds sockets to epoll so they can be monitored
+	void addSocketsToEpoll(int sock_fd);
 
-	// Closes socket and removes it from epoll
-	static void close_and_remove_socket(int connecting_socket_fd, int epoll_fd);
+	// Functions for run()
+	//// Checks if fd correspondes to a listening socket
+	bool isListeningSocket(int fd);
+	//// Handles a new connection
+	void handleNewConnection(int listening_fd);
+	//// Sets sockets to non-blocking-mode
+	static void setSocketToNonBlocking(int socket_fd);
+	//// Handles a client request
+	void handleClientRequest(int connection_fd);
+	//// Processes the request
+	void processRequest(int connection_fd, const std::string& buffer_request);
+	//// Closes socket and removes it from epoll
+	static void closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd);
+	//// Gets response from server
+	const std::string getResponse(const HTTP_Request& request,
+								  unsigned short& error_status, int client_fd);
+	// Gets correct context from client_fd
+	const Server* getContext(int client_fd, const HTTP_Request& request);
 
-	// Placeholder function to get response
-	const std::string get_response(const HTTP_Request& request,
-								   unsigned short& error_status,
-								   const Server& server);
+	// Gets address from client_fd
+	const Listen getListenFromClient(int client_fd);
+
+	const std::string getHostNameFromRequest(const HTTP_Request& request);
 
 	// Vector of available servers
-	std::vector<Server> _servers;
+	std::vector<const Server*> _servers;
+
+	// Vector of all virtual servers
+	std::vector<VirtualServer> _virtual_servers;
 
 	// Vector of all listening fds
 	std::vector<int> _listening_sockets;
-
-	// Buffer map for all clients
-	std::map<int, std::string> _client_buffer_map;
-
-	// Map that relates listening_fd to respective index on _server
-	std::map<int, int> _listening_fd_map;
-
-	// Map that relates _connection_fd to respective index on _server
-	std::map<int, int> _connection_fd_map;
 
 	// _epoll_fd for epoll()
 	int _epoll_fd;

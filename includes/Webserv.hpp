@@ -51,6 +51,7 @@ enum State { FALSE, TRUE, UNSET };
 #define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
 #define REG_FILE 0
 #define DIRECTORY 1
+#define URL_MAX_SIZE 8094
 #define SERVER "webserv"
 
 extern const std::map<short, std::string> STATUS_MESSAGES;

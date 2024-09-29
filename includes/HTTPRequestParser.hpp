@@ -21,6 +21,7 @@ struct HTTP_Request {
 	// Request Line
 	enum Method method;
 	std::string uri;
+	std::string decoded_uri;
 	std::string protocol_version;
 
 	// Header
@@ -50,6 +51,7 @@ class HTTP_Request_Parser {
 	static bool add_header_fields(HTTP_Request& HTTP, const std::string& line);
 	static void add_message_body(HTTP_Request& HTTP, const std::string& line);
 	static bool check_validity_of_header_fields(HTTP_Request& HTTP);
+	static unsigned short check_expect_validity(HTTP_Request& HTTP);
 	static void extract_queries(HTTP_Request& HTTP);
 
 	// Auxiliary functions for above functions
