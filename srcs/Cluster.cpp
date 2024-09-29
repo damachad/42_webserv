@@ -328,21 +328,21 @@ const std::string Cluster::getResponse(const HTTP_Request& request,
 
 	AResponse* response_check;
 
-	Server server = getContext(client_fd);
+	const Server* server = getContext(client_fd, request);
 
 	if (error_status != OK)
 		response_check =
-			new RequestErrorResponse(server, request, error_status);
+			new RequestErrorResponse(*server, request, error_status);
 	else {
 		switch (static_cast<int>(request.method)) {
 			case (GET):
-				response_check = new GetResponse(server, request);
+				response_check = new GetResponse(*server, request);
 				break;
 			case (POST):
-				response_check = new PostResponse(server, request);
+				response_check = new PostResponse(*server, request);
 				break;
 			case (DELETE):
-				response_check = new DeleteResponse(server, request);
+				response_check = new DeleteResponse(*server, request);
 				break;
 		}
 	}
@@ -364,11 +364,71 @@ const Listen Cluster::getListenFromClient(int client_fd) {
 	return address;
 }
 
-// Gets correct context for interpretation
-const Server Cluster::getContext(int client_fd) {
-	Listen address = getListenFromClient(client_fd);
+const std::string Cluster::getHostNameFromRequest(const HTTP_Request& request) {
+	std::multimap<std::string, std::string>::const_iterator host_name =
+		request.header_fields.find("host");
 
-	return *_servers.front();
+	if (host_name != request.header_fields.end())
+		return (host_name->second);
+	else
+		return "";
+}
+
+// Gets correct context for interpretation
+const Server* Cluster::getContext(int client_fd, const HTTP_Request& request) {
+	const Listen address = getListenFromClient(client_fd);
+	std::string host_name = getHostNameFromRequest(request);
+	std::vector<const Server*> valid_servers;
+
+	// Traverses through all the server contexts in search of addresses
+	for (std::vector<const Server*>::const_iterator server_it =
+			 _servers.begin();
+		 server_it != _servers.end(); server_it++) {
+		// Gets the vector of addresses for a given server context
+		std::vector<Listen> network_addresses =
+			(*server_it)->getNetworkAddress();
+
+		// For each address, check if it matches the IP:Port on the request
+		for (std::vector<Listen>::const_iterator listen_it =
+				 network_addresses.begin();
+			 listen_it != network_addresses.end(); listen_it++)
+			if (*listen_it == address) valid_servers.push_back(*server_it);
+	}
+
+	// If no addresses were found, check if it matches just the Port
+	if (valid_servers.empty()) {
+		for (std::vector<const Server*>::const_iterator server_it =
+				 _servers.begin();
+			 server_it != _servers.end(); server_it++) {
+			std::vector<Listen> network_addresses =
+				(*server_it)->getNetworkAddress();
+			for (std::vector<Listen>::const_iterator listen_it =
+					 network_addresses.begin();
+				 listen_it != network_addresses.end(); listen_it++)
+				if (listen_it->port == address.port)
+					valid_servers.push_back(*server_it);
+		}
+	}
+
+	// If multiple servers were found, return the first one with matching
+	// server_names
+	if (valid_servers.size() > 1) {
+		for (std::vector<const Server*>::const_iterator valid_servers_it =
+				 valid_servers.begin();
+			 valid_servers_it != valid_servers.end(); valid_servers_it++) {
+			std::vector<std::string> server_names =
+				(*valid_servers_it)->getServerName();
+			if (std::find(server_names.begin(), server_names.end(),
+						  host_name) != server_names.end())
+				return &(**valid_servers_it);
+		}
+	}
+
+	// If no server names were found, just return the first one
+	//  TODO: Check in case of URIs??
+	//  TODO: Check in case of defaults?? (perhaps switch them to the first
+	//  position in that case)
+	return valid_servers.front();
 }
 
 // Getters for private member data

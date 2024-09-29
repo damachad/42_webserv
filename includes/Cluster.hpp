@@ -95,10 +95,12 @@ class Cluster {
 	const std::string getResponse(const HTTP_Request& request,
 								  unsigned short& error_status, int client_fd);
 	// Gets correct context from client_fd
-	const Server getContext(int client_fd);
+	const Server* getContext(int client_fd, const HTTP_Request& request);
 
 	// Gets address from client_fd
 	const Listen getListenFromClient(int client_fd);
+
+	const std::string getHostNameFromRequest(const HTTP_Request& request);
 
 	// Vector of available servers
 	std::vector<const Server*> _servers;

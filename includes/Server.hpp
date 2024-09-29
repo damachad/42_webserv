@@ -28,6 +28,10 @@ struct Listen {
 		return port < other.port;
 	}
 
+	bool operator==(const Listen &other) const {
+		return (IP == other.IP && port == other.port);
+	}
+
 	// Default Constructor
 	Listen() {};
 
