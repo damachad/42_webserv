@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/18 11:16:18 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/25 14:49:30 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ std::string GetResponse::generateResponse() {
 			status = loadDirectoryListing(path);
 			if (status != 200) return loadErrorPage(status);
 		} else
-			loadErrorPage(404);
+			loadErrorPage(403); // Forbiden
 	}
 
 	return getResponseStr();

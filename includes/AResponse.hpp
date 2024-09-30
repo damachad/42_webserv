@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/17 09:51:37 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/25 14:28:43 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class AResponse {
 	AResponse(const Server& server, const HTTP_Request& request);
 	AResponse(const AResponse& src);
 	const AResponse& operator=(const AResponse& src);
-	~AResponse();
+	virtual ~AResponse();
 
 	// Pure virtual method for generating the HTTP response
 	virtual std::string generateResponse() = 0;
