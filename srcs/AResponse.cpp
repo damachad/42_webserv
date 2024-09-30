@@ -490,6 +490,10 @@ const std::string AResponse::loadErrorPage(short status) {
 	return getResponseStr();
 }
 
+const std::string AResponse::loadContinueMessage(void) {
+	return "HTTP/1.1 100 Continue";
+}
+
 // Example implementation (case GET)
 // Order of functions is important
 // std::string AResponse::generateResponse() {
