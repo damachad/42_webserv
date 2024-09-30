@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/17 14:19:22 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/30 11:46:51 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 			std::istreambuf_iterator<char>());
 		HTTP.message_body = remaining_body;	 // Append the body
 	}
-
+	trimNulls(HTTP.message_body);
 	extract_queries(HTTP);
 	if (!check_validity_of_header_fields(HTTP)) return response_status;
 
@@ -204,7 +204,7 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 		}
 	} else	// If there is no content-length
 	{
-		if (HTTP.message_body.size())  // If there is a body
+		if (!HTTP.message_body.empty())  // If there is a body
 		{
 			response_status = LENGTH_REQUIRED;
 			return false;
@@ -259,6 +259,17 @@ std::string HTTP_Request_Parser::trim(const std::string& str) {
 
 	size_t end = str.find_last_not_of(" \n\r\t");
 	return str.substr(start, end - start + 1);
+}
+
+// Function to trim null characters ('\0') from a string
+void HTTP_Request_Parser::trimNulls(std::string& s) {
+	size_t pos = s.find_last_not_of('\0');
+	
+	if (pos == std::string::npos) {
+		s.clear();
+	} else {
+		s.resize(pos + 1);
+	}
 }
 
 std::string HTTP_Request_Parser::decode(const std::string& encoded) {
