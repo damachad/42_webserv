@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/30 11:56:36 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/30 11:57:25 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -324,7 +324,6 @@ void Cluster::closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd) {
 const std::string Cluster::getResponse(const HTTP_Request& request,
 									   unsigned short& error_status,
 									   int client_fd) {
-	std::string response;
 
 	AResponse* response_check;
 
