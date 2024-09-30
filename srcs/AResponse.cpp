@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/30 14:15:11 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/30 16:37:42 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,6 +305,8 @@ void AResponse::loadCommonHeaders() {
 	_response.headers.insert(
 		std::make_pair(std::string("Content-Length"),
 					   numberToString<unsigned long>(_response.body.size())));
+	_response.headers.insert(
+		std::make_pair(std::string("Cache-Control"), std::string("no-store")));
 }
 
 // Loads reponse struct with values of return
