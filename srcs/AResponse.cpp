@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/16 11:32:44 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/30 12:51:20 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,17 +140,17 @@ AResponse::AResponse(const AResponse& src)
 // Checks if Content-Lenght is present once and if request body size matches
 // this value and value of client_max_body_size
 short AResponse::checkSize() const {
-	if (_request.header_fields.count("Content-Length") ==
+	if (_request.header_fields.count("content-length") ==
 		0)			 // mandatory Content-Length header ?
 		return 411;	 // Length Required
 	if (_request.message_body.size() >
 		static_cast<size_t>(_server.getClientMaxBodySize(_locationRoute)))
 		return 413;	 // Request Entity Too Large
 	// How to handle multiple Content-Length values ?
-	if (_request.header_fields.count("Content-Length") > 1)
+	if (_request.header_fields.count("content-length") > 1)
 		return 400;	 // Bad Request
 	std::multimap<std::string, std::string>::const_iterator it =
-		_request.header_fields.find("Content-Length");
+		_request.header_fields.find("content-length");
 	size_t size = -1;
 	if (it != _request.header_fields.end()) {
 		char* endPtr = NULL;
@@ -167,6 +167,15 @@ short AResponse::checkMethod() const {
 		_server.getAllowedMethods(_locationRoute).find(_request.method);
 	if (it == _server.getAllowedMethods(_locationRoute).end())
 		return 405;	 // Method Not Allowed
+	return 200;
+}
+
+// Check if message body size is, at most, the maximum allowed body size
+short AResponse::checkClientBodySize() const {
+	size_t max_body_size = _server.getClientMaxBodySize();
+
+	if (_request.message_body.size() > max_body_size) return 413;
+
 	return 200;
 }
 
@@ -252,13 +261,14 @@ const std::string AResponse::getIndexFile(const std::string& path) const {
 		std::string filePath = assemblePath(path, *it);
 		if (checkFile(filePath) == 200) return filePath;
 	}
-	return NULL;
+	return "";
 }
 
 // Joins both string and ensures there is a '/' in the middle
 //  TODO: review edge cases (double '/')
 const std::string AResponse::assemblePath(const std::string& l,
 										  const std::string& r) const {
+	if (r.empty()) return l;
 	if ((l.at(l.size() - 1) == '/' && r.at(0) != '/') ||
 		(l.at(l.size() - 1) != '/' && r.at(0) == '/'))
 		return l + r;
@@ -317,15 +327,82 @@ bool AResponse::hasReturn() const {
 	return true;
 }
 
+// Helper function to extract and format the directory name
+static std::string getDirectoryName(const std::string& path) {
+	std::string dirName;
+	std::string::size_type endPos = path.find_last_not_of("/");
+	if (endPos == std::string::npos) dirName = path;
+	std::string::size_type pos = path.find_last_of("/", endPos);
+	if (pos != std::string::npos) {
+		dirName = path.substr(pos, endPos - pos + 1);
+	}
+	return dirName + "/";
+}
+
+static std::string getLastModificationDate(const std::string& path) {
+	struct stat fileStat;
+	if (stat(path.c_str(), &fileStat) != 0) {
+		return "";	// Error handling or empty result
+	}
+	char dateBuffer[20];
+	struct tm* timeinfo = localtime(&fileStat.st_mtime);
+	std::strftime(dateBuffer, sizeof(dateBuffer), "%d-%b-%Y %H:%M", timeinfo);
+	return std::string(dateBuffer);
+}
+
+static std::string getFileSize(const std::string& path) {
+	struct stat fileStat;
+	if (stat(path.c_str(), &fileStat) != 0) {
+		return "";	// Error handling or empty result
+	}
+	size_t size = fileStat.st_size;
+	std::string sizeBuffer =
+		(S_ISDIR(fileStat.st_mode) ? "-" : numberToString<size_t>(size));
+	return sizeBuffer;
+}
+
+std::string AResponse::addFileEntry(const std::string& name,
+									const std::string& path) {
+	std::string fullPath = assemblePath(path, name);
+	std::string date = getLastModificationDate(fullPath);
+	std::string size = getFileSize(fullPath);
+	std::string displayName;
+	if (name.length() > 51)
+		displayName = name.substr(0, 49) + "..";  // Truncate and add ".."
+	else
+		displayName = name;
+	std::string WP1;
+	if (displayName.length() < 51)
+		WP1 = std::string(51 - displayName.length(), ' ');	// Pad with spaces
+	std::stringstream fileEntry;
+	std::string WS2 = "                   ";
+	fileEntry << "<a href=\"" + name + "\">" + displayName + "</a>" + WP1 +
+					 date + WS2 + size + "\n";
+	return fileEntry.str();
+}
+
 // Loads response with a page containing directory listing for that location
+// TODO: Add file last modified date and size, format
 short AResponse::loadDirectoryListing(const std::string& path) {
 	DIR* dir = opendir(path.c_str());
 	if (dir == NULL) return 403;
+	std::string dirName = getDirectoryName(path);
+	_response.body = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " +
+					 dirName + "</title>\n</head>\n<body>\n<h1>Index of " +
+					 dirName + "</h1>\n<hr>\n<pre>";
 	struct dirent* entry;
+	std::vector<std::string> entries;
 	while ((entry = readdir(dir)) != NULL) {
-		_response.body += std::string(entry->d_name) +
-						  "\n";	 // Print the name of each file/directory
+		entries.push_back(std::string(entry->d_name));
 	}
+	// Sort the vector alphabetically
+	std::sort(entries.begin(), entries.end());
+	for (std::vector<std::string>::iterator it = entries.begin();
+		 it != entries.end(); ++it) {
+		std::string entryName = *it;
+		_response.body += addFileEntry(entryName, path);
+	}
+	_response.body += "</pre>\n<hr>\n</body>\n</html>\n";
 	closedir(dir);
 	loadCommonHeaders();
 	_response.headers.insert(
@@ -333,20 +410,6 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	_response.status = 200;
 	return 200;
 }
-
-// Loads response with contents of file and sets MIME type
-//  NOTE: Used for GET
-// short AResponse::loadFile(const std::string& path) {
-// 	std::ifstream file(path.c_str());
-// 	if (!file.is_open()) return 500;
-// 	_response.body.assign((std::istreambuf_iterator<char>(file)),
-// 						  (std::istreambuf_iterator<char>()));
-// 	file.close();
-// 	loadCommonHeaders();
-// 	setMimeType(path);
-// 	_response.status = 200;
-// 	return 200;
-// }
 
 // Converts the response struct into a string (loading the status message) and
 // returns it
@@ -368,6 +431,43 @@ const std::string AResponse::getResponseStr() const {
 	return response;
 }
 
+static std::string loadDefaultErrorPage(short status) {
+	std::map<short, std::string>::const_iterator itStatus =
+		STATUS_MESSAGES.find(status);
+	std::string message = (itStatus != STATUS_MESSAGES.end())
+							  ? itStatus->second
+							  : "Unknown status code";
+	std::string response =
+		"<!DOCTYPE html>\n"
+		"<html lang=\"en\">\n"
+		"<head>\n"
+		"\t<meta charset=\"UTF-8\">\n"
+		"\t<meta name=\"viewport\" content=\"width=device-width, "
+		"initial-scale=1.0\">\n"
+		"\t<title>" +
+		message +
+		"</title>\n"
+		"\t<style>\n"
+		"\t\th1, p {\n"
+		"\t\t\ttext-align: center;\n"
+		"\t\t}\n"
+		"\t</style>\n"
+		"</head>\n"
+		"<body>\n"
+		"\t<div>\n"
+		"\t\t<h1>" +
+		numberToString<short>(status) + " " + message +
+		"</h1>\n"
+		"<hr>\n"
+		"\t\t<p>" +
+		SERVER +
+		"</p>\n"
+		"\t</div>\n"
+		"</body>\n"
+		"</html>";
+	return response;
+}
+
 // Loads response with respoective status code, gets personalized error page, if
 // it exists and calls getResponseStr() to convert struct to string before
 // returning it
@@ -385,6 +485,7 @@ const std::string AResponse::loadErrorPage(short status) {
 								  (std::istreambuf_iterator<char>()));
 		}
 	}
+	if (_response.body.empty()) _response.body = loadDefaultErrorPage(status);
 	loadCommonHeaders();
 	return getResponseStr();
 }

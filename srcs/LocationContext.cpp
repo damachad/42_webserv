@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   LocationContext.cpp                                  :+:      :+:    :+: */
+/*   LocationContext.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 12:28:14 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/24 11:11:17 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,8 @@ LocationContext::LocationContext(const LocationContext &src)
 	  _tryFiles(src.getTryFiles()),
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
-	  _return(src.getReturn()) {}
+	  _return(src.getReturn()),
+	  _uploadStore(src.getUpload()) {}
 
 LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_root = src.getRoot();
@@ -35,6 +36,7 @@ LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
 	_return = src.getReturn();
+	_uploadStore = src.getUpload();
 	return (*this);
 }
 
@@ -50,6 +52,7 @@ void LocationContext::initializeDirectiveMap(void) {
 	_directiveMap["client_max_body_size"] = &LocationContext::handleCliMaxSize;
 	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
 	_directiveMap["return"] = &LocationContext::handleReturn;
+	_directiveMap["upload_store"] = &LocationContext::handleUpload;
 }
 
 // Handlers
@@ -161,6 +164,11 @@ void LocationContext::handleReturn(std::vector<std::string> &tokens) {
 	_return.second = tokens[2];
 }
 
+void LocationContext::handleUpload(std::vector<std::string> &tokens) {
+	if (tokens.size() != 2) throw ConfigError("Invalid upload_store directive.");
+	_uploadStore = tokens[1];
+}
+
 void LocationContext::processDirective(std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = ConfigParser::tokenizeLine(line);
@@ -199,6 +207,10 @@ std::map<short, std::string> LocationContext::getErrorPages() const {
 
 std::pair<short, std::string> LocationContext::getReturn() const {
 	return _return;
+}
+
+std::string LocationContext::getUpload() const {
+	return _uploadStore;
 }
 
 std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
@@ -257,6 +269,8 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 	std::pair<short, std::string> returns = context.getReturn();
 	if (returns.first)
 		os << "    " << returns.first << " : " << returns.second << "\n";
+	
+	os << "  Upload Store: " << context.getUpload() << "\n";
 
 	return os;
 }

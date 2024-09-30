@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/19 15:04:17 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/24 10:33:39 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,13 @@
 
 int main(int argc, char** argv) {
 	// Get config
-	if (argc != 2) {
-		// load default conf file ?
-		std::cout << "Usage: ./webserv [configuration file]";
+	if (argc > 2) {
+		std::cout << "Usage: ./webserv [configuration file]\n";
 		return (1);
 	}
-	ConfigParser parser(argv[1]);
+	ConfigParser parser("conf/default2.conf");
+	if (argc == 2)
+		parser = ConfigParser(argv[1]);
 
 	std::vector<Server>
 		servers;  // Defined outside the try block so it can be used later
@@ -30,14 +31,15 @@ int main(int argc, char** argv) {
 	try {
 		parser.loadConfigs();
 		servers = parser.getServers();
-		for (std::vector<Server>::const_iterator it = servers.begin();
-			 it != servers.end(); ++it)
-			std::cout << (*it) << "\n";
-		std::string route = "/test";
+		// for (std::vector<Server>::const_iterator it = servers.begin();
+		// 	 it != servers.end(); ++it)
+		// 	std::cout << (*it) << "\n";
+		// std::string route = "/test";
 		// unsigned int serverNum = 0;
 		//  parser.printLocationValues(serverNum, route);
 	} catch (std::exception& e) {
 		std::cerr << e.what();
+		return 1;
 	}
 
 	// Initializes the Server Cluster
@@ -51,7 +53,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	std::cout << server_cluster;
+	// std::cout << server_cluster;
 
 	server_cluster.run();
 
