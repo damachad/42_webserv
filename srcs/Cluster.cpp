@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/25 14:28:08 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/30 16:29:01 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -378,6 +378,9 @@ const std::string Cluster::getHostNameFromRequest(const HTTP_Request& request) {
 const Server* Cluster::getContext(int client_fd, const HTTP_Request& request) {
 	const Listen address = getListenFromClient(client_fd);
 	std::string host_name = getHostNameFromRequest(request);
+	size_t colonPos = host_name.find_first_of(':');
+	if (colonPos != std::string::npos)
+		host_name = host_name.substr(0, colonPos);
 	std::vector<const Server*> valid_servers;
 
 	// Traverses through all the server contexts in search of addresses
