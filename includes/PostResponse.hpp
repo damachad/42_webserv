@@ -26,7 +26,8 @@ struct file {
 
 class PostResponse : public AResponse {
    public:
-	PostResponse(const Server& server, const HTTP_Request& request);
+	PostResponse(const Server& server, const HTTP_Request& request,
+				 int client_fd);
 	PostResponse(const PostResponse& src);
 	~PostResponse();
 
@@ -36,6 +37,7 @@ class PostResponse : public AResponse {
 	PostResponse();
 	PostResponse& operator=(const PostResponse& src);
 
+	short checkExpect();
 	short checkBody();
 	short extractFile();
 	short uploadFile();
@@ -50,6 +52,7 @@ class PostResponse : public AResponse {
 	std::vector<std::multimap<std::string, std::string> > _multipart_body;
 	std::string _boundary;
 	struct file _file_to_upload;
+	int _client_fd;
 };
 
 #endif

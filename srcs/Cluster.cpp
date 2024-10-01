@@ -285,26 +285,17 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
 	unsigned short error_status =
 		HTTP_Request_Parser::parse_HTTP_request(buffer_request, request);
 
-	// if (error_status == CONTINUE &&
-	// 	(request.method == GET || request.method == DELETE))
-	// 	;  // Send continue message
+	std::string buffer_response = getResponse(request, error_status, client_fd);
 
-	if (error_status != CONTINUE) {
-		std::string buffer_response =
-			getResponse(request, error_status, client_fd);
+	ssize_t sent =
+		send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
 
-		ssize_t sent =
-			send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
-		if (sent == -1 && errno != EAGAIN) {
-			closeAndRemoveSocket(client_fd, _epoll_fd);
-			throw ClusterRunError("send failed");
-		}
+	if (sent == -1 && errno != EAGAIN) {
 		closeAndRemoveSocket(client_fd, _epoll_fd);
-
-	} else if (error_status == CONTINUE && request.method == POST) {
-		// Wait for more data;
+		throw ClusterRunError("send failed");
 	}
-	(void)error_status;
+
+	closeAndRemoveSocket(client_fd, _epoll_fd);
 }
 
 // Sets sockets to non-blocking-mode
@@ -328,6 +319,9 @@ const std::string Cluster::getResponse(const HTTP_Request& request,
 
 	const Server* server = getContext(client_fd, request);
 
+	// TODO: Remove the following line! Just here for testing!
+	error_status = OK;
+
 	if (error_status != OK)
 		response_check =
 			new RequestErrorResponse(*server, request, error_status);
@@ -337,7 +331,7 @@ const std::string Cluster::getResponse(const HTTP_Request& request,
 				response_check = new GetResponse(*server, request);
 				break;
 			case (POST):
-				response_check = new PostResponse(*server, request);
+				response_check = new PostResponse(*server, request, client_fd);
 				break;
 			case (DELETE):
 				response_check = new DeleteResponse(*server, request);

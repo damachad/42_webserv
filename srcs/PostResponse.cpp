@@ -14,8 +14,9 @@
 
 #include <sys/stat.h>
 
-PostResponse::PostResponse(const Server &server, const HTTP_Request &request)
-	: AResponse(server, request) {}
+PostResponse::PostResponse(const Server &server, const HTTP_Request &request,
+						   int client_fd)
+	: AResponse(server, request), _client_fd(client_fd) {}
 
 PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}
 
@@ -24,6 +25,18 @@ PostResponse::~PostResponse() {}
 std::string PostResponse::generateResponse() {
 	setMatchLocationRoute();
 	unsigned short status;
+
+	char newbuffer[8094] = {};
+
+	status = checkExpect();
+	if (status == OK) {
+		ssize_t bytesSent =
+			send(_client_fd, "HTTP/1.1 100 Continue\r\n\r\n", 25, 0);
+		if (bytesSent < 0) perror("Error sending 100 Continue");
+		read(_client_fd, newbuffer, sizeof(newbuffer));
+	}
+
+	if (status != OK) return loadErrorPage(status);
 
 	status = checkSize();
 	if (status != 200) return loadErrorPage(status);
@@ -43,10 +56,12 @@ std::string PostResponse::generateResponse() {
 	return getResponseStr();
 }
 
+short PostResponse::checkExpect() { return OK; }
+
 short PostResponse::uploadFile() {
 	extractFile();
-	
-	// std::string directory = _server.getUpload(); 
+
+	// std::string directory = _server.getUpload();
 	// TODO: if upload_store empty, return error or have a default?
 	std::string directory = "file_uploads/";
 	std::string target = directory + _file_to_upload.file_name;
