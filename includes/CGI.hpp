@@ -33,7 +33,7 @@ private:
   std::multimap<std::string, std::string> parseRequestHeaders();
 
 public:
-  CGI(const HTTP_Request &httpRequest, HTTP_Response &httpResponse,
+  CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
       const std::string &path);
   ~CGI();
 

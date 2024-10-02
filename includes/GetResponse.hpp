@@ -22,7 +22,7 @@ public:
   ~GetResponse();
 
   std::string generateResponse();
-  short loadFile(const std::string &path);
+  short loadFile(std::string &path);
 
 private:
   GetResponse();

@@ -23,12 +23,13 @@ GetResponse::GetResponse(const Server &server, const HTTP_Request &request)
     : AResponse(server, request) {}
 
 // Loads response with contents of file and sets MIME type
-short GetResponse::loadFile(const std::string &path) {
+short GetResponse::loadFile(std::string &path) {
+  std::cout << "!!URI: " << _request.uri << "\n"; // TESTE
   if (_request.uri.length() > 3 &&
       _request.uri.substr(_request.uri.length() - 3) == ".py") {
+        std::cout << "!!ENTROU\n"; //TESTE
     CGI cgi(_request, _response, path);
     cgi.handleCGIResponse();
-    loadCommonHeaders();
   } else {
     std::ifstream file(path.c_str());
     if (!file.is_open())
@@ -58,6 +59,7 @@ std::string GetResponse::generateResponse() {
   std::string path = getPath();
 
   status = checkFile(path);
+  std::cout << "!!STATUS: " << status << std::endl; //TESTE
   if (status != 200)
     return loadErrorPage(status);
   if (!isDirectory(path)) {

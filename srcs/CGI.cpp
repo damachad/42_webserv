@@ -5,9 +5,10 @@
 
 std::map<pid_t, time_t> pidStartTimeMap;
 
-CGI::CGI(const HTTP_Request &httpRequest, HTTP_Response &httpResponse,
+CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
          const std::string &path)
-    : _request(httpRequest), _response(httpResponse), _path(path) {}
+    : _request(httpRequest), _response(httpResponse), _path(path) {
+    }
 
 CGI::~CGI() {}
 
@@ -154,7 +155,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     close(pipeOut[0]);
     setCGIEnv();
     char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
-    std::cerr << "path: " << scriptPath << std::endl; // TESTE
+    // std::cerr << "path: " << scriptPath << std::endl; // TESTE
     if (execve(scriptPath.c_str(), argv, environ) == -1)
       throw std::runtime_error("Exec failed");
   } else {
@@ -224,11 +225,12 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 
 std::string CGI::getCGIScriptPath() {
   std::string basePath =
-      "/home/tiaferna/42_Projects/Webserv/resources"; // Para discutir com a
+      "/home/tiaferna/42_Projects/Webserv/resources/cgi-bin"; // Para discutir com a
                                                       // equipa se isto faz
                                                       // sentido!
   std::string scriptName = _request.uri;
 
+  std::cout << "!!PATH: " << basePath + scriptName << std::endl; // TESTE
   return basePath + scriptName;
 }
 

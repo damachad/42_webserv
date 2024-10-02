@@ -218,6 +218,10 @@ void AResponse::setMatchLocationRoute() {
 // Returns path to look for resource in location, root + (uri - locationRoute)
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
+	 if (_request.uri.length() > 3 &&
+      _request.uri.substr(_request.uri.length() - 3) == ".py") {
+		return (assemblePath(assemblePath(root, "cgi-bin"), _request.uri.substr(_locationRoute.size())));
+	  }
 	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
 }
 

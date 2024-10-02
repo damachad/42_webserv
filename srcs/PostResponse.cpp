@@ -50,7 +50,9 @@ std::string PostResponse::generateResponse() {
 
   if (_request.uri.length() > 3 &&
       _request.uri.substr(_request.uri.length() - 3) == ".py") {
-    CGI cgi(_request, _response, _request.uri);
+        std::cout << "!!GETPATH: " << getPath() << std::endl; //TESTE
+        std::string path = getPath();
+    CGI cgi(_request, _response, path);
     cgi.handleCGIResponse();
     loadCommonHeaders();
   }
