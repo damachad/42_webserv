@@ -7,8 +7,7 @@ std::map<pid_t, time_t> pidStartTimeMap;
 
 CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
          const std::string &path)
-    : _request(httpRequest), _response(httpResponse), _path(path) {
-    }
+    : _request(httpRequest), _response(httpResponse), _path(path) {}
 
 CGI::~CGI() {}
 
@@ -221,17 +220,6 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
   close(pipeOut[0]);
   std::cout << cgiOutput << std::endl; // TESTE
   return cgiOutput;
-}
-
-std::string CGI::getCGIScriptPath() {
-  std::string basePath =
-      "/home/tiaferna/42_Projects/Webserv/resources/cgi-bin"; // Para discutir com a
-                                                      // equipa se isto faz
-                                                      // sentido!
-  std::string scriptName = _request.uri;
-
-  std::cout << "!!PATH: " << basePath + scriptName << std::endl; // TESTE
-  return basePath + scriptName;
 }
 
 std::multimap<std::string, std::string>
