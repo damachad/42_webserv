@@ -24,71 +24,36 @@ PostResponse::~PostResponse() {}
 
 std::string PostResponse::generateResponse() {
 	setMatchLocationRoute();
-	unsigned short status = 200;
+	unsigned short status = OK;
 
-	// char newbuffer[8094] = {};
-
-	/*
-	status = checkExpect();
-	if (status == OK) {
-
-		// The socket is non-blocking, so now wait for data to be readable
-		struct epoll_event events[1];
-		int nfds = epoll_wait(_epoll_fd, events, 1,
-							  -1);	// Wait indefinitely for new data
-		if (nfds < 0) {
-			perror("Error in epoll_wait");
-			return "";
-		}
-
-		// If the socket is readable (EPOLLIN event), read the incoming data
-		if (events[0].events & EPOLLIN) {
-			ssize_t bytesRead;
-			while ((bytesRead =
-						read(_client_fd, newbuffer, sizeof(newbuffer))) > 0) {
-				// Process the received data (you may need to append to a file
-				// or handle it in memory)
-				std::cout << "Received " << bytesRead << " bytes" << std::endl;
-
-				_request.message_body.append(newbuffer);
-
-				// For debugging: print the contents of the buffer
-				std::cout.write(newbuffer, bytesRead);
-
-				// Clear the buffer after processing
-				memset(newbuffer, 0, sizeof(newbuffer));
-
-				// Since it's non-blocking, break the loop if we need to wait
-				// for more data later (handle chunked reads)
-				if (bytesRead < static_cast<ssize_t>(sizeof(newbuffer))) {
-					break;
-				}
-			}
-		}
-	}
-	*/
+	status = checkMethod();
 	if (status != OK) return loadErrorPage(status);
 
-	/*
-	status = checkSize();
-	if (status != 200) return loadErrorPage(status);
+	if (requestHasContentLength()) {
+		status = checkSize();
+		if (status != OK) return loadErrorPage(status);
 
-	status = checkClientBodySize();
-	if (status != 200) return loadErrorPage(status);
-*/
-	status = checkMethod();
-	if (status != 200) return loadErrorPage(status);
+		status = checkClientBodySize();
+		if (status != OK) return loadErrorPage(status);
 
-	/*status = checkBody();
-	if (status != 200) return loadErrorPage(status);*/
+		status = checkBody();
+		if (status != OK) return loadErrorPage(status);
 
-	status = uploadFile();
-	if (status != 200) return loadErrorPage(status);
+		status = uploadFile();
+		if (status != OK) return loadErrorPage(status);
+	} else {
+	}
 
 	return getResponseStr();
 }
 
-short PostResponse::checkExpect() { return OK; }
+bool PostResponse::requestHasContentLength() {
+	if (_request.header_fields.find("content-length") !=
+		_request.header_fields.end())
+		return true;
+
+	return false;
+}
 
 short PostResponse::uploadFile() {
 	extractFile();

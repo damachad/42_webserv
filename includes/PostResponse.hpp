@@ -37,7 +37,7 @@ class PostResponse : public AResponse {
 	PostResponse();
 	PostResponse& operator=(const PostResponse& src);
 
-	short checkExpect();
+	bool requestHasContentLength();
 	short checkBody();
 	short extractFile();
 	short uploadFile();
@@ -52,6 +52,7 @@ class PostResponse : public AResponse {
 	std::vector<std::multimap<std::string, std::string> > _multipart_body;
 	std::string _boundary;
 	struct file _file_to_upload;
+
 	int _client_fd;
 	int _epoll_fd;
 };

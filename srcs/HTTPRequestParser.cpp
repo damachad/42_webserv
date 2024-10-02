@@ -207,7 +207,7 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 		size_t content_length =
 			static_cast<size_t>(stringToNumber<unsigned long>(
 				HTTP.header_fields.find("content-length")->second));
-		if (content_length != HTTP.message_body.size()) {
+		if (content_length <= HTTP.message_body.size()) {
 			response_status = BAD_REQUEST;
 			return false;
 		}
