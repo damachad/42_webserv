@@ -62,6 +62,7 @@ class AResponse {
 	std::string addFileEntry(const std::string& name, const std::string& path);
 	short loadDirectoryListing(const std::string& path);
 	const std::string loadErrorPage(short status);
+	const std::string loadContinueMessage();
 
 	// Utilities
 	const std::string getPath() const;

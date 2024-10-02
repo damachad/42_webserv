@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/30 12:51:20 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 10:10:21 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -211,7 +211,7 @@ void AResponse::setMatchLocationRoute() {
 // Returns path to look for resource in location, root + (uri - locationRoute)
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
-	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
+	return (assemblePath(root, _request.uri));
 }
 
 // Checks if file is a regular file and there are no problems opening it
@@ -305,6 +305,8 @@ void AResponse::loadCommonHeaders() {
 	_response.headers.insert(
 		std::make_pair(std::string("Content-Length"),
 					   numberToString<unsigned long>(_response.body.size())));
+	_response.headers.insert(
+		std::make_pair(std::string("Cache-Control"), std::string("no-store")));
 }
 
 // Loads reponse struct with values of return
@@ -488,6 +490,10 @@ const std::string AResponse::loadErrorPage(short status) {
 	if (_response.body.empty()) _response.body = loadDefaultErrorPage(status);
 	loadCommonHeaders();
 	return getResponseStr();
+}
+
+const std::string AResponse::loadContinueMessage(void) {
+	return "HTTP/1.1 100 Continue";
 }
 
 // Example implementation (case GET)
