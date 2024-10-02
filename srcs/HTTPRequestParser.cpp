@@ -359,24 +359,27 @@ bool HTTP_Request_Parser::readBody(int client_fd, int epoll_fd,
 	}
 
 	if (events[0].events & EPOLLIN) {
-		ssize_t bytesRead = 0;
-		ssize_t bytesToRead = stringToNumber<ssize_t>(
-			HTTP.header_fields.find("content-length")->second);
-
-		while (bytesRead < bytesToRead) {
+		while (true) {
 			char newbuffer[8094] = {};
 
-			bytesRead = read(client_fd, newbuffer, sizeof(newbuffer));
+			int bytesRead = read(client_fd, newbuffer, sizeof(newbuffer));
 
 			if (bytesRead < 0) {
+				int a = 2;
+				(void)a;
 				response_status = INTERNAL_SERVER_ERROR;
 				return false;
 			}
 
-			HTTP.message_body.append(newbuffer);
+			if (bytesRead == 0) break;
+
+			std::string stringbuffer(newbuffer, 8094);
+			HTTP.message_body.append(stringbuffer);
 		}
 	}
 
+	int b = 3;
+	(void)b;
 	return true;
 }
 
