@@ -1,8 +1,18 @@
-Already logging to gdb.out.
-$14 = '-' <repeats 26 times>, "td2JfqzxSGNZct0bfI2zl1\r\nContent-Disposition: form-data; name=\"file\"; filename=\"en.subject.pdf\"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.5\n%\320\324\305\330\n39 0 obj\n<<\n/Length 542       "...
-$15 = '-' <repeats 26 times>, "td2JfqzxSGNZct0bfI2zl1\r\nContent-Disposition: form-data; name=\"file\"; filename=\"en.subject.pdf\"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.5\n%\320\324\305\330\n39 0 obj\n<<\n/Length 542       \n/Filter /FlateDecode\n>>\nstream\nxڅSKs\3230\020\276\347W\350\206=\203UK\262d\273G\006\312\363\300\303\3000\300\301M\224\306\340HT\226\353ɿg\365\ni)Ԟ\361>\365\355\267\273\362\365\212\240\022^\202Kx\270\327\327\373\325ur'\307\331\313=EO\365\352\035\274%\272\002\347\363\ae\202 M\205)\257\020\257\030&\244\t\370\230\201I}Ɖ\372\217\322$\225N\241\"a\026'\240O\272\325\331\005k\020\255p\335\324\004u[D9ǜrT\t\201\005\257Q\267A_\263\317y\335d\362r\222\346&\377\336\275\ngJ,\004$\302\031\300f\376P\301jܤC\335n\230\362\202\266m\346$+\313l\331I\025<\207\234\212L\317\301\370V\262J\365\343x\bY\263\332H3\331^mBxٹ\344C0\372\220\363\361\375\233`C\236\261\223#\205H\r$\240?\322b\302X\340\260\fv\347N\320\354E\327\275ui\017\356\340좂y\021\334rN\375@\030f\314ͯ\2521iE\300\3750\357\367\2759\234\373\302\005)\031\244S\227\203\253J\234\266\317x\231\37529|\365\017\351\304\332\006g\n\366\227>8G\367b\006;\250\253`\034\364l\202\246\227 }\027^s\273\220\006{\002\0027\315\355\342_\362\232\373\371z\314a\314\v\260\307`\372\2022U\037\243fu\224rJ\f\023\2450C\227\255\242\\۹Oh\241\271eJd\3402`\"\356\f\343\017\357ԷV\261\260\336\306»\350\330\353\304`\236\374\3106\267\306\bD\335\030\275>\036\301\356`\f\312J\243\244\215\2248\254\323]OO\211\aJ\257\035\202\322\313qڃM+1\307\n}b\371\237\031\002\313\355<>\016\206\274\221\221˰=.1B"
-No breakpoint at this line.
-$16 = (HTTP_Request &) @0x7fffffffb7d0: {
+
+Breakpoint 1 at 0x64e8: file srcs/main.cpp, line 18.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main (argc=2, argv=0x7fffffffdc28) at srcs/main.cpp:18
+Breakpoint 2 at 0x555555584cdc: file srcs/HTTPRequestParser.cpp, line 21.
+Continuing.
+
+Breakpoint 2, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/8.5.0\r\nAccept: */*\r\nContent-Length: 1584367\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "LXvApTN8q9LZsOAp7KVih3\r\nExpect: 100-continue\r\n\r\n", '\000' <repeats 7872 times>, HTTP=..., client_fd=8, epoll_fd=3) at srcs/HTTPRequestParser.cpp:21
+Breakpoint 3 at 0x555555584ec9: file srcs/HTTPRequestParser.cpp, line 52.
+Continuing.
+
+Breakpoint 3, HTTP_Request_Parser::parse_HTTP_request (buffer_request="POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/8.5.0\r\nAccept: */*\r\nContent-Length: 1584367\r\nContent-Type: multipart/form-data; boundary=", '-' <repeats 24 times>, "LXvApTN8q9LZsOAp7KVih3\r\nExpect: 100-continue\r\n\r\n", '\000' <repeats 7872 times>, HTTP=..., client_fd=8, epoll_fd=3) at srcs/HTTPRequestParser.cpp:52
+$1 = (HTTP_Request &) @0x7fffffffb7d0: {
   method = POST,
   uri = "/upload",
   decoded_uri = "/upload",
@@ -10,11 +20,12 @@ $16 = (HTTP_Request &) @0x7fffffffb7d0: {
   header_fields = std::multimap with 6 elements = {
     ["accept"] = "*/*",
     ["content-length"] = "1584367",
-    ["content-type"] = "multipart/form-data; boundary=", '-' <repeats 24 times>, "td2JfqzxSGNZct0bfI2zl1",
+    ["content-type"] = "multipart/form-data; boundary=", '-' <repeats 24 times>, "LXvApTN8q9LZsOAp7KVih3",
     ["expect"] = "100-continue",
     ["host"] = "localhost:8080",
     ["user-agent"] = "curl/8.5.0"
   },
   query_fields = std::multimap with 0 elements,
-  message_body = '-' <repeats 26 times>, "td2JfqzxSGNZct0bfI2zl1\r\nContent-Disposition: form-data; name=\"file\"; filename=\"en.subject.pdf\"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.5\n%\320\324\305\330\n39 0 obj\n<<\n/Length 542       \n/Filter /FlateDecode\n>>\nstream\nxڅSKs\3230\020\276\347W\350\206=\203UK\262d\273G\006\312\363\300\303\3000\300\301M\224\306\340HT\226\353ɿg\365\ni)Ԟ\361>\365\355\267\273\362\365\212\240\022^\202Kx\270\327\327\373\325ur'\307\331\313=EO\365\352\035\274%\272\002\347\363\ae\202 M\205)\257\020\257\030&\244\t\370\230\201I}Ɖ\372\217\322$\225N\241\"a\026'\240O\272\325\331\005k\020\255p\335\324\004u[D9ǜrT\t\201\005\257Q\267A_\263\317y\335d\362r\222\346&\377\336\275\ngJ,\004$\302\031\300f\376P\301jܤC\335n\230\362\202\266m\346$+\313l\331I\025<\207\234\212L\317\301\370V\262J\365\343x\bY\263\332H3\331^mBxٹ\344C0\372\220\363\361\375\233`C\236\261\223#\205H\r$\240?\322b\302X\340\260\fv\347N\320\354E\327\275ui\017\356\340좂y\021\334rN\375@\030f\314ͯ\2521iE\300\3750\357\367\2759\234\373\302\005)\031\244S\227\203\253J\234\266\317x\231\37529|\365\017\351\304\332\006g\n\366\227>8G\367b\006;\250\253`\034\364l\202\246\227 }\027^s\273\220\006{\002\0027\315\355\342_\362\232\373\371z\314a\314\v\260\307`\372\2022U\037\243fu\224rJ\f\023\2450C\227\255\242\\۹Oh\241\271eJd\3402`\"\356\f\343\017\357ԷV\261\260\336\306»\350\330\353\304`\236\374\3106\267\306\bD\335\030\275>\036\301\356`\f\312J\243\244\215\2248\254\323]OO\211\aJ\257\035\202\322\313qڃM+1\307\n}b\371\237\031\002\313\355<>\016\206\274\221\221˰=.1B"
+  message_body = '-' <repeats 26 times>, "LXvApTN8q9LZsOAp7KVih3\r\nContent-Disposition: form-data; name=\"file\"; filename=\"en.subject.pdf\"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.5\n%\320\324\305\330\n39 0 obj\n<<\n/Length 542       \n/Filter /FlateDecode\n>>\nstream\nxڅSKs\3230\020\276\347W\350\206=\203UK\262d\273G\006\312\363\300\303\3000\300\301M\224\306\340HT\226\353ɿg\365\ni)Ԟ\361>\365\355\267\273\362\365\212\240\022^\202Kx\270\327\327\373\325ur'\307\331\313=EO\365\352\035\274%\272\002\347\363\ae\202 M\205)\257\020\257\030&\244\t\370\230\201I}Ɖ\372\217\322$\225N\241\"a\026'\240O\272\325\331\005k\020\255p\335\324\004u[D9ǜrT\t\201\005\257Q\267A_\263\317y\335d\362r\222\346&\377\336\275\ngJ,\004$\302\031\300f\376P\301jܤC\335n\230\362\202\266m\346$+\313l\331I\025<\207\234\212L\317\301\370V\262J\365\343x\bY\263\332H3\331^mBxٹ\344C0\372\220\363\361\375\233`C\236\261\223#\205H\r$\240?\322b\302X\340\260\fv\347N\320\354E\327\275ui\017\356\340좂y\021\334rN\375@\030f\314ͯ\2521iE\300\3750\357\367\2759\234\373\302\005)\031\244S\227\203\253J\234\266\317x\231\37529|\365\017\351\304\332\006g\n\366\227>8G\367b\006;\250\253`\034\364l\202\246\227 }\027^s\273\220\006{\002\0027\315\355\342_\362\232\373\371z\314a\314\v\260\307`\372\2022U\037\243fu\224rJ\f\023\2450C\227\255\242\\۹Oh\241\271eJd\3402`\"\356\f\343\017\357ԷV\261\260\336\306»\350\330\353\304`\236\374\3106\267\306\bD\335\030\275>\036\301\356`\f\312J\243\244\215\2248\254\323]OO\211\aJ\257\035\202\322\313qڃM+1\307\n}b\371\237\031\002\313\355<>\016\206\274\221\221˰=.1B"
 }
+$2 = 711

@@ -358,18 +358,24 @@ bool HTTP_Request_Parser::readBody(int client_fd, int epoll_fd,
 		return false;
 	}
 
-	char newbuffer[8094] = {};
-
 	if (events[0].events & EPOLLIN) {
-		ssize_t bytesRead = read(client_fd, newbuffer, sizeof(newbuffer));
+		ssize_t bytesRead = 0;
+		ssize_t bytesToRead = stringToNumber<ssize_t>(
+			HTTP.header_fields.find("content-length")->second);
 
-		if (bytesRead == 0) {
-			response_status = INTERNAL_SERVER_ERROR;
-			return false;
+		while (bytesRead < bytesToRead) {
+			char newbuffer[8094] = {};
+
+			bytesRead = read(client_fd, newbuffer, sizeof(newbuffer));
+
+			if (bytesRead < 0) {
+				response_status = INTERNAL_SERVER_ERROR;
+				return false;
+			}
+
+			HTTP.message_body.append(newbuffer);
 		}
 	}
-
-	HTTP.message_body.append(newbuffer);
 
 	return true;
 }
