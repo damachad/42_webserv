@@ -42,6 +42,7 @@ std::string PostResponse::generateResponse() {
 		status = uploadFile();
 		if (status != OK) return loadErrorPage(status);
 	} else {
+		;
 	}
 
 	return getResponseStr();
