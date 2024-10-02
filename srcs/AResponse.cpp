@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/02 10:10:21 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 12:29:32 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,8 +163,8 @@ short AResponse::checkSize() const {
 
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
-	std::set<Method>::const_iterator it =
-		_server.getAllowedMethods(_locationRoute).find(_request.method);
+	std::set<Method> allowedMethods = _server.getAllowedMethods(_locationRoute);
+	std::set<Method>::const_iterator it = allowedMethods.find(_request.method);
 	if (it == _server.getAllowedMethods(_locationRoute).end())
 		return 405;	 // Method Not Allowed
 	return 200;
