@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/02 12:29:32 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:34:56 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,9 @@ static std::map<std::string, std::string> initMimeTypes() {
 AResponse::~AResponse() {}
 
 AResponse::AResponse(const Server& server, const HTTP_Request& request)
-	: _request(request), _server(server) {}
+	: _request(request), _server(server) {
+		_response.status = 200;
+	}
 
 AResponse::AResponse(const AResponse& src)
 	: _request(src._request),
