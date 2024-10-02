@@ -17,7 +17,8 @@
 static int response_status = OK;
 
 unsigned short HTTP_Request_Parser::parse_HTTP_request(
-	const std::string& buffer_request, HTTP_Request& HTTP) {
+	const std::string& buffer_request, HTTP_Request& HTTP, int client_fd,
+	int epoll_fd) {
 	if (buffer_request.empty() ||
 		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos) {
 		response_status = BAD_REQUEST;
@@ -49,18 +50,23 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 	}
 
 	if (header_is_parsed) {
-		// Read the rest of the stream as the message body
-		std::string remaining_body(
-			(std::istreambuf_iterator<char>(buffer_stream)),
-			std::istreambuf_iterator<char>());
-		HTTP.message_body = remaining_body;	 // Append the body
+		if (HTTP.header_fields.find("expect") == HTTP.header_fields.end()) {
+			// Read the rest of the stream as the message body if there's no
+			// "expect header"
+			std::string remaining_body(
+				(std::istreambuf_iterator<char>(buffer_stream)),
+				std::istreambuf_iterator<char>());
+			HTTP.message_body = remaining_body;	 // Append the body
+		} else	// If there is an "expect" header, validate 100continue and then
+				// read body{
+			if (!send100Continue(client_fd) ||
+				!readBody(client_fd, epoll_fd, HTTP))
+				return response_status;
 	}
+
 	trimNulls(HTTP.message_body);
 	extract_queries(HTTP);
 	if (!check_validity_of_header_fields(HTTP)) return response_status;
-
-	// if (HTTP.header_fields.find("expect") != HTTP.header_fields.end())
-	//	return check_expect_validity(HTTP);
 
 	return response_status;
 }
@@ -172,7 +178,8 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	bool has_firefox = user_agent.find("Firefox") != std::string::npos;
 	bool has_siege = user_agent.find("siege") != std::string::npos;
 
-	// Checks that the request is from Curl, Mozilla Firefox or Mozilla Siege
+	// Checks that the request is from Curl, Mozilla Firefox or Mozilla
+	// Siege
 	if (!(has_curl || (has_mozilla && (has_firefox || has_siege)))) {
 		response_status = BAD_REQUEST;
 		return false;
@@ -186,25 +193,30 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 		return false;
 	}
 
-	// Only one content-length is allowed
-	if (HTTP.header_fields.count("content-length") > 1) {
+	// Only one of content-length or transfer-encoding is allowed
+	if (HTTP.header_fields.count("content-length") +
+			HTTP.header_fields.count("transfer-encoding") >
+		1) {
 		response_status = BAD_REQUEST;
 		return false;
 	}
 
-	// Checks if content-length is bigger than body, or if a body exists with no
-	// content length
+	// Checks if content-length is bigger than body, or if a body exists
+	// with no content length nor transfer-encoding
 	if (HTTP.header_fields.find("content-length") != HTTP.header_fields.end()) {
 		size_t content_length =
 			static_cast<size_t>(stringToNumber<unsigned long>(
 				HTTP.header_fields.find("content-length")->second));
 		if (content_length != HTTP.message_body.size()) {
-			response_status = PAYLOAD_TOO_LARGE;
+			response_status = BAD_REQUEST;
 			return false;
 		}
 	} else	// If there is no content-length
 	{
-		if (!HTTP.message_body.empty())  // If there is a body
+		if (!HTTP.message_body.empty() &&
+			HTTP.header_fields.find("transfer-encoding") !=
+				HTTP.header_fields.end())  // If there is a body and no
+										   // transfer-encoding either
 		{
 			response_status = LENGTH_REQUIRED;
 			return false;
@@ -264,7 +276,7 @@ std::string HTTP_Request_Parser::trim(const std::string& str) {
 // Function to trim null characters ('\0') from a string
 void HTTP_Request_Parser::trimNulls(std::string& s) {
 	size_t pos = s.find_last_not_of('\0');
-	
+
 	if (pos == std::string::npos) {
 		s.clear();
 	} else {
@@ -323,6 +335,43 @@ bool HTTP_Request_Parser::protocol_version_is_valid(
 		protocol_version == "HTTP/0.9")
 		return true;
 	return false;
+}
+
+bool HTTP_Request_Parser::send100Continue(int client_fd) {
+	ssize_t bytesSent = send(client_fd, "HTTP/1.1 100 Continue\r\n\r\n", 25, 0);
+	if (bytesSent < 0) {
+		perror("Error sending 100 Continue");  // TODO: Remove?
+		response_status = INTERNAL_SERVER_ERROR;
+		return false;
+	}
+	return true;
+}
+
+bool HTTP_Request_Parser::readBody(int client_fd, int epoll_fd,
+								   HTTP_Request& HTTP) {
+	struct epoll_event events[1];
+	int nfds = epoll_wait(epoll_fd, events, 1,
+						  -1);	// Wait indefinitely for new data
+	if (nfds < 0) {
+		perror("Error in epoll_wait");	// TODO: Remove?
+		response_status = INTERNAL_SERVER_ERROR;
+		return false;
+	}
+
+	char newbuffer[8094] = {};
+
+	if (events[0].events & EPOLLIN) {
+		ssize_t bytesRead = read(client_fd, newbuffer, sizeof(newbuffer));
+
+		if (bytesRead == 0) {
+			response_status = INTERNAL_SERVER_ERROR;
+			return false;
+		}
+	}
+
+	HTTP.message_body.append(newbuffer);
+
+	return true;
 }
 
 std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {

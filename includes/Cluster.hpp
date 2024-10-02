@@ -89,6 +89,7 @@ class Cluster {
 	void handleClientRequest(int connection_fd);
 	//// Processes the request
 	void processRequest(int connection_fd, const std::string& buffer_request);
+
 	//// Closes socket and removes it from epoll
 	static void closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd);
 	//// Gets response from server

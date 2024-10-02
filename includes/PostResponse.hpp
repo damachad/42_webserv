@@ -27,7 +27,7 @@ struct file {
 class PostResponse : public AResponse {
    public:
 	PostResponse(const Server& server, const HTTP_Request& request,
-				 int client_fd);
+				 int client_fd, int epoll_fd);
 	PostResponse(const PostResponse& src);
 	~PostResponse();
 
@@ -53,6 +53,7 @@ class PostResponse : public AResponse {
 	std::string _boundary;
 	struct file _file_to_upload;
 	int _client_fd;
+	int _epoll_fd;
 };
 
 #endif
