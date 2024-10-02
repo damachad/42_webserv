@@ -204,10 +204,9 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	// Checks if content-length is bigger than body, or if a body exists
 	// with no content length nor transfer-encoding
 	if (HTTP.header_fields.find("content-length") != HTTP.header_fields.end()) {
-		size_t content_length =
-			static_cast<size_t>(stringToNumber<unsigned long>(
-				HTTP.header_fields.find("content-length")->second));
-		if (content_length <= HTTP.message_body.size()) {
+		unsigned long content_length = stringToNumber<unsigned long>(
+			HTTP.header_fields.find("content-length")->second);
+		if (content_length != HTTP.message_body.size()) {
 			response_status = BAD_REQUEST;
 			return false;
 		}
@@ -362,25 +361,28 @@ bool HTTP_Request_Parser::readBody(int client_fd, int epoll_fd,
 		while (true) {
 			char newbuffer[8094] = {};
 
-			int bytesRead = read(client_fd, newbuffer, sizeof(newbuffer));
+			ssize_t bytesRead =
+				recv(client_fd, newbuffer, sizeof(newbuffer), 0);
 
 			if (bytesRead < 0) {
-				int a = 2;
-				(void)a;
-				response_status = INTERNAL_SERVER_ERROR;
-				return false;
+				if (errno == EAGAIN || errno == EWOULDBLOCK)
+					// Non-blocking mode, no data available; exit the loop
+					return true;
+				else {
+					response_status = INTERNAL_SERVER_ERROR;
+					return false;
+				}
 			}
 
 			if (bytesRead == 0) break;
 
-			std::string stringbuffer(newbuffer, 8094);
-			HTTP.message_body.append(stringbuffer);
+			HTTP.message_body.append(newbuffer, bytesRead);
 		}
 	}
 
-	int b = 3;
-	(void)b;
-	return true;
+	response_status =
+		INTERNAL_SERVER_ERROR;	// TODO: Error if timeout? I guess?
+	return false;
 }
 
 std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {

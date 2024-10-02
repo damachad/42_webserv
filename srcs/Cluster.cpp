@@ -259,7 +259,8 @@ void Cluster::handleNewConnection(int listening_fd) {
 // Handles a client request
 void Cluster::handleClientRequest(int connection_fd) {
 	char buffer_request[BUFFER_SIZE] = {};
-	ssize_t count = read(connection_fd, buffer_request, sizeof(buffer_request));
+	ssize_t count =
+		recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
 
 	if (count == -1) {
 		if (errno != EAGAIN) {
@@ -275,7 +276,7 @@ void Cluster::handleClientRequest(int connection_fd) {
 		return;
 	}
 
-	std::string request(buffer_request, BUFFER_SIZE);
+	std::string request(buffer_request, count);
 	processRequest(connection_fd, request);
 }
 
