@@ -27,7 +27,7 @@ short GetResponse::loadFile(std::string &path) {
   std::cout << "!!URI: " << _request.uri << "\n"; // TESTE
   if (_request.uri.length() > 3 &&
       _request.uri.substr(_request.uri.length() - 3) == ".py") {
-        std::cout << "!!ENTROU\n"; //TESTE
+    std::cout << "!!ENTROU\n"; // TESTE
     CGI cgi(_request, _response, path);
     cgi.handleCGIResponse();
   } else {
@@ -59,7 +59,7 @@ std::string GetResponse::generateResponse() {
   std::string path = getPath();
 
   status = checkFile(path);
-  std::cout << "!!STATUS: " << status << std::endl; //TESTE
+  std::cout << "!!STATUS: " << status << std::endl; // TESTE
   if (status != 200)
     return loadErrorPage(status);
   if (!isDirectory(path)) {
