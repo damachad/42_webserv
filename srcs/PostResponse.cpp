@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/02 12:54:03 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:42:19 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ std::string PostResponse::generateResponse() {
 
 	status = checkSize();
 	if (status != 200) return loadErrorPage(status);
-
+	
 	status = checkClientBodySize();
 	if (status != 200) return loadErrorPage(status);
 
@@ -39,7 +39,8 @@ std::string PostResponse::generateResponse() {
 
 	status = uploadFile();
 	if (status != 200) return loadErrorPage(status);
-
+	
+	loadCommonHeaders();
 	return getResponseStr();
 }
 
