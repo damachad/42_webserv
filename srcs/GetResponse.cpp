@@ -25,8 +25,7 @@ GetResponse::GetResponse(const Server &server, const HTTP_Request &request)
 // Loads response with contents of file and sets MIME type
 short GetResponse::loadFile(std::string &path) {
   std::cout << "!!URI: " << _request.uri << "\n"; // TESTE
-  if (_request.uri.length() > 3 &&
-      _request.uri.substr(_request.uri.length() - 3) == ".py") {
+  if (isCGI()) {
     std::cout << "!!ENTROU\n"; // TESTE
     CGI cgi(_request, _response, path);
     cgi.handleCGIResponse();

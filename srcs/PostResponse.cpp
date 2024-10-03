@@ -47,11 +47,9 @@ std::string PostResponse::generateResponse() {
   status = uploadFile();
   if (status != 200)
     return loadErrorPage(status);
-
-  if (_request.uri.length() > 3 &&
-      _request.uri.substr(_request.uri.length() - 3) == ".py") {
-        std::cout << "!!GETPATH: " << getPath() << std::endl; //TESTE
-        std::string path = getPath();
+  if (isCGI()) {
+    std::cout << "!!GETPATH: " << getPath() << std::endl; // TESTE
+    std::string path = getPath();
     CGI cgi(_request, _response, path);
     cgi.handleCGIResponse();
     loadCommonHeaders();
@@ -91,8 +89,7 @@ short PostResponse::checkBody() {
     return 400;
 
   _multipart_body = getMultipartBody(_boundary);
-  if (_multipart_body.empty())
-  {
+  if (_multipart_body.empty()) {
     std::cout << "SEGUNDO\n";
     return 400;
   }
