@@ -154,7 +154,6 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     close(pipeOut[0]);
     setCGIEnv();
     char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
-    // std::cerr << "path: " << scriptPath << std::endl; // TESTE
     if (execve(scriptPath.c_str(), argv, environ) == -1)
       throw std::runtime_error("Exec failed");
   } else {
