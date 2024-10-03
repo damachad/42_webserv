@@ -40,10 +40,6 @@ private:
   parseCGIHeaders(const std::string &headers);
   std::multimap<std::string, std::string> parseRequestHeaders();
 
-  // Process map and timing
-  std::map<pid_t, time_t> pidStartTimeMap;
-  std::map<pid_t, int> processMap;
-
 public:
   CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
       const std::string &path);
@@ -52,5 +48,4 @@ public:
   void handleCGIResponse();
   std::string executeCGI(const std::string &scriptPath);
   std::string getHeaderEnvValue(std::string key);
-  void processOutput();
 };
