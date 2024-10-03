@@ -161,7 +161,8 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     close(pipeOut[1]);
 
     time_t startTime = time(NULL);
-    pidStartTimeMap[pid] = startTime;
+    _pidStartTimeMap[pid] = startTime;
+    _processMap[pid] = pipeOut[0];
 
     if (!_request.message_body.empty())
       write(pipeIn[1], _request.message_body.c_str(),
@@ -184,35 +185,23 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
       int activity = select(pipeOut[0] + 1, &readFds, NULL, NULL, &timeout);
 
       if (activity < 0) {
-        if (errno == EINTR)
+        if (errno == EINTR) {
           std::cerr << "Select call interrupted by a singnal." << std::endl;
-        else
+          break;
+        } else {
           std::cerr << "Select error: " << strerror(errno) << std::endl;
+          break;
+        }
       } else if (activity == 0) {
         // Timeout occurred
         std::cout << "Select time out." << std::endl;
+        break;
       } else if (activity > 0) {
         bytesRead = read(pipeOut[0], buffer, sizeof(buffer));
         if (bytesRead > 0)
           cgiOutput.append(buffer, bytesRead);
-      }
-
-      time_t currentTime = time(NULL);
-
-      if (currentTime - pidStartTimeMap[pid] > 5) {
-        std::cerr << "CGI script taking too long, killing process. \n";
-        kill(pid, SIGKILL);
-        waitpid(pid, NULL, 0);
-        pidStartTimeMap.erase(pid);
-        throw std::runtime_error("CGI execution timed out");
-      }
-
-      int status;
-      pid_t result = waitpid(pid, &status, WNOHANG);
-
-      if (result == pid) {
-        pidStartTimeMap.erase(pid);
-        break;
+        else
+          break;
       }
     }
   }
@@ -279,11 +268,11 @@ void CGI::handleCGIResponse() {
   }
 }
 
-void CGI::processOutput() {
+/*void CGI::processOutput() {
   time_t currentTime = time(NULL);
 
-  std::map<pid_t, int>::iterator it = processMap.begin();
-  while (it != processMap.end()) {
+  std::map<pid_t, int>::iterator it = _processMap.begin();
+  while (it != _processMap.end()) {
     pid_t pid = it->first;
 
     // Check if the process has been running for more than 5 seconds
@@ -295,10 +284,10 @@ void CGI::processOutput() {
       std::map<pid_t, int>::iterator nextIt = it;
       ++nextIt;
 
-      processMap.erase(it);
+      _processMap.erase(it);
       it = nextIt;
     } else {
       ++it;
     }
   }
-}
+}*/
