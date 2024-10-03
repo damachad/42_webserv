@@ -4,8 +4,10 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <iostream>
 #include <map>
+#include <signal.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -22,15 +24,25 @@ private:
   HTTP_Response &_response;
   const std::string &_path;
 
+  // Checker
   bool isSingleValueHeader(std::string &key);
+
+  // Env getters
   std::string getQueryFields();
   std::string getEnvVar(const char *key);
   std::string fetchCookies();
+
+  // Env setter
   void setCGIEnv();
-  std::string getCGIScriptPath();
+
+  // Parsers
   std::multimap<std::string, std::string>
   parseCGIHeaders(const std::string &headers);
   std::multimap<std::string, std::string> parseRequestHeaders();
+
+  // Process map and timing
+  std::map<pid_t, time_t> pidStartTimeMap;
+  std::map<pid_t, int> processMap;
 
 public:
   CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
@@ -40,4 +52,5 @@ public:
   void handleCGIResponse();
   std::string executeCGI(const std::string &scriptPath);
   std::string getHeaderEnvValue(std::string key);
+  void processOutput();
 };

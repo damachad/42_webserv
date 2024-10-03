@@ -278,3 +278,27 @@ void CGI::handleCGIResponse() {
         "Error: Malformed CGI output, no valid headers found.");
   }
 }
+
+void CGI::processOutput() {
+  time_t currentTime = time(NULL);
+
+  std::map<pid_t, int>::iterator it = processMap.begin();
+  while (it != processMap.end()) {
+    pid_t pid = it->first;
+
+    // Check if the process has been running for more than 5 seconds
+    if (currentTime - pidStartTimeMap[pid] > 5) {
+      kill(pid, SIGKILL);
+      waitpid(pid, NULL, 0);
+      pidStartTimeMap.erase(pid);
+
+      std::map<pid_t, int>::iterator nextIt = it;
+      ++nextIt;
+
+      processMap.erase(it);
+      it = nextIt;
+    } else {
+      ++it;
+    }
+  }
+}
