@@ -160,7 +160,18 @@ void Cluster::processRequest(int client_fd, const std::string &buffer_request,
   unsigned short error_status = HTTP_Request_Parser::parse_HTTP_request(
       _client_buffer_map[client_fd], request);
 
-      // ********** FORKA AQUI!!! *********** //
+   if (request.uri.length() > 3 &&
+       request.uri.substr(request.uri.length() - 3) == ".py") {
+     pid_t pid = fork();
+
+     if (pid == -1)
+       throw std::runtime_error("Fork failed");
+
+     if (pid != 0) {
+       return;
+     }
+   }
+  // ********** FORKA AQUI!!! *********** //
   std::cout << "****REQUEST****" << std::endl;          // TESTE
   std::cout << request << std::endl;                    // TESTE
   std::cout << "STATUS: " << error_status << std::endl; // TESTE
