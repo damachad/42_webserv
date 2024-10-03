@@ -159,6 +159,8 @@ void Cluster::processRequest(int client_fd, const std::string &buffer_request,
   HTTP_Request request;
   unsigned short error_status = HTTP_Request_Parser::parse_HTTP_request(
       _client_buffer_map[client_fd], request);
+
+      // ********** FORKA AQUI!!! *********** //
   std::cout << "****REQUEST****" << std::endl;          // TESTE
   std::cout << request << std::endl;                    // TESTE
   std::cout << "STATUS: " << error_status << std::endl; // TESTE
