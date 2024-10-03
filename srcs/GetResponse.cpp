@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/03 12:35:00 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/03 13:57:57 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,8 +66,8 @@ std::string GetResponse::generateResponse() {
 		if (status != 200) return loadErrorPage(status);
 	} else {  // is a directory
 		std::string indexFile = getIndexFile(path);
-		if (!indexFile.empty() &&
-			!isDirectory(indexFile)) {	// TODO: deal with directory in index?
+		if (!indexFile.empty() && 
+			(checkFile(indexFile) == 200)) {
 			status = loadFile(indexFile);
 			if (status != 200) return loadErrorPage(status);
 		} else if (hasAutoindex()) {
