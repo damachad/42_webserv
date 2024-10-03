@@ -161,8 +161,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     close(pipeOut[1]);
 
     time_t startTime = time(NULL);
-    _pidStartTimeMap[pid] = startTime;
-    _processMap[pid] = pipeOut[0];
+    pidStartTimeMap[pid] = startTime;
 
     if (!_request.message_body.empty())
       write(pipeIn[1], _request.message_body.c_str(),
@@ -186,16 +185,16 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 
       if (activity < 0) {
         if (errno == EINTR) {
-          std::cerr << "Select call interrupted by a singnal." << std::endl;
-          break;
+          throw std::runtime_error("Select call interrupted by a singnal.");
+          exit(1); // NEED TO FREE ALL BEFORE EXITING
         } else {
-          std::cerr << "Select error: " << strerror(errno) << std::endl;
-          break;
+          throw std::runtime_error("Select error: ");
+          exit(1);
         }
       } else if (activity == 0) {
         // Timeout occurred
-        std::cout << "Select time out." << std::endl;
-        break;
+        throw std::runtime_error("Select time out.");
+        exit(1);
       } else if (activity > 0) {
         bytesRead = read(pipeOut[0], buffer, sizeof(buffer));
         if (bytesRead > 0)
