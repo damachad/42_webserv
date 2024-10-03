@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:07 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/10 11:03:11 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/03 11:09:43 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ T stringToNumber(const std::string& value) {
 
 	return result;
 }
-
+time_t parseTime(const std::string& http_time);
 std::string getHttpDate();
 std::ostream& operator<<(std::ostream& outstream,
 						 const struct Context configuration);
