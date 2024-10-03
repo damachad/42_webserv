@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/02 14:57:13 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/03 12:32:24 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -310,7 +310,7 @@ void AResponse::loadCommonHeaders() {
 					   numberToString<unsigned long>(_response.body.size())));
 	}
 	_response.headers.insert(
-		std::make_pair(std::string("Cache-Control"), std::string("no-store")));
+		std::make_pair(std::string("Cache-Control"), std::string("no-cache")));
 }
 
 // Loads reponse struct with values of return
@@ -345,7 +345,7 @@ static std::string getDirectoryName(const std::string& path) {
 	return dirName + "/";
 }
 
-static std::string getLastModificationDate(const std::string& path) {
+std::string AResponse::getLastModificationDate(const std::string& path) const {
 	struct stat fileStat;
 	if (stat(path.c_str(), &fileStat) != 0) {
 		return "";	// Error handling or empty result
