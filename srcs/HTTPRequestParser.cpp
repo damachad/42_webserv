@@ -374,8 +374,6 @@ bool HTTP_Request_Parser::readBody(int client_fd, int epoll_fd,
 				}
 			}
 
-			if (bytesRead == 0) break;
-
 			HTTP.message_body.append(newbuffer, bytesRead);
 		}
 	}

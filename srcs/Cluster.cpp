@@ -15,6 +15,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
+#include <cerrno>
 #include <utility>
 
 #include "AResponse.hpp"
@@ -259,24 +260,32 @@ void Cluster::handleNewConnection(int listening_fd) {
 // Handles a client request
 void Cluster::handleClientRequest(int connection_fd) {
 	char buffer_request[BUFFER_SIZE] = {};
-	ssize_t count =
-		recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
+	std::string request;
 
-	if (count == -1) {
-		if (errno != EAGAIN) {
+	while (request.find("\r\n\r\n") ==
+		   std::string::npos) {	 // NOTE: While all the headers haven't been
+								 // received
+		//
+		memset(buffer_request, 0, sizeof(buffer_request));
+
+		ssize_t bytesRead =
+			recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
+
+		if (bytesRead < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) break;
+			if (errno != EAGAIN) {
+				closeAndRemoveSocket(connection_fd, _epoll_fd);
+				throw ClusterRunError("read failed");
+			}
+		} else if (bytesRead == 0) {
+			// Connection closed
 			closeAndRemoveSocket(connection_fd, _epoll_fd);
-			throw ClusterRunError("read failed");
-		}
-		return;	 // No data to read, just return
+			return;
+		} else
+			// Bytes have been read. Append them to request.
+			request.append(buffer_request, bytesRead);
 	}
 
-	if (count == 0) {
-		// Connection closed
-		closeAndRemoveSocket(connection_fd, _epoll_fd);
-		return;
-	}
-
-	std::string request(buffer_request, count);
 	processRequest(connection_fd, request);
 }
 
