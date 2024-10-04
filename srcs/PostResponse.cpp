@@ -14,7 +14,11 @@
 
 #include <sys/stat.h>
 
-PostResponse::PostResponse(const Server &server, const HTTP_Request &request,
+#include "Helpers.hpp"
+
+static unsigned short response_status = OK;
+
+PostResponse::PostResponse(const Server &server, HTTP_Request &request,
 						   int client_fd, int epoll_fd)
 	: AResponse(server, request), _client_fd(client_fd), _epoll_fd(epoll_fd) {}
 
@@ -22,35 +26,183 @@ PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}
 
 PostResponse::~PostResponse() {}
 
-std::string PostResponse::generateResponse() {
-	setMatchLocationRoute();
-	unsigned short status = OK;
+unsigned short PostResponse::parse_HTTP_body() {
+	// If there's an expect header, check validity and ready body
+	// before continuing
+	if (requestHasHeader("expect")) {
+		if (!send100Continue()) return response_status;
+	}
 
-	status = checkMethod();
+	// If there's content-length, read it
+	if (requestHasHeader("content-length")) readContentLength();
+
+	// If it's chunked, get all the chunk
+	else if (requestHasHeader("transfer-encoding"))
+		readChunks();
+	// If there's no content-length nor chunked, return error
+	// No need to test for both: already tested on HTTP header parser
+	else
+		response_status = BAD_REQUEST;
+
+	return response_status;
+}
+
+bool PostResponse::send100Continue() {
+	if (_request.header_fields.find("expect")->second != "100-continue") {
+		response_status = BAD_REQUEST;
+		return false;
+	}
+
+	if (_request.header_fields.find("content-length") ==
+		_request.header_fields.end()) {
+		response_status = LENGTH_REQUIRED;
+		return false;
+	}
+
+	if (stringToNumber<long>(
+			_request.header_fields.find("content-length")->second) >
+		_server.getClientMaxBodySize()) {
+		response_status = PAYLOAD_TOO_LARGE;
+		return false;
+	}
+
+	ssize_t bytesSent =
+		send(_client_fd, "HTTP/1.1 100 Continue\r\n\r\n", 25, 0);
+	if (bytesSent < 0) {
+		perror("Error sending 100 Continue");  // TODO: Remove?
+		response_status = INTERNAL_SERVER_ERROR;
+		return false;
+	}
+
+	return true;
+}
+
+bool PostResponse::readBody() {
+	struct epoll_event events[1];
+	int nfds = epoll_wait(_epoll_fd, events, 1,
+						  -1);	// Wait indefinitely for new data
+	if (nfds < 0) {
+		perror("Error in epoll_wait");	// TODO: Remove?
+		response_status = INTERNAL_SERVER_ERROR;
+		return false;
+	}
+
+	if (events[0].events & EPOLLIN) {
+		while (true) {
+			char newbuffer[8094] = {};
+
+			ssize_t bytesRead =
+				recv(_client_fd, newbuffer, sizeof(newbuffer), 0);
+
+			if (bytesRead < 0) {
+				if (errno == EAGAIN || errno == EWOULDBLOCK)
+					// Non-blocking mode, no data available; exit the loop
+					return true;
+				else {
+					response_status = INTERNAL_SERVER_ERROR;
+					return false;
+				}
+			}
+
+			_request.message_body.append(newbuffer, bytesRead);
+		}
+	}
+
+	response_status =
+		INTERNAL_SERVER_ERROR;	// TODO: Error if timeout? I guess?
+
+	return false;
+}
+
+void PostResponse::readContentLength() {
+	unsigned long content_length = stringToNumber<unsigned long>(
+		_request.header_fields.find("content-length")->second);
+
+	ssize_t bytes_to_read = content_length - _request.message_body.size();
+	ssize_t total_bytes_read = 0;
+
+	while (total_bytes_read < bytes_to_read) {
+		char read_buffer[8096] = {};
+
+		ssize_t buffer_size = std::min(bytes_to_read - total_bytes_read,
+									   (ssize_t)sizeof(read_buffer));
+
+		ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
+
+		if (bytes_read < 0) {
+			// Handle error case (e.g., log the error, close the connection,
+			// etc.)
+			perror("Error reading from socket");
+			break;	// Exit the loop on error
+		}
+
+		// Handle the case where the connection was closed prematurely
+		if (bytes_read == 0) {
+			// Client closed the connection
+			break;	// Exit the loop if the connection is closed
+		}
+
+		_request.message_body.append(read_buffer, bytes_read);
+
+		total_bytes_read += bytes_read;
+	}
+}
+
+void PostResponse::readChunks() {
+	while (true) {
+		ssize_t chunk_size = readChunkSizeFromSocket();
+
+		if (chunk_size == 0) break;
+
+		ssize_t total_bytes_read = 0;
+		char read_buffer[8096] = {};
+
+		while (total_bytes_read < chunk_size) {
+			ssize_t buffer_size = std::min(chunk_size - total_bytes_read,
+										   (ssize_t)sizeof(read_buffer));
+			ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
+			if (bytes_read < 0) {
+				// Handle error case (e.g., log the error, close the connection,
+				// etc.)
+				perror("Error reading from socket");
+				break;	// Exit the loop on error
+			}
+			// Handle the case where the connection was closed prematurely
+			if (bytes_read == 0) {
+				// Client closed the connection
+				return;	 // Exit the loop if the connection is closed
+			}
+			_request.message_body.append(read_buffer, bytes_read);
+			total_bytes_read += bytes_read;
+		}
+	}
+}
+
+ssize_t PostResponse::readChunkSizeFromSocket() { return 1000000; }
+
+std::string PostResponse::generateResponse() {
+	unsigned short status = OK;
+	setMatchLocationRoute();
+
+	parse_HTTP_body();
+
+	status = checkSize();
 	if (status != OK) return loadErrorPage(status);
 
-	if (requestHasContentLength()) {
-		status = checkSize();
-		if (status != OK) return loadErrorPage(status);
+	status = checkClientBodySize();
+	if (status != OK) return loadErrorPage(status);
 
-		status = checkClientBodySize();
-		if (status != OK) return loadErrorPage(status);
+	status = checkBody();
+	if (status != OK) return loadErrorPage(status);
 
-		status = checkBody();
-		if (status != OK) return loadErrorPage(status);
-
-		status = uploadFile();
-		if (status != OK) return loadErrorPage(status);
-	} else {
-		;
-	}
+	status = uploadFile();
+	if (status != OK) return loadErrorPage(status);
 
 	return getResponseStr();
 }
 
-bool PostResponse::requestHasContentLength() {
-	if (_request.header_fields.find("content-length") !=
-		_request.header_fields.end())
+bool PostResponse::requestHasHeader(const std::string &header) {
+	if (_request.header_fields.find(header) != _request.header_fields.end())
 		return true;
 
 	return false;

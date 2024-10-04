@@ -26,8 +26,8 @@ struct file {
 
 class PostResponse : public AResponse {
    public:
-	PostResponse(const Server& server, const HTTP_Request& request,
-				 int client_fd, int epoll_fd);
+	PostResponse(const Server& server, HTTP_Request& request, int client_fd,
+				 int epoll_fd);
 	PostResponse(const PostResponse& src);
 	~PostResponse();
 
@@ -37,7 +37,14 @@ class PostResponse : public AResponse {
 	PostResponse();
 	PostResponse& operator=(const PostResponse& src);
 
-	bool requestHasContentLength();
+	// Functions to parse the remainder of the body
+	unsigned short parse_HTTP_body();
+	bool send100Continue();
+	bool readBody();
+	void readContentLength();
+	void readChunks();
+	ssize_t readChunkSizeFromSocket();
+	bool requestHasHeader(const std::string& header);
 	short checkBody();
 	short extractFile();
 	short uploadFile();

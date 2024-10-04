@@ -16,9 +16,8 @@
 
 static int response_status = OK;
 
-unsigned short HTTP_Request_Parser::parse_HTTP_request(
-	const std::string& buffer_request, HTTP_Request& HTTP, int client_fd,
-	int epoll_fd) {
+unsigned short HTTP_Request_Parser::parse_HTTP_headers(
+	const std::string& buffer_request, HTTP_Request& HTTP) {
 	if (buffer_request.empty() ||
 		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos) {
 		response_status = BAD_REQUEST;
@@ -49,24 +48,12 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 		}
 	}
 
-	if (header_is_parsed) {
-		if (HTTP.header_fields.find("expect") == HTTP.header_fields.end()) {
-			// Read the rest of the stream as the message body if there's no
-			// "expect header"
-			std::string remaining_body(
-				(std::istreambuf_iterator<char>(buffer_stream)),
-				std::istreambuf_iterator<char>());
-			HTTP.message_body = remaining_body;	 // Append the body
-		} else	// If there is an "expect" header, validate 100continue and then
-				// read body{
-			if (!send100Continue(client_fd) ||
-				!readBody(client_fd, epoll_fd, HTTP))
-				return response_status;
-	}
-
-	trimNulls(HTTP.message_body);
 	extract_queries(HTTP);
-	if (!check_validity_of_header_fields(HTTP)) return response_status;
+
+	std::string remaining_body((std::istreambuf_iterator<char>(buffer_stream)),
+							   std::istreambuf_iterator<char>());
+	HTTP.message_body =
+		remaining_body;	 // Append the remaining body, if such exists
 
 	return response_status;
 }
@@ -225,13 +212,6 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	return true;
 }
 
-unsigned short HTTP_Request_Parser::check_expect_validity(HTTP_Request& HTTP) {
-	if (HTTP.header_fields.find("expect")->second != "100-continue")
-		return BAD_REQUEST;
-
-	return CONTINUE;
-}
-
 void HTTP_Request_Parser::extract_queries(HTTP_Request& HTTP) {
 	size_t delimiter_pos = HTTP.uri.find('?');
 
@@ -333,53 +313,6 @@ bool HTTP_Request_Parser::protocol_version_is_valid(
 	if (protocol_version == "HTTP/1.1" || protocol_version == "HTTP/1.0" ||
 		protocol_version == "HTTP/0.9")
 		return true;
-	return false;
-}
-
-bool HTTP_Request_Parser::send100Continue(int client_fd) {
-	ssize_t bytesSent = send(client_fd, "HTTP/1.1 100 Continue\r\n\r\n", 25, 0);
-	if (bytesSent < 0) {
-		perror("Error sending 100 Continue");  // TODO: Remove?
-		response_status = INTERNAL_SERVER_ERROR;
-		return false;
-	}
-	return true;
-}
-
-bool HTTP_Request_Parser::readBody(int client_fd, int epoll_fd,
-								   HTTP_Request& HTTP) {
-	struct epoll_event events[1];
-	int nfds = epoll_wait(epoll_fd, events, 1,
-						  -1);	// Wait indefinitely for new data
-	if (nfds < 0) {
-		perror("Error in epoll_wait");	// TODO: Remove?
-		response_status = INTERNAL_SERVER_ERROR;
-		return false;
-	}
-
-	if (events[0].events & EPOLLIN) {
-		while (true) {
-			char newbuffer[8094] = {};
-
-			ssize_t bytesRead =
-				recv(client_fd, newbuffer, sizeof(newbuffer), 0);
-
-			if (bytesRead < 0) {
-				if (errno == EAGAIN || errno == EWOULDBLOCK)
-					// Non-blocking mode, no data available; exit the loop
-					return true;
-				else {
-					response_status = INTERNAL_SERVER_ERROR;
-					return false;
-				}
-			}
-
-			HTTP.message_body.append(newbuffer, bytesRead);
-		}
-	}
-
-	response_status =
-		INTERNAL_SERVER_ERROR;	// TODO: Error if timeout? I guess?
 	return false;
 }
 

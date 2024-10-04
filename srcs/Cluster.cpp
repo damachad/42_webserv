@@ -292,8 +292,8 @@ void Cluster::handleClientRequest(int connection_fd) {
 // Handles a client request
 void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
 	HTTP_Request request;
-	unsigned short error_status = HTTP_Request_Parser::parse_HTTP_request(
-		buffer_request, request, client_fd, _epoll_fd);
+	unsigned short error_status =
+		HTTP_Request_Parser::parse_HTTP_headers(buffer_request, request);
 
 	std::string buffer_response = getResponse(request, error_status, client_fd);
 
@@ -322,7 +322,7 @@ void Cluster::closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd) {
 }
 
 // Gets response from server
-const std::string Cluster::getResponse(const HTTP_Request& request,
+const std::string Cluster::getResponse(HTTP_Request& request,
 									   unsigned short& error_status,
 									   int client_fd) {
 	AResponse* response_check;
