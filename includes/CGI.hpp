@@ -30,6 +30,7 @@ private:
   // Env getters
   std::string getQueryFields();
   std::string getEnvVar(const char *key);
+  std::string getHeaderEnvValue(std::string key);
   std::string fetchCookies();
 
   // Env setter
@@ -40,12 +41,16 @@ private:
   parseCGIHeaders(const std::string &headers);
   std::multimap<std::string, std::string> parseRequestHeaders();
 
+  // Script executer
+  std::string executeCGI(const std::string &scriptPath);
+
+
 public:
   CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
       const std::string &path);
   ~CGI();
 
+  // CGI's response
   void handleCGIResponse();
-  std::string executeCGI(const std::string &scriptPath);
-  std::string getHeaderEnvValue(std::string key);
+
 };
