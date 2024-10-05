@@ -37,7 +37,8 @@ unsigned short PostResponse::parse_HTTP_body() {
 	if (requestHasHeader("content-length")) readContentLength();
 
 	// If it's chunked, get all the chunk
-	else if (requestHasHeader("transfer-encoding"))
+	// NOTE: In our server, chunked is only useful for CGI!
+	else if (requestHasHeader("transfer-encoding") && requestIsCGI())
 		readChunks();
 	// If there's no content-length nor chunked, return error
 	// No need to test for both existing at the same time: already tested on
@@ -232,6 +233,7 @@ void PostResponse::skipTrailingCRLF() {
 	if (bytes_read != 2 || crlf[0] != '\r' || crlf[1] != '\n')
 		return;	 // TODO: Handle error?
 }
+
 std::string PostResponse::generateResponse() {
 	unsigned short status = OK;
 	setMatchLocationRoute();
@@ -244,11 +246,15 @@ std::string PostResponse::generateResponse() {
 	status = checkBody();
 	if (status != OK) return loadErrorPage(status);
 
-	status = extractFile();
-	if (status != OK) return loadErrorPage(status);
+	if (!requestIsCGI()) {
+		status = extractFile();
+		if (status != OK) return loadErrorPage(status);
 
-	status = uploadFile();
-	if (status != OK) return loadErrorPage(status);
+		status = uploadFile();
+		if (status != OK) return loadErrorPage(status);
+	} else {
+		// Send to CGI;
+	}
 
 	return getResponseStr();
 }
@@ -258,6 +264,14 @@ bool PostResponse::requestHasHeader(const std::string &header) {
 		return true;
 
 	return false;
+}
+
+bool PostResponse::requestIsCGI() {
+	if (_request.uri.length() < 4) return false;
+
+	std::string ending = _request.uri.substr(_request.uri.length() - 3);
+
+	return (ending == ".py");
 }
 
 short PostResponse::uploadFile() {

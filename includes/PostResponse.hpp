@@ -47,6 +47,7 @@ class PostResponse : public AResponse {
 	ssize_t readChunkSizeFromSocket();
 	void skipTrailingCRLF();
 	bool requestHasHeader(const std::string& header);
+	bool requestIsCGI();
 	short checkBody();
 	short extractFile();
 	short uploadFile();
