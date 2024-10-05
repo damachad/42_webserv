@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/24 11:44:20 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:42:19 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,11 +278,39 @@ short PostResponse::uploadFile() {
 	// std::string directory = _server.getUpload();
 	// TODO: if upload_store empty, return error or have a default?
 	std::string directory = "file_uploads/";
+=======
+	status = uploadFile();
+	if (status != 200) return loadErrorPage(status);
+
+	loadCommonHeaders();
+	return getResponseStr();
+}
+
+// Function to create directory
+static bool createDirectory(const std::string &path) {
+	if (mkdir(path.c_str(), 0777) == 0)
+		return true;  // Directory created successfully
+	else if (errno == EEXIST)
+		return true;  // Directory already exists
+	else
+		return false;
+}
+
+short PostResponse::uploadFile() {
+	extractFile();
+
+	std::string directory = _server.getUpload(_locationRoute);
+	if (directory.empty())
+		return 500;	 // TODO: if upload_store empty, return error or have a
+					 // default?
+	if (directory.at(directory.length() - 1) != '/') directory += "/";
+	if (!createDirectory(directory)) return FORBIDDEN;
+>>>>>>> main
 	std::string target = directory + _file_to_upload.file_name;
 
 	int file_fd =
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
-	if (file_fd == -1) return (500);  // TODO: Adjust error
+	if (file_fd == -1) return (FORBIDDEN);	// TODO: Adjust error
 
 	size_t bytes_to_write = _file_to_upload.file_contents.size();
 

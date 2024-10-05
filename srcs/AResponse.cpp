@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/30 16:37:42 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:57:13 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,9 @@ static std::map<std::string, std::string> initMimeTypes() {
 AResponse::~AResponse() {}
 
 AResponse::AResponse(const Server& server, const HTTP_Request& request)
-	: _request(request), _server(server) {}
+	: _request(request), _server(server) {
+		_response.status = 200;
+	}
 
 AResponse::AResponse(const AResponse& src)
 	: _request(src._request),
@@ -163,8 +165,8 @@ short AResponse::checkSize() const {
 
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
-	std::set<Method>::const_iterator it =
-		_server.getAllowedMethods(_locationRoute).find(_request.method);
+	std::set<Method> allowedMethods = _server.getAllowedMethods(_locationRoute);
+	std::set<Method>::const_iterator it = allowedMethods.find(_request.method);
 	if (it == _server.getAllowedMethods(_locationRoute).end())
 		return 405;	 // Method Not Allowed
 	return 200;
@@ -302,9 +304,11 @@ void AResponse::loadCommonHeaders() {
 		std::make_pair(std::string("Date"), getHttpDate()));
 	_response.headers.insert(
 		std::make_pair(std::string("Server"), std::string(SERVER)));
-	_response.headers.insert(
-		std::make_pair(std::string("Content-Length"),
+	if (_response.body.size()) {
+		_response.headers.insert(
+			std::make_pair(std::string("Content-Length"),
 					   numberToString<unsigned long>(_response.body.size())));
+	}
 	_response.headers.insert(
 		std::make_pair(std::string("Cache-Control"), std::string("no-store")));
 }
@@ -363,7 +367,7 @@ static std::string getFileSize(const std::string& path) {
 	return sizeBuffer;
 }
 
-std::string AResponse::addFileEntry(const std::string& name,
+std::string AResponse::addFileEntry(std::string& name,
 									const std::string& path) {
 	std::string fullPath = assemblePath(path, name);
 	std::string date = getLastModificationDate(fullPath);
@@ -373,6 +377,8 @@ std::string AResponse::addFileEntry(const std::string& name,
 		displayName = name.substr(0, 49) + "..";  // Truncate and add ".."
 	else
 		displayName = name;
+	if (name != "." && name != "..")
+		name = assemblePath(_request.uri, name);
 	std::string WP1;
 	if (displayName.length() < 51)
 		WP1 = std::string(51 - displayName.length(), ' ');	// Pad with spaces
@@ -409,7 +415,6 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	loadCommonHeaders();
 	_response.headers.insert(
 		std::make_pair(std::string("Content-Type"), std::string("text/html")));
-	_response.status = 200;
 	return 200;
 }
 
