@@ -14,61 +14,303 @@
 
 #include <sys/stat.h>
 
-PostResponse::PostResponse(const Server &server, const HTTP_Request &request)
-	: AResponse(server, request) {}
+#include "Helpers.hpp"
+
+static unsigned short response_status = OK;
+
+PostResponse::PostResponse(const Server &server, HTTP_Request &request,
+						   int client_fd, int epoll_fd)
+	: AResponse(server, request), _client_fd(client_fd), _epoll_fd(epoll_fd) {}
 
 PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}
 
 PostResponse::~PostResponse() {}
 
+unsigned short PostResponse::parse_HTTP_body() {
+	// If there's an expect header, check validity and ready body
+	// before continuing
+	if (requestHasHeader("expect")) {
+		if (!send100Continue()) return response_status;
+	}
+
+	// If there's content-length, read it
+	if (requestHasHeader("content-length")) readContentLength();
+
+	// If it's chunked, get all the chunk
+	// NOTE: In our server, chunked is only useful for CGI!
+	else if (requestHasHeader("transfer-encoding") && requestIsCGI())
+		readChunks();
+	// If there's no content-length nor chunked, return error
+	// No need to test for both existing at the same time: already tested on
+	// HTTP header parser
+	else
+		response_status = BAD_REQUEST;
+
+	return response_status;
+}
+
+bool PostResponse::send100Continue() {
+	if (_request.header_fields.find("expect")->second != "100-continue") {
+		response_status = BAD_REQUEST;
+		return false;
+	}
+
+	if (!requestHasHeader("content-length") &&
+		!requestHasHeader("transfer-encoding")) {
+		response_status = BAD_REQUEST;
+		return false;
+	}
+
+	if (requestHasHeader("content-length") &&
+		stringToNumber<long>(
+			_request.header_fields.find("content-length")->second) >
+			_server.getClientMaxBodySize()) {
+		response_status = PAYLOAD_TOO_LARGE;
+		return false;
+	}
+
+	ssize_t bytesSent =
+		send(_client_fd, "HTTP/1.1 100 Continue\r\n\r\n", 25, 0);
+	if (bytesSent < 0) {
+		perror("Error sending 100 Continue");  // TODO: Remove?
+		response_status = INTERNAL_SERVER_ERROR;
+		return false;
+	}
+
+	return true;
+}
+
+bool PostResponse::readBody() {
+	struct epoll_event events[1];
+	int nfds = epoll_wait(_epoll_fd, events, 1,
+						  -1);	// Wait indefinitely for new data
+	if (nfds < 0) {
+		perror("Error in epoll_wait");	// TODO: Remove?
+		response_status = INTERNAL_SERVER_ERROR;
+		return false;
+	}
+
+	if (events[0].events & EPOLLIN) {
+		while (true) {
+			char newbuffer[8094] = {};
+
+			ssize_t bytesRead =
+				recv(_client_fd, newbuffer, sizeof(newbuffer), 0);
+
+			if (bytesRead < 0) {
+				if (errno == EAGAIN || errno == EWOULDBLOCK)
+					// Non-blocking mode, no data available; exit the loop
+					return true;
+				else {
+					response_status = INTERNAL_SERVER_ERROR;
+					return false;
+				}
+			}
+
+			_request.message_body.append(newbuffer, bytesRead);
+		}
+	}
+
+	response_status =
+		INTERNAL_SERVER_ERROR;	// TODO: Error if timeout? I guess?
+
+	return false;
+}
+
+void PostResponse::readContentLength() {
+	unsigned long content_length = stringToNumber<unsigned long>(
+		_request.header_fields.find("content-length")->second);
+
+	ssize_t bytes_to_read = content_length - _request.message_body.size();
+	ssize_t total_bytes_read = 0;
+
+	while (total_bytes_read < bytes_to_read) {
+		char read_buffer[8096] = {};
+
+		ssize_t buffer_size = std::min(bytes_to_read - total_bytes_read,
+									   (ssize_t)sizeof(read_buffer));
+
+		ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
+
+		if (bytes_read < 0) {
+			// Handle error case (e.g., log the error, close the connection,
+			// etc.)
+			perror("Error reading from socket");
+			break;	// Exit the loop on error
+		}
+
+		// Handle the case where the connection was closed prematurely
+		if (bytes_read == 0) {
+			// Client closed the connection
+			break;	// Exit the loop if the connection is closed
+		}
+
+		_request.message_body.append(read_buffer, bytes_read);
+
+		total_bytes_read += bytes_read;
+	}
+}
+
+void PostResponse::readChunks() {
+	removeFirstChunk();
+
+	while (true) {
+		ssize_t chunk_size = readChunkSizeFromSocket();
+
+		if (chunk_size == 0) break;
+
+		ssize_t total_bytes_read = 0;
+		char read_buffer[8096] = {};
+
+		while (total_bytes_read < chunk_size) {
+			ssize_t read_size = std::min(chunk_size - total_bytes_read,
+										 (ssize_t)sizeof(read_buffer));
+
+			ssize_t bytes_read = recv(_client_fd, read_buffer, read_size, 0);
+			if (bytes_read < 0) {
+				// Handle error case (e.g., log the error, close the connection,
+				// etc.)
+				perror("Error reading from socket");
+				break;	// Exit the loop on error
+			}
+			// Handle the case where the connection was closed prematurely
+			if (bytes_read == 0) {
+				// Client closed the connection
+				return;	 // Exit the loop if the connection is closed
+			}
+			_request.message_body.append(read_buffer, bytes_read);
+			total_bytes_read += bytes_read;
+		}
+
+		skipTrailingCRLF();
+	}
+}
+
+// TODO: Remove first bit of chunk from message body in case it got read on
+// run()
+void PostResponse::removeFirstChunk() { ; }
+
+ssize_t PostResponse::readChunkSizeFromSocket() {
+	std::string chunk_size_str;
+	char buffer;
+
+	// Read byte by byte until we reach "\r\n" (end of chunk size line)
+	while (true) {
+		ssize_t bytes_read = recv(_client_fd, &buffer, 1, 0);
+		if (bytes_read < 0) {
+			// Handle error (e.g., log error, close connection, etc.)
+			perror("Error reading chunk size");
+			return -1;
+		}
+		if (bytes_read == 0) {
+			// Connection closed by the client
+			return 0;
+		}
+
+		chunk_size_str += buffer;
+
+		if (chunk_size_str.length() >= 2 &&
+			chunk_size_str[chunk_size_str.length() - 1] == '\n' &&
+			chunk_size_str[chunk_size_str.length() - 2] == '\r') {
+			chunk_size_str.resize(chunk_size_str.length() - 2);
+			break;
+		}
+	}
+
+	// Convert the chunk size from hex string to decimal
+	ssize_t chunk_size = 0;
+	chunk_size = std::strtol(chunk_size_str.c_str(), NULL, 16);
+
+	// TODO: Handle errors
+
+	return chunk_size;
+}
+
+void PostResponse::skipTrailingCRLF() {
+	char crlf[2];
+	ssize_t bytes_read = recv(_client_fd, crlf, 2, 0);
+
+	if (bytes_read != 2 || crlf[0] != '\r' || crlf[1] != '\n')
+		return;	 // TODO: Handle error?
+}
+
 std::string PostResponse::generateResponse() {
+	unsigned short status = OK;
 	setMatchLocationRoute();
-	unsigned short status;
 
-	status = checkSize();
-	if (status != 200) return loadErrorPage(status);
-	
+	parse_HTTP_body();
+
 	status = checkClientBodySize();
-	if (status != 200) return loadErrorPage(status);
-
-	status = checkMethod();
-	if (status != 200) return loadErrorPage(status);
+	if (status != OK) return loadErrorPage(status);
 
 	status = checkBody();
-	if (status != 200) return loadErrorPage(status);
+	if (status != OK) return loadErrorPage(status);
 
+	if (!requestIsCGI()) {
+		status = extractFile();
+		if (status != OK) return loadErrorPage(status);
+
+		status = uploadFile();
+		if (status != OK) return loadErrorPage(status);
+	} else {
+		// Send to CGI;
+	}
+
+	return getResponseStr();
+}
+
+bool PostResponse::requestHasHeader(const std::string &header) {
+	if (_request.header_fields.find(header) != _request.header_fields.end())
+		return true;
+
+	return false;
+}
+
+bool PostResponse::requestIsCGI() {
+	if (_request.uri.length() < 4) return false;
+
+	std::string ending = _request.uri.substr(_request.uri.length() - 3);
+
+	return (ending == ".py");
+}
+
+short PostResponse::uploadFile() {
+	// std::string directory = _server.getUpload();
+	// TODO: if upload_store empty, return error or have a default?
+	std::string directory = "file_uploads/";
+=======
 	status = uploadFile();
 	if (status != 200) return loadErrorPage(status);
-	
+
 	loadCommonHeaders();
 	return getResponseStr();
 }
 
 // Function to create directory
-static bool createDirectory(const std::string& path) {
+static bool createDirectory(const std::string &path) {
 	if (mkdir(path.c_str(), 0777) == 0)
-        return true;  // Directory created successfully
-    else if (errno == EEXIST)
-        return true;  // Directory already exists
+		return true;  // Directory created successfully
+	else if (errno == EEXIST)
+		return true;  // Directory already exists
 	else
-        return false;
+		return false;
 }
 
 short PostResponse::uploadFile() {
 	extractFile();
-	
+
 	std::string directory = _server.getUpload(_locationRoute);
 	if (directory.empty())
-		return 500; // TODO: if upload_store empty, return error or have a default?
-	if (directory.at(directory.length() - 1) != '/')
-		directory += "/";
-	if (!createDirectory(directory))
-		return FORBIDDEN;
+		return 500;	 // TODO: if upload_store empty, return error or have a
+					 // default?
+	if (directory.at(directory.length() - 1) != '/') directory += "/";
+	if (!createDirectory(directory)) return FORBIDDEN;
+>>>>>>> main
 	std::string target = directory + _file_to_upload.file_name;
 
 	int file_fd =
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
-	if (file_fd == -1) return (FORBIDDEN);  // TODO: Adjust error
+	if (file_fd == -1) return (FORBIDDEN);	// TODO: Adjust error
 
 	size_t bytes_to_write = _file_to_upload.file_contents.size();
 
@@ -82,11 +324,16 @@ short PostResponse::uploadFile() {
 }
 
 short PostResponse::checkBody() {
-	_boundary = getBoundary();
-	if (_boundary.empty()) return 400;
+	if (requestHasHeader("content-type") &&
+		_request.header_fields.find("content-type")
+				->second.find("multipart/") == 0) {
+		_boundary = getBoundary();
+		if (_boundary.empty()) return 400;
 
-	_multipart_body = getMultipartBody(_boundary);
-	if (_multipart_body.empty()) return 400;
+		_multipart_body = getMultipartBody(_boundary);
+		if (_multipart_body.empty()) return 400;
+	} else
+		return 400;
 
 	return 200;
 }

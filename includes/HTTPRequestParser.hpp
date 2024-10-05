@@ -42,7 +42,7 @@ struct HTTP_Request {
 class HTTP_Request_Parser {
    public:
 	// Main function, parses request
-	static unsigned short parse_HTTP_request(const std::string& buffer_request,
+	static unsigned short parse_HTTP_headers(const std::string& buffer_request,
 											 HTTP_Request& HTTP);
 
    private:
@@ -62,6 +62,8 @@ class HTTP_Request_Parser {
 	static bool url_is_valid(const std::string& url);
 	static bool protocol_version_is_valid(
 		const ::std::string& protocol_version);
+	static bool send100Continue(int client_fd, const HTTP_Request& HTTP);
+	static bool readBody(int client_fd, int epoll_fd, HTTP_Request& HTTP);
 
 	// Private constructor and destructor: class is not instanciable
 	HTTP_Request_Parser();
