@@ -40,7 +40,8 @@ unsigned short PostResponse::parse_HTTP_body() {
 	else if (requestHasHeader("transfer-encoding"))
 		readChunks();
 	// If there's no content-length nor chunked, return error
-	// No need to test for both: already tested on HTTP header parser
+	// No need to test for both existing at the same time: already tested on
+	// HTTP header parser
 	else
 		response_status = BAD_REQUEST;
 
@@ -53,15 +54,16 @@ bool PostResponse::send100Continue() {
 		return false;
 	}
 
-	if (_request.header_fields.find("content-length") ==
-		_request.header_fields.end()) {
-		response_status = LENGTH_REQUIRED;
+	if (!requestHasHeader("content-length") &&
+		!requestHasHeader("transfer-encoding")) {
+		response_status = BAD_REQUEST;
 		return false;
 	}
 
-	if (stringToNumber<long>(
+	if (requestHasHeader("content-length") &&
+		stringToNumber<long>(
 			_request.header_fields.find("content-length")->second) >
-		_server.getClientMaxBodySize()) {
+			_server.getClientMaxBodySize()) {
 		response_status = PAYLOAD_TOO_LARGE;
 		return false;
 	}
@@ -149,6 +151,8 @@ void PostResponse::readContentLength() {
 }
 
 void PostResponse::readChunks() {
+	removeFirstChunk();
+
 	while (true) {
 		ssize_t chunk_size = readChunkSizeFromSocket();
 
@@ -158,9 +162,10 @@ void PostResponse::readChunks() {
 		char read_buffer[8096] = {};
 
 		while (total_bytes_read < chunk_size) {
-			ssize_t buffer_size = std::min(chunk_size - total_bytes_read,
-										   (ssize_t)sizeof(read_buffer));
-			ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
+			ssize_t read_size = std::min(chunk_size - total_bytes_read,
+										 (ssize_t)sizeof(read_buffer));
+
+			ssize_t bytes_read = recv(_client_fd, read_buffer, read_size, 0);
 			if (bytes_read < 0) {
 				// Handle error case (e.g., log the error, close the connection,
 				// etc.)
@@ -175,24 +180,71 @@ void PostResponse::readChunks() {
 			_request.message_body.append(read_buffer, bytes_read);
 			total_bytes_read += bytes_read;
 		}
+
+		skipTrailingCRLF();
 	}
 }
 
-ssize_t PostResponse::readChunkSizeFromSocket() { return 1000000; }
+// TODO: Remove first bit of chunk from message body in case it got read on
+// run()
+void PostResponse::removeFirstChunk() { ; }
 
+ssize_t PostResponse::readChunkSizeFromSocket() {
+	std::string chunk_size_str;
+	char buffer;
+
+	// Read byte by byte until we reach "\r\n" (end of chunk size line)
+	while (true) {
+		ssize_t bytes_read = recv(_client_fd, &buffer, 1, 0);
+		if (bytes_read < 0) {
+			// Handle error (e.g., log error, close connection, etc.)
+			perror("Error reading chunk size");
+			return -1;
+		}
+		if (bytes_read == 0) {
+			// Connection closed by the client
+			return 0;
+		}
+
+		chunk_size_str += buffer;
+
+		if (chunk_size_str.length() >= 2 &&
+			chunk_size_str[chunk_size_str.length() - 1] == '\n' &&
+			chunk_size_str[chunk_size_str.length() - 2] == '\r') {
+			chunk_size_str.resize(chunk_size_str.length() - 2);
+			break;
+		}
+	}
+
+	// Convert the chunk size from hex string to decimal
+	ssize_t chunk_size = 0;
+	chunk_size = std::strtol(chunk_size_str.c_str(), NULL, 16);
+
+	// TODO: Handle errors
+
+	return chunk_size;
+}
+
+void PostResponse::skipTrailingCRLF() {
+	char crlf[2];
+	ssize_t bytes_read = recv(_client_fd, crlf, 2, 0);
+
+	if (bytes_read != 2 || crlf[0] != '\r' || crlf[1] != '\n')
+		return;	 // TODO: Handle error?
+}
 std::string PostResponse::generateResponse() {
 	unsigned short status = OK;
 	setMatchLocationRoute();
 
 	parse_HTTP_body();
 
-	status = checkSize();
-	if (status != OK) return loadErrorPage(status);
-
 	status = checkClientBodySize();
 	if (status != OK) return loadErrorPage(status);
 
 	status = checkBody();
+	if (status != OK) return loadErrorPage(status);
+
+	status = extractFile();
 	if (status != OK) return loadErrorPage(status);
 
 	status = uploadFile();
@@ -209,8 +261,6 @@ bool PostResponse::requestHasHeader(const std::string &header) {
 }
 
 short PostResponse::uploadFile() {
-	extractFile();
-
 	// std::string directory = _server.getUpload();
 	// TODO: if upload_store empty, return error or have a default?
 	std::string directory = "file_uploads/";
@@ -232,11 +282,16 @@ short PostResponse::uploadFile() {
 }
 
 short PostResponse::checkBody() {
-	_boundary = getBoundary();
-	if (_boundary.empty()) return 400;
+	if (requestHasHeader("content-type") &&
+		_request.header_fields.find("content-type")
+				->second.find("multipart/") == 0) {
+		_boundary = getBoundary();
+		if (_boundary.empty()) return 400;
 
-	_multipart_body = getMultipartBody(_boundary);
-	if (_multipart_body.empty()) return 400;
+		_multipart_body = getMultipartBody(_boundary);
+		if (_multipart_body.empty()) return 400;
+	} else
+		return 400;
 
 	return 200;
 }

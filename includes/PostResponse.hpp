@@ -42,8 +42,10 @@ class PostResponse : public AResponse {
 	bool send100Continue();
 	bool readBody();
 	void readContentLength();
+	void removeFirstChunk();
 	void readChunks();
 	ssize_t readChunkSizeFromSocket();
+	void skipTrailingCRLF();
 	bool requestHasHeader(const std::string& header);
 	short checkBody();
 	short extractFile();
