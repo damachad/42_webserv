@@ -274,18 +274,6 @@ bool PostResponse::requestIsCGI() {
 	return (ending == ".py");
 }
 
-short PostResponse::uploadFile() {
-	// std::string directory = _server.getUpload();
-	// TODO: if upload_store empty, return error or have a default?
-	std::string directory = "file_uploads/";
-=======
-	status = uploadFile();
-	if (status != 200) return loadErrorPage(status);
-
-	loadCommonHeaders();
-	return getResponseStr();
-}
-
 // Function to create directory
 static bool createDirectory(const std::string &path) {
 	if (mkdir(path.c_str(), 0777) == 0)
@@ -305,7 +293,6 @@ short PostResponse::uploadFile() {
 					 // default?
 	if (directory.at(directory.length() - 1) != '/') directory += "/";
 	if (!createDirectory(directory)) return FORBIDDEN;
->>>>>>> main
 	std::string target = directory + _file_to_upload.file_name;
 
 	int file_fd =
