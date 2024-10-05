@@ -42,26 +42,26 @@ struct HTTP_Request {
 class HTTP_Request_Parser {
    public:
 	// Main function, parses request
-	static unsigned short parse_HTTP_headers(const std::string& buffer_request,
-											 HTTP_Request& HTTP);
+	static unsigned short parseHTTPHeaders(const std::string& buffer_request,
+										   HTTP_Request& HTTP);
 
    private:
 	// Gets data HTTP_Request structure
-	static bool add_req_line(HTTP_Request& HTTP, const std::string& first_line);
-	static bool add_header_fields(HTTP_Request& HTTP, const std::string& line);
-	static void add_message_body(HTTP_Request& HTTP, const std::string& line);
-	static bool check_validity_of_header_fields(HTTP_Request& HTTP);
+	static bool addRequestLine(HTTP_Request& HTTP,
+							   const std::string& first_line);
+	static bool addHeaderFields(HTTP_Request& HTTP, const std::string& line);
+	static void addMessageBody(HTTP_Request& HTTP, const std::string& line);
+	static bool checkValidityOfHeaderFields(HTTP_Request& HTTP);
 	static unsigned short check_expect_validity(HTTP_Request& HTTP);
-	static void extract_queries(HTTP_Request& HTTP);
+	static void extractQueries(HTTP_Request& HTTP);
 
 	// Auxiliary functions for above functions
 	static std::string trim(const std::string& str);
 	static void trimNulls(std::string& s);
 	static std::string decode(const std::string& encoded);
-	static bool method_is_valid(const std::string& method);
-	static bool url_is_valid(const std::string& url);
-	static bool protocol_version_is_valid(
-		const ::std::string& protocol_version);
+	static bool methodIsValid(const std::string& method);
+	static bool urlIsValid(const std::string& url);
+	static bool protocolVersionIsValid(const ::std::string& protocol_version);
 	static bool send100Continue(int client_fd, const HTTP_Request& HTTP);
 	static bool readBody(int client_fd, int epoll_fd, HTTP_Request& HTTP);
 

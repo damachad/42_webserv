@@ -26,7 +26,7 @@ PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}
 
 PostResponse::~PostResponse() {}
 
-unsigned short PostResponse::parse_HTTP_body() {
+unsigned short PostResponse::parseHTTPBody() {
 	// If there's an expect header, check validity and ready body
 	// before continuing
 	if (requestHasHeader("expect")) {
@@ -38,8 +38,9 @@ unsigned short PostResponse::parse_HTTP_body() {
 
 	// If it's chunked, get all the chunk
 	// NOTE: In our server, chunked is only useful for CGI!
-	else if (requestHasHeader("transfer-encoding") && requestIsCGI())
+	else if (requestHasHeader("transfer-encoding"))
 		readChunks();
+
 	// If there's no content-length nor chunked, return error
 	// No need to test for both existing at the same time: already tested on
 	// HTTP header parser
@@ -238,20 +239,18 @@ std::string PostResponse::generateResponse() {
 	unsigned short status = OK;
 	setMatchLocationRoute();
 
-	parse_HTTP_body();
+	parseHTTPBody();
 
-	status = checkClientBodySize();
-	if (status != OK) return loadErrorPage(status);
+	if ((status = checkClientBodySize()) != OK) return loadErrorPage(status);
 
-	status = checkBody();
-	if (status != OK) return loadErrorPage(status);
+	if ((status = checkBody()) != OK) return loadErrorPage(status);
+
+	if ((status = checkFormData()) != OK) return loadErrorPage(status);
 
 	if (!requestIsCGI()) {
-		status = extractFile();
-		if (status != OK) return loadErrorPage(status);
+		if ((status = extractFile()) != OK) return loadErrorPage(status);
 
-		status = uploadFile();
-		if (status != OK) return loadErrorPage(status);
+		if ((status = uploadFile()) != OK) return loadErrorPage(status);
 	} else {
 		// Send to CGI;
 	}
@@ -284,7 +283,7 @@ static bool createDirectory(const std::string &path) {
 		return false;
 }
 
-short PostResponse::uploadFile() {
+unsigned short PostResponse::uploadFile() {
 	extractFile();
 
 	std::string directory = _server.getUpload(_locationRoute);
@@ -310,7 +309,7 @@ short PostResponse::uploadFile() {
 	return 200;
 }
 
-short PostResponse::checkBody() {
+unsigned short PostResponse::checkBody() {
 	if (requestHasHeader("content-type") &&
 		_request.header_fields.find("content-type")
 				->second.find("multipart/") == 0) {
@@ -323,6 +322,18 @@ short PostResponse::checkBody() {
 		return 400;
 
 	return 200;
+}
+
+unsigned short PostResponse::checkFormData() {
+	std::map<std::string, std::string>::iterator it =
+		_request.header_fields.find("content-type");
+
+	if (it == _request.header_fields.end()) return BAD_REQUEST;
+
+	if (it->second.find("multipart/form-data") == std::string::npos)
+		return NOT_IMPLEMENTED;
+
+	return OK;
 }
 
 // Returns boundary, returns empty if no boundary. Also checks content-type
@@ -413,7 +424,7 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 	return submap;
 }
 
-short PostResponse::extractFile() {
+unsigned short PostResponse::extractFile() {
 	std::string content_disposition =
 		_multipart_body[0].find("Content-Disposition")->second;
 

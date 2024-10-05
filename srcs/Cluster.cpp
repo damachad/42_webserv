@@ -293,7 +293,7 @@ void Cluster::handleClientRequest(int connection_fd) {
 void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
 	HTTP_Request request;
 	unsigned short error_status =
-		HTTP_Request_Parser::parse_HTTP_headers(buffer_request, request);
+		HTTP_Request_Parser::parseHTTPHeaders(buffer_request, request);
 
 	std::string buffer_response = getResponse(request, error_status, client_fd);
 

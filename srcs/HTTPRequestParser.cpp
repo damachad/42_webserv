@@ -16,7 +16,7 @@
 
 static int response_status = OK;
 
-unsigned short HTTP_Request_Parser::parse_HTTP_headers(
+unsigned short HTTP_Request_Parser::parseHTTPHeaders(
 	const std::string& buffer_request, HTTP_Request& HTTP) {
 	if (buffer_request.empty() ||
 		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos) {
@@ -31,24 +31,24 @@ unsigned short HTTP_Request_Parser::parse_HTTP_headers(
 
 	// Flags for parsing
 	bool request_line_is_parsed = false;
-	bool header_is_parsed = false;
+	bool headerIsParsed = false;
 
 	while (std::getline(buffer_stream, buffer)) {
 		// Parses request line
 		if (!request_line_is_parsed) {
-			if (!add_req_line(HTTP, buffer)) return response_status;
+			if (!addRequestLine(HTTP, buffer)) return response_status;
 			request_line_is_parsed = true;
 		}  // Parses header fields
-		else if (buffer != "\r" && !header_is_parsed) {
-			if (!add_header_fields(HTTP, buffer)) return response_status;
+		else if (buffer != "\r" && !headerIsParsed) {
+			if (!addHeaderFields(HTTP, buffer)) return response_status;
 		}  // Notes end of header fields
 		else if (buffer == "\r" || buffer.empty()) {
-			header_is_parsed = true;
+			headerIsParsed = true;
 			break;
 		}
 	}
 
-	extract_queries(HTTP);
+	extractQueries(HTTP);
 
 	std::string remaining_body((std::istreambuf_iterator<char>(buffer_stream)),
 							   std::istreambuf_iterator<char>());
@@ -58,15 +58,15 @@ unsigned short HTTP_Request_Parser::parse_HTTP_headers(
 	return response_status;
 }
 
-bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
-									   const std::string& first_line) {
+bool HTTP_Request_Parser::addRequestLine(HTTP_Request& HTTP,
+										 const std::string& first_line) {
 	if (std::isspace(first_line[0])) return false;
 
 	std::stringstream line_stream(first_line);
 
 	std::string method;
 	line_stream >> method;
-	if (method.size() == 0 || !method_is_valid(method)) {
+	if (method.size() == 0 || !methodIsValid(method)) {
 		response_status = METHOD_NOT_ALLOWED;
 		return false;
 	}
@@ -75,7 +75,7 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 	line_stream >> url;
 	std::string decoded_uri = decode(url);
 	if (decoded_uri.size() == 0 ||
-		!url_is_valid(decoded_uri)) {  // TODO: URL SIZE
+		!urlIsValid(decoded_uri)) {	 // TODO: URL SIZE
 		response_status = BAD_REQUEST;
 		return false;
 	}
@@ -83,7 +83,7 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 	std::string protocol_version;
 	line_stream >> protocol_version;
 	if (protocol_version.size() == 0 ||
-		!protocol_version_is_valid(protocol_version)) {
+		!protocolVersionIsValid(protocol_version)) {
 		response_status = HTTP_VERSION_NOT_SUPPORTED;
 		return false;
 	}
@@ -96,8 +96,8 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 	return true;
 }
 
-bool HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
-											const std::string& line) {
+bool HTTP_Request_Parser::addHeaderFields(HTTP_Request& HTTP,
+										  const std::string& line) {
 	size_t colon_pos = line.find(':');
 
 	// Validate the presence of colon
@@ -141,8 +141,8 @@ bool HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 }
 
 // Fields without validation
-void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
-										   const std::string& line) {
+void HTTP_Request_Parser::addMessageBody(HTTP_Request& HTTP,
+										 const std::string& line) {
 	if (!line.empty()) {
 		HTTP.message_body += line;
 		HTTP.message_body += "\r\n";
@@ -150,7 +150,7 @@ void HTTP_Request_Parser::add_message_body(HTTP_Request& HTTP,
 }
 
 // Checks validity of HTTP header fields
-bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
+bool HTTP_Request_Parser::checkValidityOfHeaderFields(HTTP_Request& HTTP) {
 	// NOTE: User-Agent is not a strictly mandatory field, but helps for
 	// evaluation
 	if (HTTP.header_fields.count("user-agent") != 1) {
@@ -212,7 +212,7 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	return true;
 }
 
-void HTTP_Request_Parser::extract_queries(HTTP_Request& HTTP) {
+void HTTP_Request_Parser::extractQueries(HTTP_Request& HTTP) {
 	size_t delimiter_pos = HTTP.uri.find('?');
 
 	if (delimiter_pos == std::string::npos) return;	 // Returns if no ? found
@@ -280,12 +280,12 @@ std::string HTTP_Request_Parser::decode(const std::string& encoded) {
 	return decoded.str();
 }
 
-bool HTTP_Request_Parser::method_is_valid(const std::string& method) {
+bool HTTP_Request_Parser::methodIsValid(const std::string& method) {
 	if (method == "GET" || method == "POST" || method == "DELETE") return true;
 	return false;
 }
 
-bool HTTP_Request_Parser::url_is_valid(const std::string& url) {
+bool HTTP_Request_Parser::urlIsValid(const std::string& url) {
 	// Target should always start with a /
 	if (url[0] != '/') return false;
 
@@ -308,7 +308,7 @@ bool HTTP_Request_Parser::url_is_valid(const std::string& url) {
 	return true;
 }
 
-bool HTTP_Request_Parser::protocol_version_is_valid(
+bool HTTP_Request_Parser::protocolVersionIsValid(
 	const std::string& protocol_version) {
 	if (protocol_version == "HTTP/1.1" || protocol_version == "HTTP/1.0" ||
 		protocol_version == "HTTP/0.9")

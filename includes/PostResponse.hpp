@@ -38,7 +38,7 @@ class PostResponse : public AResponse {
 	PostResponse& operator=(const PostResponse& src);
 
 	// Functions to parse the remainder of the body
-	unsigned short parse_HTTP_body();
+	unsigned short parseHTTPBody();
 	bool send100Continue();
 	bool readBody();
 	void readContentLength();
@@ -48,9 +48,10 @@ class PostResponse : public AResponse {
 	void skipTrailingCRLF();
 	bool requestHasHeader(const std::string& header);
 	bool requestIsCGI();
-	short checkBody();
-	short extractFile();
-	short uploadFile();
+	unsigned short checkBody();
+	unsigned short checkFormData();
+	unsigned short extractFile();
+	unsigned short uploadFile();
 	const std::string getBoundary();
 	const std::vector<std::multimap<std::string, std::string> >
 	getMultipartBody(const std::string& boundary);
