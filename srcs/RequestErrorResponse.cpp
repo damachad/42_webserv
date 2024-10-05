@@ -13,8 +13,7 @@
 #include "RequestErrorResponse.hpp"
 
 RequestErrorResponse::RequestErrorResponse(const Server& server,
-										   const HTTP_Request& request,
-										   short error_status)
+										   const HTTP_Request& request, short error_status)
 	: AResponse(server, request), _error_status(error_status) {}
 
 RequestErrorResponse::RequestErrorResponse(const RequestErrorResponse& src)
@@ -23,7 +22,5 @@ RequestErrorResponse::RequestErrorResponse(const RequestErrorResponse& src)
 RequestErrorResponse::~RequestErrorResponse() {}
 
 std::string RequestErrorResponse::generateResponse() {
-	// if (_error_status == 100) return loadContinueMessage;
-
 	return loadErrorPage(_error_status);
 }

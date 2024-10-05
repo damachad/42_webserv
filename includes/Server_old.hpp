@@ -17,11 +17,6 @@
 #include "Server.hpp"
 #include "Webserv.hpp"
 
-struct Listen {
-	std::string IP;
-	std::string port;
-};
-
 class Server {
    public:
 	// Constructor, creates server from configuration file
@@ -36,7 +31,7 @@ class Server {
 	// Getters for private member data
 	const std::vector<std::string>& get_server_names() const;
 	const std::vector<Listen>& get_network_addresses() const;
-	const std::vector<int>& getListeningSockets() const;
+	const std::vector<int>& get_listening_sockets() const;
 
    private:
 	// Server's names in config

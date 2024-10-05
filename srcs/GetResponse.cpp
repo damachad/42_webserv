@@ -77,7 +77,7 @@ std::string GetResponse::generateResponse() {
       if (status != 200)
         return loadErrorPage(status);
     } else
-      loadErrorPage(403); // Forbiden
+      loadErrorPage(404);
   }
 
   return getResponseStr();

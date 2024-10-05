@@ -94,7 +94,7 @@ const std::vector<std::string>& Server::get_server_names(void) const {
 const std::vector<Listen>& Server::get_network_addresses(void) const {
 	return _network_addresses;
 }
-const std::vector<int>& Server::getListeningSockets(void) const {
+const std::vector<int>& Server::get_listening_sockets(void) const {
 	return _listening_sockets;
 }
 
