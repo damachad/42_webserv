@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 
 #include "Helpers.hpp"
+#include "CGI.hpp"
 
 static unsigned short response_status = OK;
 
@@ -254,6 +255,11 @@ std::string PostResponse::generateResponse() {
 		if (status != OK) return loadErrorPage(status);
 	} else {
 		// Send to CGI;
+		std::cout << "!!GETPATH: " << getPath() << std::endl; // TESTE
+    	std::string path = getPath();
+    	CGI cgi(_request, _response, path);
+    	cgi.handleCGIResponse();
+    	loadCommonHeaders();
 	}
 
 	return getResponseStr();

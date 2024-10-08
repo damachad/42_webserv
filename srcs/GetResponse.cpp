@@ -13,6 +13,7 @@
 #include "GetResponse.hpp"
 
 #include "AResponse.hpp"
+#include "CGI.hpp"
 
 GetResponse::~GetResponse() {}
 
@@ -21,16 +22,24 @@ GetResponse::GetResponse(const GetResponse& src) : AResponse(src) {}
 GetResponse::GetResponse(const Server& server, const HTTP_Request& request)
 	: AResponse(server, request) {}
 
-// Loads response with contents of file and sets MIME type
-short GetResponse::loadFile(const std::string& path) {
-	std::ifstream file(path.c_str());
-	if (!file.is_open()) return 500;
-	_response.body.assign((std::istreambuf_iterator<char>(file)),
-						  (std::istreambuf_iterator<char>()));
-	file.close();
-	loadCommonHeaders();
-	setMimeType(path);
-	return 200;
+short GetResponse::loadFile(std::string &path) {
+  std::cout << "!!URI: " << _request.uri << "\n"; // TESTE
+  if (isCGI()) {
+    std::cout << "!!ENTROU\n"; // TESTE
+    CGI cgi(_request, _response, path);
+    cgi.handleCGIResponse();
+  } else {
+    std::ifstream file(path.c_str());
+    if (!file.is_open())
+      return 500;
+    _response.body.assign((std::istreambuf_iterator<char>(file)),
+                          (std::istreambuf_iterator<char>()));
+    file.close();
+    setMimeType(path);
+  }
+  loadCommonHeaders();
+  _response.status = 200;
+  return 200;
 }
 
 std::string GetResponse::generateResponse() {

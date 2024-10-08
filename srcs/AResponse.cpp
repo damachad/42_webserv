@@ -247,6 +247,13 @@ bool AResponse::isDirectory(const std::string& path) const {
 		return false;
 }
 
+bool AResponse::isCGI() {
+  if (_request.uri.length() > 3 &&
+      _request.uri.substr(_request.uri.length() - 3) == ".py")
+    return true;
+  return false;
+}
+
 // Checks if autoindex is on
 bool AResponse::hasAutoindex() const {
 	if (_server.getAutoIndex(_locationRoute) == TRUE)

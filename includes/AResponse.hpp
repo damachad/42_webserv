@@ -53,6 +53,7 @@ class AResponse {
 	bool hasAutoindex() const;
 	bool hasReturn() const;
 	bool isDirectory(const std::string& path) const;
+	bool isCGI();
 
 	// Response construtors
 	void setMatchLocationRoute();
