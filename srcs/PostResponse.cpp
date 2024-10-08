@@ -307,11 +307,6 @@ short PostResponse::uploadFile() {
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (file_fd == -1) return (FORBIDDEN);	// TODO: Adjust error
 
-  int file_fd =
-      open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
-  if (file_fd == -1)
-    return (500); // TODO: Adjust error
-
   size_t bytes_to_write = _file_to_upload.file_contents.size();
 
   if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
