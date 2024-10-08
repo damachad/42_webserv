@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/17 14:02:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:57:13 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,8 +128,11 @@ static std::map<std::string, std::string> initMimeTypes() {
 
 AResponse::~AResponse() {}
 
-AResponse::AResponse(const Server &server, const HTTP_Request &request)
-	: _request(request), _server(server) {}
+
+AResponse::AResponse(const Server& server, const HTTP_Request& request)
+	: _request(request), _server(server) {
+		_response.status = 200;
+	}
 
 AResponse::AResponse(const AResponse &src)
 	: _request(src._request),
@@ -219,6 +222,7 @@ const std::string AResponse::getPath() const {
 							 _request.uri.substr(_locationRoute.size())));
 	}
 	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
+
 }
 
 // Checks if file is a regular file and there are no problems opening it
@@ -317,9 +321,13 @@ void AResponse::loadCommonHeaders() {
 		std::make_pair(std::string("Date"), getHttpDate()));
 	_response.headers.insert(
 		std::make_pair(std::string("Server"), std::string(SERVER)));
-	_response.headers.insert(
-		std::make_pair(std::string("Content-Length"),
+	if (_response.body.size()) {
+		_response.headers.insert(
+			std::make_pair(std::string("Content-Length"),
 					   numberToString<unsigned long>(_response.body.size())));
+	}
+	_response.headers.insert(
+		std::make_pair(std::string("Cache-Control"), std::string("no-store")));
 }
 
 // Loads reponse struct with values of return
@@ -376,8 +384,9 @@ static std::string getFileSize(const std::string &path) {
 	return sizeBuffer;
 }
 
-std::string AResponse::addFileEntry(const std::string &name,
-									const std::string &path) {
+
+std::string AResponse::addFileEntry(std::string& name,
+									const std::string& path) {
 	std::string fullPath = assemblePath(path, name);
 	std::string date = getLastModificationDate(fullPath);
 	std::string size = getFileSize(fullPath);
@@ -386,6 +395,8 @@ std::string AResponse::addFileEntry(const std::string &name,
 		displayName = name.substr(0, 49) + "..";  // Truncate and add ".."
 	else
 		displayName = name;
+	if (name != "." && name != "..")
+		name = assemblePath(_request.uri, name);
 	std::string WP1;
 	if (displayName.length() < 51)
 		WP1 = std::string(51 - displayName.length(), ' ');	// Pad with spaces
@@ -422,7 +433,6 @@ short AResponse::loadDirectoryListing(const std::string &path) {
 	loadCommonHeaders();
 	_response.headers.insert(
 		std::make_pair(std::string("Content-Type"), std::string("text/html")));
-	_response.status = 200;
 	return 200;
 }
 
@@ -503,6 +513,10 @@ const std::string AResponse::loadErrorPage(short status) {
 	if (_response.body.empty()) _response.body = loadDefaultErrorPage(status);
 	loadCommonHeaders();
 	return getResponseStr();
+}
+
+const std::string AResponse::loadContinueMessage(void) {
+	return "HTTP/1.1 100 Continue";
 }
 
 // Example implementation (case GET)

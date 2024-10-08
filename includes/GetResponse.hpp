@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 14:51:25 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 16:09:52 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/24 13:33:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,9 @@ public:
   GetResponse(const GetResponse &src);
   ~GetResponse();
 
-  std::string generateResponse();
-  short loadFile(std::string &path);
+
+	std::string generateResponse();
+	short loadFile(std::string& path);
 
 private:
   GetResponse();
@@ -30,4 +31,3 @@ private:
 };
 
 #endif
-

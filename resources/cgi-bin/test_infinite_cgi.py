@@ -51,7 +51,8 @@ def main():
     print("<head><title>Looping</title></head>")
     print("<body>")
     print("<h1>While true...</h1>")
-    sleep(5)
+
+    sleep(10)
     # Print HTML end
     print("</body>")
     print("</html>")

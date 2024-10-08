@@ -6,29 +6,64 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/24 10:33:42 by damachad         ###   ########.fr       */
+/*   Updated: 2024/09/30 16:29:01 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
+
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+
+#include <cerrno>
+#include <utility>
 
 #include "AResponse.hpp"
 #include "CGI.hpp"
 #include "DeleteResponse.hpp"
 #include "GetResponse.hpp"
 #include "HTTPRequestParser.hpp"
+#include "Helpers.hpp"
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
 
 // Constructor
 // Create a vector of servers from provided context vector
-Cluster::Cluster(const std::vector<Server> &servers)
-    : _servers(), _listening_fd_map(), _connection_fd_map(), _epoll_fd(-1) {
-  //	std::cout << "Cluster Constructor called" << std::endl;
-  for (std::vector<Server>::const_iterator it = servers.begin();
-       it != servers.end(); it++) {
-    _servers.push_back(*it);
-  }
+
+Cluster::Cluster(const std::vector<Server>& servers)
+	: _servers(), _epoll_fd(-1) {
+	for (std::vector<Server>::const_iterator it = servers.begin();
+		 it != servers.end(); it++) {
+		(_servers).push_back(&(*it));
+
+		std::vector<Listen> network_addresses = (*it).getNetworkAddress();
+		std::vector<std::string> server_names = (*it).getServerName();
+
+		for (std::vector<Listen>::const_iterator listen_it =
+				 network_addresses.begin();
+			 listen_it != network_addresses.end(); listen_it++) {
+			if (server_names.empty()) {
+				struct VirtualServer VServer;
+				VServer.IP = listen_it->IP;
+				VServer.port = listen_it->port;
+				VServer.server_name = "";
+				VServer.server = &(*it);
+				_virtual_servers.push_back(VServer);
+			} else {
+				for (std::vector<std::string>::const_iterator servername_it =
+						 server_names.begin();
+					 servername_it != server_names.end(); servername_it++) {
+					struct VirtualServer VServer;
+					VServer.IP = listen_it->IP;
+					VServer.port = listen_it->port;
+					VServer.server_name = *servername_it;
+					VServer.server = &(*it);
+					_virtual_servers.push_back(VServer);
+				}
+			}
+		}
+	}
 }
 
 // Destructor
@@ -44,51 +79,149 @@ const Server &Cluster::operator[](unsigned int index) const {
   if (index >= _servers.size())
     throw OutOfBoundsError(numberToString<int>(index));
 
-  return _servers[index];
+	return *_servers[index];
 }
 
-// Sets up _epoll_fd, fills _listening_fd_map and instructs setup_server()
-void Cluster::setup_cluster(void) {
-  _epoll_fd = epoll_create(1); // Int is ignored in newer implementations
-  if (_epoll_fd == -1)
-    throw ClusterSetupError("epoll_create");
+// Accesses ith server of _server array when asking Cluster[i]
+bool Cluster::hasDuplicateVirtualServers() const {
+	std::set<VirtualServer> seen;
 
-  for (size_t i = 0; i < _servers.size(); i++) {
-    Server &server = _servers[i];
+	for (std::vector<VirtualServer>::const_iterator it =
+			 _virtual_servers.begin();
+		 it != _virtual_servers.end(); ++it) {
+		std::pair<std::set<VirtualServer>::iterator, bool> result =
+			seen.insert(*it);
 
-    // Sets up every port on each server
-    server.setup_server();
+		if (!result.second) {
+			return true;
+		}
+	}
 
-    // Adds sockets to epoll instance
-    add_sockets_to_epoll(server);
+	return false;
+}
 
-    // Adds ports to _listening_sockets and to _listening_fd_map
-    const std::vector<int> socks_listing = server.getListeningSockets();
-    for (std::vector<int>::const_iterator it = socks_listing.begin();
-         it < socks_listing.end(); it++) {
-      _listening_sockets.push_back(*it);
-      _listening_fd_map[*it] = i;
-    }
-  }
-  // std::cerr << "Here it goes?" << std::endl;
+// Creates epoll instance
+void Cluster::createEpollInstance(void) {
+	_epoll_fd = epoll_create(1);  // Int is ignored in newer implementations
+	if (_epoll_fd == -1) throw ClusterSetupError("epoll_create");
+}
+
+// Creates sockets and binds to them
+int Cluster::createAndBindSocket(const std::string& IP,
+								 const std::string& port) {
+	// Create a socket (IPv4, TCP)
+	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock_fd == -1) throw SocketSetupError("socket");
+
+	// Set the socket option SO_REUSEADDR
+	int optval = 1;
+	if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) <
+		0)
+		throw SocketSetupError("Could not set SO_REUSEADDR");
+
+	// Listen to connections on socket
+	struct sockaddr_in sockaddr;
+	std::memset(&sockaddr, 0,
+				sizeof(sockaddr));	// Clears the struct
+	sockaddr.sin_family = AF_INET;	// IPv4 Internet Protocolos
+	if (IP == "")
+		sockaddr.sin_addr.s_addr =
+			INADDR_ANY;	 // Binds to all available interfaces
+	else if (IP == "localhost") {
+		if (inet_aton("127.0.0.1", &sockaddr.sin_addr) == 0)
+			throw SocketSetupError("inet_addr");
+
+	} else {
+		if (inet_aton(IP.c_str(), &sockaddr.sin_addr) == 0)
+			throw SocketSetupError("inet_addr");
+	}
+	sockaddr.sin_port = htons(
+		stringToNumber<int>(port));	 // Converts number to network byte order
+
+	// Binds to socket
+	if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
+		close(sock_fd);
+		throw SocketSetupError("bind");
+	};
+
+	return sock_fd;
+}
+
+// Starts listening to incoming connections
+void Cluster::startListening(int sock_fd) {
+	if (listen(sock_fd, SOMAXCONN) < 0) {
+		close(sock_fd);
+		throw SocketSetupError("listen");
+	}
 }
 
 // Adds sockets to epoll so they can be monitored
-void Cluster::add_sockets_to_epoll(const Server &server) {
-  std::vector<int> socket_list = server.getListeningSockets();
+void Cluster::addSocketsToEpoll(int sock_fd) {
+	epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = sock_fd;
 
-  for (std::vector<int>::const_iterator it = socket_list.begin();
-       it != socket_list.end(); it++) {
-    int listening_socket = *it;
-    epoll_event event;
-    event.events = EPOLLIN;
-    event.data.fd = listening_socket;
-
-    if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, listening_socket, &event) == -1)
-      throw ClusterSetupError("epoll_ctl");
-  }
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, sock_fd, &event) == -1)
+		throw ClusterSetupError("epoll_ctl");
 }
 
+// Gets list of sockets needed
+std::set<Listen> Cluster::trimVirtualServers() {
+	std::vector<VirtualServer> virtual_server_copy = _virtual_servers;
+
+	std::set<std::string> ports_to_remove;
+
+	for (std::vector<VirtualServer>::const_iterator vs_it =
+			 virtual_server_copy.begin();
+		 vs_it != virtual_server_copy.end(); vs_it++) {
+		if (vs_it->IP.empty()) ports_to_remove.insert(vs_it->port);
+	}
+
+	for (std::vector<VirtualServer>::iterator vs_it =
+			 virtual_server_copy.begin();
+		 vs_it != virtual_server_copy.end();) {
+		if (ports_to_remove.count(vs_it->port) > 0 && !(vs_it->IP.empty()))
+			vs_it = virtual_server_copy.erase(vs_it);
+		else
+			vs_it++;
+	}
+
+	std::set<Listen> trimmedVirtualServers;
+
+	for (std::vector<VirtualServer>::const_iterator vs_it =
+			 virtual_server_copy.begin();
+		 vs_it != virtual_server_copy.end(); vs_it++) {
+		Listen address(vs_it->IP, vs_it->port);
+		trimmedVirtualServers.insert(address);
+	}
+
+	return trimmedVirtualServers;
+}
+
+// Sets up listening sockets
+void Cluster::setupCluster(void) {
+	createEpollInstance();	// Creates epoll instance
+
+	std::set<Listen> trimmed_servers = trimVirtualServers();
+
+	for (std::set<Listen>::const_iterator it = trimmed_servers.begin();
+		 it != trimmed_servers.end(); it++) {
+		Listen address(it->IP, it->port);
+		// Create, bind and set up a new socket
+		int sock_fd = createAndBindSocket(it->IP, it->port);
+
+		// Starts listening to socket
+		startListening(sock_fd);
+
+		// Adds socket to epoll for monitoring
+		addSocketsToEpoll(sock_fd);
+
+		// Adds listening socket to _listening_socket vector
+		_listening_sockets.push_back(sock_fd);
+	}
+}
+
+// Sets an infinite loop to listen to incoming connections
 void Cluster::run(void) {
   std::vector<struct epoll_event> events(MAX_CONNECTIONS);
 
@@ -100,26 +233,30 @@ void Cluster::run(void) {
     for (int i = 0; i < n; ++i) {
       int fd = events[i].data.fd;
 
-      if (isListeningSocket(fd))
-        handleNewConnection(fd);
-      else
-        handleClientRequest(fd);
-    }
-  }
+
+			if (isListeningSocket(fd))
+				handleNewConnection(fd);
+			else
+				handleClientRequest(fd);
+		}
+		
+	}
 }
 
+// Checks if fd corresponds to listening socket
 bool Cluster::isListeningSocket(int fd) {
   return std::find(_listening_sockets.begin(), _listening_sockets.end(), fd) !=
          _listening_sockets.end();
 }
 
+// Handles a new connection
 void Cluster::handleNewConnection(int listening_fd) {
   int client_fd = accept(listening_fd, NULL, NULL);
   if (client_fd == -1)
     throw ClusterSetupError("accept");
 
-  set_socket_to_non_blocking(client_fd);
-  _connection_fd_map[client_fd] = _listening_fd_map[listening_fd];
+
+	setSocketToNonBlocking(client_fd);
 
   struct epoll_event client_event;
   client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
@@ -129,155 +266,202 @@ void Cluster::handleNewConnection(int listening_fd) {
     throw ClusterRunError("epoll_ctl");
 }
 
-void Cluster::handleClientRequest(int client_fd) {
-  char buffer_request[BUFFER_SIZE] = {};
-  ssize_t count = read(client_fd, buffer_request, sizeof(buffer_request));
+// Handles a client request
+void Cluster::handleClientRequest(int connection_fd) {
+	char buffer_request[BUFFER_SIZE] = {};
+	std::string request;
 
-  if (count == -1) {
-    if (errno != EAGAIN) {
-      close_and_remove_socket(client_fd, _epoll_fd);
-      throw ClusterRunError("read failed");
-    }
-    return; // No data to read, just return
-  }
+	while (request.find("\r\n\r\n") ==
+		   std::string::npos) {	 // NOTE: While all the headers haven't been
+								 // received
+		//
+		memset(buffer_request, 0, sizeof(buffer_request));
 
-  if (count == 0) {
-    // Connection closed
-    close_and_remove_socket(client_fd, _epoll_fd);
-    return;
-  }
+		ssize_t bytesRead =
+			recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
 
-  std::string request(buffer_request, BUFFER_SIZE);
-  processRequest(client_fd, request, count);
+		if (bytesRead < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
+			if (errno != EAGAIN) {
+				closeAndRemoveSocket(connection_fd, _epoll_fd);
+				throw ClusterRunError("read failed");
+			}
+		} else if (bytesRead == 0) {
+			// Connection closed
+			closeAndRemoveSocket(connection_fd, _epoll_fd);
+			return;
+		} else
+			// Bytes have been read. Append them to request.
+			request.append(buffer_request, bytesRead);
+	}
+	processRequest(connection_fd, request);
 }
 
-void Cluster::processRequest(int client_fd, const std::string &buffer_request,
-                             ssize_t count) {
-  // Assume we have a buffer for the client
-  _client_buffer_map[client_fd].append(buffer_request.c_str(), count);
+// Handles a client request
+void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
+	HTTP_Request request;
+	unsigned short error_status =
+		HTTP_Request_Parser::parse_HTTP_headers(buffer_request, request);
 
-  HTTP_Request request;
-  unsigned short error_status = HTTP_Request_Parser::parse_HTTP_request(
-      _client_buffer_map[client_fd], request);
+	std::string buffer_response = getResponse(request, error_status, client_fd);
+	ssize_t sent =
+		send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
 
-   if (request.uri.length() > 3 &&
-       request.uri.substr(request.uri.length() - 3) == ".py") {
-     pid_t pid = fork();
+	if (sent == -1 && errno != EAGAIN) {
+		closeAndRemoveSocket(client_fd, _epoll_fd);
+		throw ClusterRunError("send failed");
+	}
 
-     if (pid == -1)
-       throw std::runtime_error("Fork failed");
-
-     if (pid != 0) {
-       return;
-     }
-   }
-  // ********** FORKA AQUI!!! *********** //
-  std::cout << "****REQUEST****" << std::endl;          // TESTE
-  std::cout << request << std::endl;                    // TESTE
-  std::cout << "STATUS: " << error_status << std::endl; // TESTE
-  // if (error_status == CONTINUE &&
-  // 	(request.method == GET || request.method == POST))
-  // 	;  // Send continue message
-
-  if (error_status != CONTINUE) {
-    std::string buffer_response = get_response(
-        request, error_status, _servers[_connection_fd_map[client_fd]]);
-
-    std::cout << std::endl << "*** BUFFER RESPONSE ***" << std::endl; // TESTE
-    std::cout << buffer_response;                                     // TESTE
-    std::cout << "*** BUFFER RESPONSE ***" << std::endl << std::endl; // TESTE
-
-    ssize_t sent =
-        send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
-    if (sent == -1 && errno != EAGAIN) {
-      close_and_remove_socket(client_fd, _epoll_fd);
-      throw ClusterRunError("send failed");
-    }
-    close_and_remove_socket(client_fd, _epoll_fd);
-
-    // Clear buffer after processing the request
-    _client_buffer_map[client_fd].clear();
-  } else if (error_status == CONTINUE && request.method == POST) {
-    // Wait for more data;
-  }
+	closeAndRemoveSocket(client_fd, _epoll_fd);
 }
 
 // Sets sockets to non-blocking-mode
-void Cluster::set_socket_to_non_blocking(int socket_fd) {
-  int flags = fcntl(socket_fd, F_GETFL, 0);
-  if (flags == -1 || fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1)
-    throw ClusterSetupError("fcntl");
+void Cluster::setSocketToNonBlocking(int socket_fd) {
+	int flags = fcntl(socket_fd, F_GETFL, 0);
+	if (flags == -1 || fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		throw ClusterSetupError("fcntl");
 }
 
 // Closes socket and removes it from epoll
-void Cluster::close_and_remove_socket(int connecting_socket_fd, int epoll_fd) {
-  close(connecting_socket_fd);
-  epoll_ctl(epoll_fd, EPOLL_CTL_DEL, connecting_socket_fd, NULL);
+void Cluster::closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd) {
+	close(connecting_socket_fd);
+	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, connecting_socket_fd, NULL);
 }
 
-// Placeholder function to get response
-const std::string Cluster::get_response(const HTTP_Request &request,
-                                        unsigned short &error_status,
-                                        const Server &server) {
-  std::vector<std::string> server_name = server.getServerName();
+// Gets response from server
+const std::string Cluster::getResponse(HTTP_Request& request,
+									   unsigned short& error_status,
+									   int client_fd) {
+	AResponse* response_check;
 
-  std::string response;
+	const Server* server = getContext(client_fd, request);
 
-  AResponse *response_check;
+	// TODO: Remove the following line! Just here for testing!
+	error_status = OK;
 
-  if (error_status != OK)
-    response_check = new RequestErrorResponse(server, request, error_status);
-  else {
-    switch (static_cast<int>(request.method)) {
-    case (GET):
-      response_check = new GetResponse(server, request);
-      break;
-    case (POST):
-      response_check = new PostResponse(server, request);
-      break;
-    case (DELETE):
-      response_check = new DeleteResponse(server, request);
-      break;
-    }
-  }
+	if (error_status != OK)
+		response_check =
+			new RequestErrorResponse(*server, request, error_status);
+	else {
+		switch (static_cast<int>(request.method)) {
+			case (GET):
+				response_check = new GetResponse(*server, request);
+				break;
+			case (POST):
+				response_check =
+					new PostResponse(*server, request, client_fd, _epoll_fd);
+				break;
+			case (DELETE):
+				response_check = new DeleteResponse(*server, request);
+				break;
+		}
+	}
+	std::string response = response_check->generateResponse();
+	delete response_check;
 
-  return response_check->generateResponse();
+	return response;
+}
+
+const Listen Cluster::getListenFromClient(int client_fd) {
+	struct sockaddr addr;
+	socklen_t addr_len = sizeof(addr);
+	struct sockaddr_in* addr_in;
+	Listen address;
+
+	getsockname(client_fd, &addr, &addr_len);
+	addr_in = reinterpret_cast<struct sockaddr_in*>(&addr);
+	address.port = numberToString(ntohs(addr_in->sin_port));
+	address.IP = inet_ntoa(addr_in->sin_addr);
+
+	return address;
+}
+
+const std::string Cluster::getHostNameFromRequest(const HTTP_Request& request) {
+	std::multimap<std::string, std::string>::const_iterator host_name =
+		request.header_fields.find("host");
+
+	if (host_name != request.header_fields.end())
+		return (host_name->second);
+	else
+		return "";
+}
+
+// Gets correct context for interpretation
+const Server* Cluster::getContext(int client_fd, const HTTP_Request& request) {
+	const Listen address = getListenFromClient(client_fd);
+	std::string host_name = getHostNameFromRequest(request);
+	size_t colonPos = host_name.find_first_of(':');
+	if (colonPos != std::string::npos)
+		host_name = host_name.substr(0, colonPos);
+	std::vector<const Server*> valid_servers;
+
+	// Traverses through all the server contexts in search of addresses
+	for (std::vector<const Server*>::const_iterator server_it =
+			 _servers.begin();
+		 server_it != _servers.end(); server_it++) {
+		// Gets the vector of addresses for a given server context
+		std::vector<Listen> network_addresses =
+			(*server_it)->getNetworkAddress();
+
+		// For each address, check if it matches the IP:Port on the request
+		for (std::vector<Listen>::const_iterator listen_it =
+				 network_addresses.begin();
+			 listen_it != network_addresses.end(); listen_it++)
+			if (*listen_it == address) valid_servers.push_back(*server_it);
+	}
+
+	// If no addresses were found, check if it matches just the Port
+	if (valid_servers.empty()) {
+		for (std::vector<const Server*>::const_iterator server_it =
+				 _servers.begin();
+			 server_it != _servers.end(); server_it++) {
+			std::vector<Listen> network_addresses =
+				(*server_it)->getNetworkAddress();
+			for (std::vector<Listen>::const_iterator listen_it =
+					 network_addresses.begin();
+				 listen_it != network_addresses.end(); listen_it++)
+				if (listen_it->port == address.port)
+					valid_servers.push_back(*server_it);
+		}
+	}
+
+	// If multiple servers were found, return the first one with matching
+	// server_names
+	if (valid_servers.size() > 1) {
+		for (std::vector<const Server*>::const_iterator valid_servers_it =
+				 valid_servers.begin();
+			 valid_servers_it != valid_servers.end(); valid_servers_it++) {
+			std::vector<std::string> server_names =
+				(*valid_servers_it)->getServerName();
+			if (std::find(server_names.begin(), server_names.end(),
+						  host_name) != server_names.end())
+				return &(**valid_servers_it);
+		}
+	}
+
+	// If no server names were found, just return the first one
+	//  TODO: Check in case of URIs??
+	//  TODO: Check in case of defaults?? (perhaps switch them to the first
+	//  position in that case)
+	return valid_servers.front();
 }
 
 // Getters for private member data
-const std::vector<Server> &Cluster::get_server_list() const { return _servers; }
-const std::vector<int> &Cluster::get_listening_sockets() const {
-  return _listening_sockets;
+const std::vector<const Server*>& Cluster::getServerList() const {
+	return _servers;
 }
-const std::map<int, int> &Cluster::get_listening_fd_map() const {
-  return _listening_fd_map;
-}
-const std::map<int, int> &Cluster::get_connection_fd_map() const {
-  return _connection_fd_map;
-}
-int Cluster::get_epoll_fd() const { return _epoll_fd; }
-
-// Returns respective server from each fd
-Server &Cluster::get_server_from_listening_fd(int listening_fd) {
-  if (_listening_fd_map.find(listening_fd) == _listening_fd_map.end())
-    throw ValueNotFoundError(numberToString<int>(listening_fd));
-
-  return _servers[_listening_fd_map[listening_fd]];
+const std::vector<int>& Cluster::getListeningSockets() const {
+	return _listening_sockets;
 }
 
-Server &Cluster::get_server_from_connection_fd(int connection_fd) {
-  if (_connection_fd_map.find(connection_fd) == _connection_fd_map.end()) {
-    throw ValueNotFoundError(numberToString<int>(connection_fd));
-  }
-  return _servers[_connection_fd_map[connection_fd]];
-}
+int Cluster::getEpollFd() const { return _epoll_fd; }
 
 // Outputs Cluster data (epoll_fd, plus all the servers)
-std::ostream &operator<<(std::ostream &outstream, const Cluster &cluster) {
-  const std::vector<Server> &server_list = cluster.get_server_list();
+std::ostream& operator<<(std::ostream& outstream, const Cluster& cluster) {
+	const std::vector<const Server*> server_list = cluster.getServerList();
 
-  outstream << "The Cluster has an epoll_fd of [" << cluster.get_epoll_fd()
-            << "] and " << server_list.size() << " servers:" << std::endl;
+	outstream << "The Cluster has an epoll_fd of [" << cluster.getEpollFd()
+			  << "] and " << server_list.size() << " servers:" << std::endl;
 
   for (size_t i = 0; i < server_list.size(); i++)
     outstream << cluster[i] << std::endl;

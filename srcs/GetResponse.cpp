@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/18 11:16:18 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:41:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,28 +57,24 @@ std::string GetResponse::generateResponse() {
   }
   std::string path = getPath();
 
-  status = checkFile(path);
-  std::cout << "!!STATUS: " << status << std::endl; // TESTE
-  if (status != 200)
-    return loadErrorPage(status);
-  if (!isDirectory(path)) {
-    status = loadFile(path);
-    if (status != 200)
-      return loadErrorPage(status);
-  } else { // is a directory
-    std::string indexFile = getIndexFile(path);
-    if (!indexFile.empty() &&
-        !isDirectory(indexFile)) { // TODO: deal with directory in index?
-      status = loadFile(indexFile);
-      if (status != 200)
-        return loadErrorPage(status);
-    } else if (hasAutoindex()) {
-      status = loadDirectoryListing(path);
-      if (status != 200)
-        return loadErrorPage(status);
-    } else
-      loadErrorPage(404);
-  }
+
+	status = checkFile(path);
+	if (status != 200) return loadErrorPage(status);
+	if (!isDirectory(path)) {
+		status = loadFile(path);
+		if (status != 200) return loadErrorPage(status);
+	} else {  // is a directory
+		std::string indexFile = getIndexFile(path);
+		if (!indexFile.empty() &&
+			!isDirectory(indexFile)) {	// TODO: deal with directory in index?
+			status = loadFile(indexFile);
+			if (status != 200) return loadErrorPage(status);
+		} else if (hasAutoindex()) {
+			status = loadDirectoryListing(path);
+			if (status != 200) return loadErrorPage(status);
+		} else
+			loadErrorPage(403); // Forbiden
+	}
 
   return getResponseStr();
 }

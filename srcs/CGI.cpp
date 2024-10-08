@@ -3,6 +3,8 @@
 
 #include <sys/wait.h>
 
+#include <sys/time.h>
+
 std::map<pid_t, time_t> pidStartTimeMap;
 
 CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
@@ -135,6 +137,19 @@ void CGI::setCGIEnv() {
   }
 }
 
+
+std::string readHtmlFile(const std::string& filePath) {
+    std::ifstream file(filePath.c_str());
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open HTML file." << std::endl;
+        return "";
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf(); // Read the entire file into the buffer
+    return buffer.str();    // Return the string containing HTML content
+}
+
 std::string CGI::executeCGI(const std::string &scriptPath) {
   int pipeIn[2];
   int pipeOut[2];
@@ -160,9 +175,6 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     close(pipeIn[0]);
     close(pipeOut[1]);
 
-    time_t startTime = time(NULL);
-    pidStartTimeMap[pid] = startTime;
-
     if (!_request.message_body.empty())
       write(pipeIn[1], _request.message_body.c_str(),
             _request.message_body.size());
@@ -171,40 +183,36 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     char buffer[1024];
     ssize_t bytesRead;
 
-    fd_set readFds;
-    struct timeval timeout;
+    struct timeval startTime;
+    struct timeval currentTime;
 
-    while (true) {
-      timeout.tv_sec = 0;
-      timeout.tv_usec = 5000000;
+    gettimeofday(&startTime, NULL);
 
-      FD_ZERO(&readFds);
-      FD_SET(pipeOut[0], &readFds);
-
-      int activity = select(pipeOut[0] + 1, &readFds, NULL, NULL, &timeout);
-
-      if (activity < 0) {
-        if (errno == EINTR) {
-          throw std::runtime_error("Select call interrupted by a singnal.");
-          exit(1); // NEED TO FREE ALL BEFORE EXITING
-        } else {
-          throw std::runtime_error("Select error: ");
-          exit(1);
-        }
-      } else if (activity == 0) {
-        // Timeout occurred
-        throw std::runtime_error("Select time out.");
-        exit(1);
-      } else if (activity > 0) {
-        bytesRead = read(pipeOut[0], buffer, sizeof(buffer));
-        if (bytesRead > 0)
-          cgiOutput.append(buffer, bytesRead);
-        else
-          break;
+    while (true)
+    {
+      gettimeofday(&currentTime, NULL);
+      int status;
+      
+      if (waitpid(pid, &status, WNOHANG) != 0)
+      {
+         while ((bytesRead = read(pipeOut[0], buffer, sizeof(buffer))) > 0)
+            cgiOutput.append(buffer, bytesRead);
+        break ;
       }
+
+      if (currentTime.tv_sec - startTime.tv_sec > 2)
+      {
+        cgiOutput = "HTPP/1.1 200 OK \r\n\r\n";
+        cgiOutput += readHtmlFile("/home/tiaferna/42_Projects/Webserv-main/resources/504.html");
+        break ;
+      }
+      std::cout << "current time : " << currentTime.tv_sec << std::endl;
     }
-  }
+
+   
+    }
   close(pipeOut[0]);
+
   std::cout << cgiOutput << std::endl; // TESTE
   return cgiOutput;
 }
