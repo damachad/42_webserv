@@ -302,7 +302,7 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
 	HTTP_Request request;
 	unsigned short error_status =
 		HTTP_Request_Parser::parse_HTTP_headers(buffer_request, request);
-
+	std::cout << "!!BUFFER REQUEST: " << buffer_request << std::endl;
 	std::string buffer_response = getResponse(request, error_status, client_fd);
 	ssize_t sent =
 		send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);

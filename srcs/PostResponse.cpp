@@ -428,18 +428,24 @@ PostResponse::extractFields(const std::string &subpart) {
 
   return submap;
 }
-
+// TODO: Protect finds!
 short PostResponse::extractFile() {
+		std::cout << "*** ENTROU 1***" << std::endl; // TESTE
+
   std::string content_disposition =
       _multipart_body[0].find("Content-Disposition")->second;
+	std::cout << "*** ENTROU 2***" << std::endl; // TESTE
 
   _file_to_upload.name = extractFieldValue(content_disposition, "name");
+	std::cout << "*** ENTROU 3***" << std::endl; // TESTE
 
   _file_to_upload.file_name =
       extractFieldValue(content_disposition, "filename");
+	std::cout << "*** ENTROU 4***" << std::endl; // TESTE
 
-  _file_to_upload.content_type =
-      _multipart_body[0].find("Content-Type")->second;
+//   _file_to_upload.content_type =
+//       _multipart_body[0].find("Content-Type")->second;
+	std::cout << "*** ENTROU 5***" << std::endl; // TESTE
 
   _file_to_upload.file_contents =
       _multipart_body[0].find("_File Contents")->second;
