@@ -169,10 +169,7 @@ std::string createCgiOutput(pid_t pid, int *pipeOut) {
     }
 
     if (currentTime.tv_sec - startTime.tv_sec > 2) {
-      cgiOutput = "HTPP/1.1 504 Gateway Timeout \r\n\r\n";
-      cgiOutput +=
-          readHtmlFile("/home/tiaferna/42_Projects/Webserv/resources/504.html");
-      break;
+      return "504";
     }
   }
   return cgiOutput;
@@ -255,6 +252,10 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 
 void CGI::handleCGIResponse() {
   std::string cgiOutput = executeCGI(_path);
+  if (std::atoi(cgiOutput.c_str()) != 0) {
+    _response.status = std::atoi(cgiOutput.c_str());
+    return;
+  }
   size_t pos = cgiOutput.find("\r\n\r\n");
   if (pos != std::string::npos) {
     std::string headers = cgiOutput.substr(0, pos);
@@ -273,27 +274,3 @@ void CGI::handleCGIResponse() {
         "Error: Malformed CGI output, no valid headers found.");
   }
 }
-
-/*void CGI::processOutput() {
-  time_t currentTime = time(NULL);
-
-  std::map<pid_t, int>::iterator it = _processMap.begin();
-  while (it != _processMap.end()) {
-    pid_t pid = it->first;
-
-    // Check if the process has been running for more than 5 seconds
-    if (currentTime - pidStartTimeMap[pid] > 5) {
-      kill(pid, SIGKILL);
-      waitpid(pid, NULL, 0);
-      pidStartTimeMap.erase(pid);
-
-      std::map<pid_t, int>::iterator nextIt = it;
-      ++nextIt;
-
-      _processMap.erase(it);
-      it = nextIt;
-    } else {
-      ++it;
-    }
-  }
-}*/

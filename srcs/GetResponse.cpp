@@ -29,6 +29,8 @@ short GetResponse::loadFile(std::string &path) {
     std::cout << "!!ENTROU\n"; // TESTE
     CGI cgi(_request, _response, path);
     cgi.handleCGIResponse();
+    if (_response.status != 200)
+      loadErrorPage(_response.status);
   } else {
     std::ifstream file(path.c_str());
     if (!file.is_open())
@@ -57,24 +59,27 @@ std::string GetResponse::generateResponse() {
   }
   std::string path = getPath();
 
-
-	status = checkFile(path);
-	if (status != 200) return loadErrorPage(status);
-	if (!isDirectory(path)) {
-		status = loadFile(path);
-		if (status != 200) return loadErrorPage(status);
-	} else {  // is a directory
-		std::string indexFile = getIndexFile(path);
-		if (!indexFile.empty() &&
-			!isDirectory(indexFile)) {	// TODO: deal with directory in index?
-			status = loadFile(indexFile);
-			if (status != 200) return loadErrorPage(status);
-		} else if (hasAutoindex()) {
-			status = loadDirectoryListing(path);
-			if (status != 200) return loadErrorPage(status);
-		} else
-			loadErrorPage(403); // Forbiden
-	}
+  status = checkFile(path);
+  if (status != 200)
+    return loadErrorPage(status);
+  if (!isDirectory(path)) {
+    status = loadFile(path);
+    if (status != 200)
+      return loadErrorPage(status);
+  } else { // is a directory
+    std::string indexFile = getIndexFile(path);
+    if (!indexFile.empty() &&
+        !isDirectory(indexFile)) { // TODO: deal with directory in index?
+      status = loadFile(indexFile);
+      if (status != 200)
+        return loadErrorPage(status);
+    } else if (hasAutoindex()) {
+      status = loadDirectoryListing(path);
+      if (status != 200)
+        return loadErrorPage(status);
+    } else
+      loadErrorPage(403); // Forbiden
+  }
 
   return getResponseStr();
 }
