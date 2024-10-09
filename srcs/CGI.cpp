@@ -137,17 +137,45 @@ void CGI::setCGIEnv() {
   }
 }
 
+std::string readHtmlFile(const std::string &filePath) {
+  std::ifstream file(filePath.c_str());
+  if (!file.is_open()) {
+    std::cerr << "Error: Could not open HTML file." << std::endl;
+    return "";
+  }
 
-std::string readHtmlFile(const std::string& filePath) {
-    std::ifstream file(filePath.c_str());
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open HTML file." << std::endl;
-        return "";
+  std::stringstream buffer;
+  buffer << file.rdbuf(); // Read the entire file into the buffer
+  return buffer.str();    // Return the string containing HTML content
+}
+
+std::string createCgiOutput(pid_t pid, int *pipeOut) {
+  std::string cgiOutput;
+  char buffer[1024];
+  ssize_t bytesRead;
+  struct timeval startTime;
+  struct timeval currentTime;
+
+  gettimeofday(&startTime, NULL);
+
+  while (true) {
+    gettimeofday(&currentTime, NULL);
+    int status;
+
+    if (waitpid(pid, &status, WNOHANG) != 0) {
+      while ((bytesRead = read(pipeOut[0], buffer, sizeof(buffer))) > 0)
+        cgiOutput.append(buffer, bytesRead);
+      break;
     }
 
-    std::stringstream buffer;
-    buffer << file.rdbuf(); // Read the entire file into the buffer
-    return buffer.str();    // Return the string containing HTML content
+    if (currentTime.tv_sec - startTime.tv_sec > 2) {
+      cgiOutput = "HTPP/1.1 504 Gateway Timeout \r\n\r\n";
+      cgiOutput +=
+          readHtmlFile("/home/tiaferna/42_Projects/Webserv/resources/504.html");
+      break;
+    }
+  }
+  return cgiOutput;
 }
 
 std::string CGI::executeCGI(const std::string &scriptPath) {
@@ -180,37 +208,8 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
             _request.message_body.size());
     close(pipeIn[1]);
 
-    char buffer[1024];
-    ssize_t bytesRead;
-
-    struct timeval startTime;
-    struct timeval currentTime;
-
-    gettimeofday(&startTime, NULL);
-
-    while (true)
-    {
-      gettimeofday(&currentTime, NULL);
-      int status;
-      
-      if (waitpid(pid, &status, WNOHANG) != 0)
-      {
-         while ((bytesRead = read(pipeOut[0], buffer, sizeof(buffer))) > 0)
-            cgiOutput.append(buffer, bytesRead);
-        break ;
-      }
-
-      if (currentTime.tv_sec - startTime.tv_sec > 2)
-      {
-        cgiOutput = "HTPP/1.1 200 OK \r\n\r\n";
-        cgiOutput += readHtmlFile("/home/tiaferna/42_Projects/Webserv-main/resources/504.html");
-        break ;
-      }
-      std::cout << "current time : " << currentTime.tv_sec << std::endl;
-    }
-
-   
-    }
+    cgiOutput = createCgiOutput(pid, pipeOut);
+  }
   close(pipeOut[0]);
 
   std::cout << cgiOutput << std::endl; // TESTE
