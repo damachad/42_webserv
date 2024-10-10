@@ -12,12 +12,12 @@
 
 #include "PostResponse.hpp"
 
-#include <sstream>
 #include <sys/stat.h>
 
+#include <sstream>
 
-#include "Helpers.hpp"
 #include "CGI.hpp"
+#include "Helpers.hpp"
 
 static unsigned short response_status = OK;
 
@@ -257,14 +257,17 @@ std::string PostResponse::generateResponse() {
 		if (status != OK) return loadErrorPage(status);
 	} else {
 		// Send to CGI;
-		std::cout << "!!GETPATH: " << getPath() << std::endl; // TESTE
-    	std::string path = getPath();
-    	CGI cgi(_request, _response, path);
-    	cgi.handleCGIResponse();
-    	loadCommonHeaders();
+		std::string rootPath = (_server.getRoot(_locationRoute)).c_str();
+		std::string cgiPath = rootPath + "cgi/bin/";
+		chdir(cgiPath.c_str());
+		std::cout << "!!GETPATH: " << getPath() << std::endl;  // TESTE
+		std::string path = getPath();
+		CGI cgi(_request, _response, path);
+		cgi.handleCGIResponse();
+		loadCommonHeaders();
 	}
 
-  return getResponseStr();
+	return getResponseStr();
 }
 
 bool PostResponse::requestHasHeader(const std::string &header) {
@@ -307,16 +310,15 @@ short PostResponse::uploadFile() {
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (file_fd == -1) return (FORBIDDEN);	// TODO: Adjust error
 
-  size_t bytes_to_write = _file_to_upload.file_contents.size();
+	size_t bytes_to_write = _file_to_upload.file_contents.size();
 
-  if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
-      -1)
-    return 500; // TODO: Adjust error, as well as binary octet stream
+	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
+		-1)
+		return 500;	 // TODO: Adjust error, as well as binary octet stream
 
-  if (close(file_fd) == -1)
-    return (500); // TODO: Adjust error
+	if (close(file_fd) == -1) return (500);	 // TODO: Adjust error
 
-  return 200;
+	return 200;
 }
 
 short PostResponse::checkBody() {
@@ -337,157 +339,147 @@ short PostResponse::checkBody() {
 // Returns boundary, returns empty if no boundary. Also checks content-type
 // exists.
 const std::string PostResponse::getBoundary() {
-  std::multimap<std::string, std::string>::const_iterator
-      content_type_header_field = _request.header_fields.find("content-type");
-  if (content_type_header_field == _request.header_fields.end())
-    return "";
+	std::multimap<std::string, std::string>::const_iterator
+		content_type_header_field = _request.header_fields.find("content-type");
+	if (content_type_header_field == _request.header_fields.end()) return "";
 
-  const std::string content_type = content_type_header_field->second;
-  if (content_type.empty())
-    return "";
+	const std::string content_type = content_type_header_field->second;
+	if (content_type.empty()) return "";
 
-  size_t boundary_position = content_type.find("boundary=");
-  if (boundary_position == std::string::npos)
-    return "";
+	size_t boundary_position = content_type.find("boundary=");
+	if (boundary_position == std::string::npos) return "";
 
-  const std::string boundary = content_type.substr(boundary_position + 9);
+	const std::string boundary = content_type.substr(boundary_position + 9);
 
-  return boundary;
+	return boundary;
 }
 
 // Gets entire multipart as one contiguous vector
 const std::vector<std::multimap<std::string, std::string> >
 PostResponse::getMultipartBody(const std::string &boundary) {
-  std::vector<std::multimap<std::string, std::string> > multipart_body;
-  std::string full_boundary = "--" + boundary;
-  std::string end_boundary = full_boundary + "--";
+	std::vector<std::multimap<std::string, std::string> > multipart_body;
+	std::string full_boundary = "--" + boundary;
+	std::string end_boundary = full_boundary + "--";
 
-  size_t start_boundary_position = _request.message_body.find(full_boundary);
-  if (start_boundary_position == std::string::npos)
-    return multipart_body;
+	size_t start_boundary_position = _request.message_body.find(full_boundary);
+	if (start_boundary_position == std::string::npos) return multipart_body;
 
-  while (start_boundary_position != std::string::npos) {
-    start_boundary_position += full_boundary.length() + 2;
-    size_t end_boundary_position =
-        _request.message_body.find(full_boundary, start_boundary_position);
+	while (start_boundary_position != std::string::npos) {
+		start_boundary_position += full_boundary.length() + 2;
+		size_t end_boundary_position =
+			_request.message_body.find(full_boundary, start_boundary_position);
 
-    if (_request.message_body.find(end_boundary, start_boundary_position) ==
-        start_boundary_position)
-      break;
+		if (_request.message_body.find(end_boundary, start_boundary_position) ==
+			start_boundary_position)
+			break;
 
-    if (end_boundary_position == std::string::npos)
-      return multipart_body;
+		if (end_boundary_position == std::string::npos) return multipart_body;
 
-    std::string subpart = _request.message_body.substr(
-        start_boundary_position,
-        end_boundary_position - start_boundary_position);
+		std::string subpart = _request.message_body.substr(
+			start_boundary_position,
+			end_boundary_position - start_boundary_position);
 
-    std::multimap<std::string, std::string> submap = extractFields(subpart);
-    if (submap.empty())
-      break;
-    multipart_body.push_back(submap);
+		std::multimap<std::string, std::string> submap = extractFields(subpart);
+		if (submap.empty()) break;
+		multipart_body.push_back(submap);
 
-    start_boundary_position = end_boundary_position;
-  }
+		start_boundary_position = end_boundary_position;
+	}
 
-  return multipart_body;
+	return multipart_body;
 }
 
 // Gets submap for each part of the body
-const std::multimap<std::string, std::string>
-PostResponse::extractFields(const std::string &subpart) {
-  std::multimap<std::string, std::string> submap;
+const std::multimap<std::string, std::string> PostResponse::extractFields(
+	const std::string &subpart) {
+	std::multimap<std::string, std::string> submap;
 
-  size_t header_end = subpart.find("\r\n\r\n");
-  if (header_end == std::string::npos)
-    return submap;
+	size_t header_end = subpart.find("\r\n\r\n");
+	if (header_end == std::string::npos) return submap;
 
-  std::string headers = subpart.substr(0, header_end + 2);
-  std::string body = subpart.substr(header_end + 4);
+	std::string headers = subpart.substr(0, header_end + 2);
+	std::string body = subpart.substr(header_end + 4);
 
-  size_t start_separator = 0;
-  size_t end_separator = headers.find("\r\n");
+	size_t start_separator = 0;
+	size_t end_separator = headers.find("\r\n");
 
-  while (end_separator != std::string::npos) {
-    std::string field =
-        headers.substr(start_separator, end_separator - start_separator);
-    size_t colon_pos = field.find(":");
-    if (colon_pos != std::string::npos) {
-      std::string first = field.substr(0, colon_pos);
-      std::string second = field.substr(colon_pos + 2);
-      if (!first.empty() && !second.empty())
-        submap.insert(std::make_pair(first, second));
-    }
+	while (end_separator != std::string::npos) {
+		std::string field =
+			headers.substr(start_separator, end_separator - start_separator);
+		size_t colon_pos = field.find(":");
+		if (colon_pos != std::string::npos) {
+			std::string first = field.substr(0, colon_pos);
+			std::string second = field.substr(colon_pos + 2);
+			if (!first.empty() && !second.empty())
+				submap.insert(std::make_pair(first, second));
+		}
 
-    start_separator = end_separator + 2;
-    end_separator = headers.find("\r\n", start_separator);
-  }
+		start_separator = end_separator + 2;
+		end_separator = headers.find("\r\n", start_separator);
+	}
 
-  submap.insert(
-      std::make_pair("_File Contents", body.substr(0, body.length() - 2)));
+	submap.insert(
+		std::make_pair("_File Contents", body.substr(0, body.length() - 2)));
 
-  return submap;
+	return submap;
 }
 // TODO: Protect finds!
 short PostResponse::extractFile() {
-		std::cout << "*** ENTROU 1***" << std::endl; // TESTE
+	std::cout << "*** ENTROU 1***" << std::endl;  // TESTE
 
-  std::string content_disposition =
-      _multipart_body[0].find("Content-Disposition")->second;
-	std::cout << "*** ENTROU 2***" << std::endl; // TESTE
+	std::string content_disposition =
+		_multipart_body[0].find("Content-Disposition")->second;
+	std::cout << "*** ENTROU 2***" << std::endl;  // TESTE
 
-  _file_to_upload.name = extractFieldValue(content_disposition, "name");
-	std::cout << "*** ENTROU 3***" << std::endl; // TESTE
+	_file_to_upload.name = extractFieldValue(content_disposition, "name");
+	std::cout << "*** ENTROU 3***" << std::endl;  // TESTE
 
-  _file_to_upload.file_name =
-      extractFieldValue(content_disposition, "filename");
-	std::cout << "*** ENTROU 4***" << std::endl; // TESTE
+	_file_to_upload.file_name =
+		extractFieldValue(content_disposition, "filename");
+	std::cout << "*** ENTROU 4***" << std::endl;  // TESTE
 
-//   _file_to_upload.content_type =
-//       _multipart_body[0].find("Content-Type")->second;
-	std::cout << "*** ENTROU 5***" << std::endl; // TESTE
+	//   _file_to_upload.content_type =
+	//       _multipart_body[0].find("Content-Type")->second;
+	std::cout << "*** ENTROU 5***" << std::endl;  // TESTE
 
-  _file_to_upload.file_contents =
-      _multipart_body[0].find("_File Contents")->second;
+	_file_to_upload.file_contents =
+		_multipart_body[0].find("_File Contents")->second;
 
-  return 200;
+	return 200;
 }
 
 // Function to extract the value of a specified key (either "name" or
 // "filename")
 std::string PostResponse::extractFieldValue(const std::string &header,
-                                            const std::string &field) {
-  std::string key = field + "=";
-  size_t start = header.find(key);
+											const std::string &field) {
+	std::string key = field + "=";
+	size_t start = header.find(key);
 
-  if (start == std::string::npos)
-    return "";
+	if (start == std::string::npos) return "";
 
-  start += key.length();
+	start += key.length();
 
-  bool inQuotes = false;
-  if (header[start] == '"') {
-    inQuotes = true;
-    start++;
-  }
+	bool inQuotes = false;
+	if (header[start] == '"') {
+		inQuotes = true;
+		start++;
+	}
 
-  size_t end = start;
-  while (end < header.length()) {
-    if (inQuotes) {
-      if (header[end] == '"') {
-        inQuotes = false;
-        break;
-      }
+	size_t end = start;
+	while (end < header.length()) {
+		if (inQuotes) {
+			if (header[end] == '"') {
+				inQuotes = false;
+				break;
+			}
 
-    } else {
-      if (header[end] == ';')
-        break;
-    }
-    end++;
-  }
+		} else {
+			if (header[end] == ';') break;
+		}
+		end++;
+	}
 
-  if (inQuotes && end < header.length() && header[end] == '"')
-    end++;
+	if (inQuotes && end < header.length() && header[end] == '"') end++;
 
-  return header.substr(start, end - start);
+	return header.substr(start, end - start);
 }
