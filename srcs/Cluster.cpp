@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/30 16:29:01 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 15:52:00 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,9 @@
 #include "Helpers.hpp"
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
+
+unsigned int total_used_storage = 0;
+// NOTE: Keeps track of how many bytes have been uploaded/deleted to server
 
 // Constructor
 // Create a vector of servers from provided context vector
@@ -281,7 +284,9 @@ void Cluster::handleClientRequest(int connection_fd) {
 			recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
 
 		if (bytesRead < 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
+
+			if (errno == EAGAIN || errno == EWOULDBLOCK) return;
+
 			if (errno != EAGAIN) {
 				closeAndRemoveSocket(connection_fd, _epoll_fd);
 				throw ClusterRunError("read failed");
@@ -336,8 +341,8 @@ const std::string Cluster::getResponse(HTTP_Request& request,
 
 	const Server* server = getContext(client_fd, request);
 
-	// TODO: Remove the following line! Just here for testing!
-	error_status = OK;
+	// NOTE: Remove the following line! Just here for testing!
+	// error_status = OK;
 
 	if (error_status != OK)
 		response_check =
@@ -440,9 +445,6 @@ const Server* Cluster::getContext(int client_fd, const HTTP_Request& request) {
 	}
 
 	// If no server names were found, just return the first one
-	//  TODO: Check in case of URIs??
-	//  TODO: Check in case of defaults?? (perhaps switch them to the first
-	//  position in that case)
 	return valid_servers.front();
 }
 

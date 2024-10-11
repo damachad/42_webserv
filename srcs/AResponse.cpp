@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/02 14:57:13 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 14:37:46 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -423,6 +423,7 @@ short AResponse::loadDirectoryListing(const std::string &path) {
 	}
 	// Sort the vector alphabetically
 	std::sort(entries.begin(), entries.end());
+	entries.erase(entries.begin()); // Hide "."
 	for (std::vector<std::string>::iterator it = entries.begin();
 		 it != entries.end(); ++it) {
 		std::string entryName = *it;

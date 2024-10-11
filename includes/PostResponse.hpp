@@ -45,7 +45,7 @@ class PostResponse : public AResponse {
 	void removeFirstChunk();
 	void readChunks();
 	ssize_t readChunkSizeFromSocket();
-	void skipTrailingCRLF();
+	int skipTrailingCRLF();
 	bool requestHasHeader(const std::string& header);
 	bool requestIsCGI();
 	short checkBody();
