@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/02 14:51:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 16:04:04 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ class AResponse {
 	bool hasAutoindex() const;
 	bool hasReturn() const;
 	bool isDirectory(const std::string& path) const;
-	bool isCGI();
+	bool isCGI() const;
 
 	// Response construtors
 	void setMatchLocationRoute();

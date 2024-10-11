@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/11 14:37:46 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 16:08:46 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,8 +216,10 @@ void AResponse::setMatchLocationRoute() {
 // Returns path to look for resource in location, root + (uri - locationRoute)
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
-	if (_request.uri.length() > 3 &&
-		_request.uri.substr(_request.uri.length() - 3) == ".py") {
+	if (isCGI()) {
+		if (_request.uri.find("cgi-bin") != std::string::npos)
+		return (assemblePath(root,
+							 _request.uri.substr(_locationRoute.size())));
 		return (assemblePath(assemblePath(root, "cgi-bin"),
 							 _request.uri.substr(_locationRoute.size())));
 	}
@@ -257,7 +259,7 @@ bool AResponse::isDirectory(const std::string &path) const {
 }
 
 // Checks if the request is calling a CGI script
-bool AResponse::isCGI() {
+bool AResponse::isCGI() const {
 	if (_request.uri.length() > 3 &&
 		_request.uri.substr(_request.uri.length() - 3) == ".py")
 		return true;
