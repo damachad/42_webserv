@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/18 11:16:18 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:41:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@ short GetResponse::loadFile(const std::string& path) {
 	file.close();
 	loadCommonHeaders();
 	setMimeType(path);
-	_response.status = 200;
 	return 200;
 }
 
@@ -62,7 +61,7 @@ std::string GetResponse::generateResponse() {
 			status = loadDirectoryListing(path);
 			if (status != 200) return loadErrorPage(status);
 		} else
-			loadErrorPage(404);
+			loadErrorPage(403); // Forbiden
 	}
 
 	return getResponseStr();

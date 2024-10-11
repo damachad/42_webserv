@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
+/*   Server_old.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:29 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/08/19 14:57:44 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/09/24 13:36:53 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,11 @@
 #include "Exceptions.hpp"
 #include "Server.hpp"
 #include "Webserv.hpp"
+
+struct Listen {
+	std::string IP;
+	std::string port;
+};
 
 class Server {
    public:
@@ -31,7 +36,7 @@ class Server {
 	// Getters for private member data
 	const std::vector<std::string>& get_server_names() const;
 	const std::vector<Listen>& get_network_addresses() const;
-	const std::vector<int>& get_listening_sockets() const;
+	const std::vector<int>& getListeningSockets() const;
 
    private:
 	// Server's names in config
