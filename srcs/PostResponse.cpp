@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 
 #include "Helpers.hpp"
+#include "Webserv.hpp"
 
 static unsigned short response_status = OK;
 
@@ -121,6 +122,11 @@ void PostResponse::readContentLength() {
 	unsigned long content_length = stringToNumber<unsigned long>(
 		_request.header_fields.find("content-length")->second);
 
+	if (content_length + total_used_storage > MAX_STORAGE_SIZE) {
+		response_status = INTERNAL_SERVER_ERROR;
+		return;
+	}
+
 	ssize_t bytes_to_read = content_length - _request.message_body.size() - 1;
 	ssize_t total_bytes_read = 0;
 
@@ -165,6 +171,12 @@ void PostResponse::readChunks() {
 		char read_buffer[8096] = {};
 
 		while (total_bytes_read < chunk_size) {
+			if (total_used_storage + _request.message_body.size() >
+				MAX_STORAGE_SIZE) {
+				response_status = INTERNAL_SERVER_ERROR;
+				return;
+			}
+
 			ssize_t read_size = std::min(chunk_size - total_bytes_read,
 										 (ssize_t)sizeof(read_buffer));
 
@@ -304,6 +316,8 @@ short PostResponse::uploadFile() {
 		return FORBIDDEN;
 
 	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
+	
+  total_used_storage += _request.message_body.size();
 
 	return OK;
 }

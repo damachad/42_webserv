@@ -26,6 +26,9 @@
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
 
+unsigned int total_used_storage = 0;
+// NOTE: Keeps track of how many bytes have been uploaded/deleted to server
+
 // Constructor
 // Create a vector of servers from provided context vector
 Cluster::Cluster(const std::vector<Server>& servers)
@@ -294,7 +297,7 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
 	HTTP_Request request;
 	unsigned short error_status =
 		HTTP_Request_Parser::parse_HTTP_headers(buffer_request, request);
-	
+
 	std::string buffer_response = getResponse(request, error_status, client_fd);
 
 	ssize_t sent =
