@@ -32,7 +32,6 @@ class Server {
 	std::vector<std::string> _index;
 	State _autoIndex;
 	long _clientMaxBodySize;
-	std::vector<std::string> _tryFiles;
 	std::set<Method> _allowedMethods;
 	std::map<short, std::string> _errorPages;
 	std::map<std::string, LocationContext> _locations;
@@ -60,7 +59,6 @@ class Server {
 	std::vector<std::string> getIndex() const;
 	State getAutoIndex() const;
 	long getClientMaxBodySize() const;
-	std::vector<std::string> getTryFiles() const;
 	std::set<Method> getAllowedMethods() const;
 	std::map<short, std::string> getErrorPages() const;
 	std::map<std::string, LocationContext> getLocations() const;
@@ -71,7 +69,6 @@ class Server {
 	std::vector<std::string> getIndex(const std::string &route) const;
 	State getAutoIndex(const std::string &route) const;
 	long getClientMaxBodySize(const std::string &route) const;
-	std::vector<std::string> getTryFiles(const std::string &route) const;
 	std::map<short, std::string> getErrorPages(const std::string &route) const;
 	std::set<Method> getAllowedMethods(const std::string &route) const;
 	std::pair<short, std::string> getReturn(const std::string &route) const;
@@ -84,7 +81,6 @@ class Server {
 	void handleServerName(std::vector<std::string> &tokens);
 	void handleRoot(std::vector<std::string> &tokens);
 	void handleIndex(std::vector<std::string> &tokens);
-	void handleTryFiles(std::vector<std::string> &tokens);
 	void handleErrorPage(std::vector<std::string> &tokens);
 	void handleCliMaxSize(std::vector<std::string> &tokens);
 	void handleAutoIndex(std::vector<std::string> &tokens);
