@@ -97,6 +97,10 @@ void CGI::setCGIEnv() {
       throw std::runtime_error(
           "Error: Failed to set CONTENT_TYPE environment variable.");
     }
+    if (setenv("PATH_INFO", _path.c_str(), 1) != 0) {
+      throw std::runtime_error(
+          "Error: Failed to set PATH_INFO environment variable.");
+    }
 
     std::string contentLength = getHeaderEnvValue("content-length");
     if (_request.method == POST && contentLength.empty()) {
@@ -186,13 +190,14 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
   pid_t pid = fork();
   if (pid == -1)
     throw std::runtime_error("Fork failed");
-
   if (pid == 0) {
     dup2(pipeIn[0], STDIN_FILENO);
     dup2(pipeOut[1], STDOUT_FILENO);
     close(pipeIn[1]);
     close(pipeOut[0]);
     setCGIEnv();
+    std::string dirName = scriptPath.substr(0, scriptPath.find_last_of("/"));
+    if (chdir(dirName.c_str()) < 0) throw std::runtime_error("chdir failed");
     char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
     if (execve(scriptPath.c_str(), argv, environ) == -1)
       throw std::runtime_error("Exec failed");

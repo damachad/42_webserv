@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/02 14:42:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 16:46:15 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -267,9 +267,6 @@ std::string PostResponse::generateResponse() {
 		if (status != OK) return loadErrorPage(status);
 	} else {
 		// Send to CGI;
-		std::string rootPath = (_server.getRoot(_locationRoute)).c_str();
-		std::string cgiPath = rootPath + "cgi/bin/";
-		chdir(cgiPath.c_str());
 		std::cout << "!!GETPATH: " << getPath() << std::endl;  // TESTE
 		std::string path = getPath();
 		CGI cgi(_request, _response, path);

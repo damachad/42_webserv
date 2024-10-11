@@ -45,7 +45,7 @@ def main():
                 for value in values:
                     print(f"<li><strong>{key}:</strong> {value}</li>")
             print("</ul>")
-
+    # print("Current dir: ", os.getcwd())
     # Print HTML end
     print("</body>")
     print("</html>")

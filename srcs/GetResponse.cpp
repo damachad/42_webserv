@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/02 14:41:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 16:45:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,6 @@ GetResponse::GetResponse(const Server &server, const HTTP_Request &request)
 short GetResponse::loadFile(std::string &path) {
 	std::cout << "!!URI: " << _request.uri << "\n";	 // TESTE
 	if (isCGI()) {
-		std::string rootPath = (_server.getRoot(_locationRoute)).c_str();
-		std::string cgiPath = rootPath + "cgi/bin/";
-		chdir(cgiPath.c_str());
 		std::cout << "!!ENTROU\n";	// TESTE
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
