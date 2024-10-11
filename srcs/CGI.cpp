@@ -167,6 +167,7 @@ std::string createCgiOutput(pid_t pid, int *pipeOut) {
     int status;
 
     if (waitpid(pid, &status, WNOHANG) != 0) {
+      if (WEXITSTATUS(status) != 0) return "500";
       while ((bytesRead = read(pipeOut[0], buffer, sizeof(buffer))) > 0)
         cgiOutput.append(buffer, bytesRead);
       break;
@@ -195,11 +196,10 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
   std::string cgiOutput;
 
   if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
-    throw std::runtime_error("Pipe creation failed");
+    return "500";
 
   pid_t pid = fork();
-  if (pid == -1)
-    throw std::runtime_error("Fork failed");
+  if (pid == -1) return "500";
   if (pid == 0) {
     dup2(pipeIn[0], STDIN_FILENO);
     dup2(pipeOut[1], STDOUT_FILENO);
@@ -208,10 +208,10 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     setCGIEnv();
     setLimits(64);
     std::string dirName = scriptPath.substr(0, scriptPath.find_last_of("/"));
-    if (chdir(dirName.c_str()) < 0) throw std::runtime_error("chdir failed");
+    if (chdir(dirName.c_str()) < 0) return "500";
     char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
     if (execve(scriptPath.c_str(), argv, environ) == -1)
-      throw std::runtime_error("Exec failed");
+      return "500";
   } else {
     close(pipeIn[0]);
     close(pipeOut[1]);
@@ -225,7 +225,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
   }
   close(pipeOut[0]);
 
-  std::cout << cgiOutput << std::endl; // TESTE
+  // std::cout << cgiOutput << std::endl; // TESTE
   return cgiOutput;
 }
 
