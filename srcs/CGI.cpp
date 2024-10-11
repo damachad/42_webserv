@@ -179,6 +179,16 @@ std::string createCgiOutput(pid_t pid, int *pipeOut) {
   return cgiOutput;
 }
 
+// Sets the maximum size of a process' total available memory
+static void setLimits(int limitMb) {
+  struct rlimit limit;
+
+  // Set memory limit (limit MB)
+  limit.rlim_cur = limitMb * 1024 * 1024;
+  limit.rlim_max = limitMb * 1024 * 1024;
+  setrlimit(RLIMIT_AS, &limit);
+}
+
 std::string CGI::executeCGI(const std::string &scriptPath) {
   int pipeIn[2];
   int pipeOut[2];
@@ -196,6 +206,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     close(pipeIn[1]);
     close(pipeOut[0]);
     setCGIEnv();
+    setLimits(64);
     std::string dirName = scriptPath.substr(0, scriptPath.find_last_of("/"));
     if (chdir(dirName.c_str()) < 0) throw std::runtime_error("chdir failed");
     char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};

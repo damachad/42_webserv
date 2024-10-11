@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 20:04:31 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/10/11 16:57:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>	 // For read
+#include <sys/resource.h>
 
 #include <cctype>	// For islanum
 #include <cstdlib>	// For exit() and EXIT_FAILURE
