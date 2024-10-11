@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/24 11:11:17 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 10:58:15 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ LocationContext::LocationContext(const LocationContext &src)
 	  _index(src.getIndex()),
 	  _autoIndex(src.getAutoIndex()),
 	  _clientMaxBodySize(src.getClientMaxBodySize()),
-	  _tryFiles(src.getTryFiles()),
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _return(src.getReturn()),
@@ -32,7 +31,6 @@ LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_index = src.getIndex();
 	_autoIndex = src.getAutoIndex();
 	_clientMaxBodySize = src.getClientMaxBodySize();
-	_tryFiles = src.getTryFiles();
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
 	_return = src.getReturn();
@@ -47,7 +45,6 @@ void LocationContext::initializeDirectiveMap(void) {
 	_directiveMap["root"] = &LocationContext::handleRoot;
 	_directiveMap["index"] = &LocationContext::handleIndex;
 	_directiveMap["limit_except"] = &LocationContext::handleLimitExcept;
-	_directiveMap["try_files"] = &LocationContext::handleTryFiles;
 	_directiveMap["error_page"] = &LocationContext::handleErrorPage;
 	_directiveMap["client_max_body_size"] = &LocationContext::handleCliMaxSize;
 	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
@@ -82,11 +79,6 @@ void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
 			throw ConfigError("Unsupported method detected.");
 	}
 	_allowedMethods = methods;
-}
-
-void LocationContext::handleTryFiles(std::vector<std::string> &tokens) {
-	tokens.erase(tokens.begin());
-	_tryFiles = tokens;
 }
 
 void LocationContext::handleErrorPage(std::vector<std::string> &tokens) {
@@ -193,10 +185,6 @@ long LocationContext::getClientMaxBodySize() const {
 	return _clientMaxBodySize;
 }
 
-std::vector<std::string> LocationContext::getTryFiles() const {
-	return _tryFiles;
-}
-
 std::set<Method> LocationContext::getAllowedMethods() const {
 	return _allowedMethods;
 }
@@ -230,13 +218,6 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 	   << "\n";
 
 	os << "  Client Max Body Size: " << context.getClientMaxBodySize() << "\n";
-
-	os << "  Try Files:\n";
-	std::vector<std::string> tryFiles = context.getTryFiles();
-	for (std::vector<std::string>::const_iterator it = tryFiles.begin();
-		 it != tryFiles.end(); ++it) {
-		os << "    " << *it << "\n";
-	}
 
 	os << "  Allowed Methods: ";
 	std::set<Method> methods = context.getAllowedMethods();

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/30 16:29:01 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 12:40:31 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -294,7 +294,7 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
 	HTTP_Request request;
 	unsigned short error_status =
 		HTTP_Request_Parser::parse_HTTP_headers(buffer_request, request);
-
+	
 	std::string buffer_response = getResponse(request, error_status, client_fd);
 
 	ssize_t sent =

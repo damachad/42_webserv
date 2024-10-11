@@ -31,7 +31,6 @@ Server::Server(const Server &src)
 	  _index(src.getIndex()),
 	  _autoIndex(src.getAutoIndex()),
 	  _clientMaxBodySize(src.getClientMaxBodySize()),
-	  _tryFiles(src.getTryFiles()),
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _locations(src.getLocations()),
@@ -45,7 +44,6 @@ Server &Server::operator=(const Server &src) {
 	_index = src.getIndex();
 	_autoIndex = src.getAutoIndex();
 	_clientMaxBodySize = src.getClientMaxBodySize();
-	_tryFiles = src.getTryFiles();
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
 	_locations = src.getLocations();
@@ -62,7 +60,6 @@ void Server::initializeDirectiveMap(void) {
 	_directiveMap["server_name"] = &Server::handleServerName;
 	_directiveMap["root"] = &Server::handleRoot;
 	_directiveMap["index"] = &Server::handleIndex;
-	_directiveMap["try_files"] = &Server::handleTryFiles;
 	_directiveMap["error_page"] = &Server::handleErrorPage;
 	_directiveMap["client_max_body_size"] = &Server::handleCliMaxSize;
 	_directiveMap["autoindex"] = &Server::handleAutoIndex;
@@ -139,11 +136,6 @@ void Server::handleRoot(std::vector<std::string> &tokens) {
 void Server::handleIndex(std::vector<std::string> &tokens) {
 	tokens.erase(tokens.begin());
 	_index = tokens;
-}
-
-void Server::handleTryFiles(std::vector<std::string> &tokens) {
-	tokens.erase(tokens.begin());
-	_tryFiles = tokens;
 }
 
 void Server::handleErrorPage(std::vector<std::string> &tokens) {
@@ -284,8 +276,6 @@ State Server::getAutoIndex() const { return _autoIndex; }
 
 long Server::getClientMaxBodySize() const { return _clientMaxBodySize; }
 
-std::vector<std::string> Server::getTryFiles() const { return _tryFiles; }
-
 std::set<Method> Server::getAllowedMethods() const { return _allowedMethods; }
 
 std::map<short, std::string> Server::getErrorPages() const {
@@ -338,16 +328,6 @@ long Server::getClientMaxBodySize(const std::string &route) const {
 		return _clientMaxBodySize;
 	else
 		return it->second.getClientMaxBodySize();
-}
-
-std::vector<std::string> Server::getTryFiles(const std::string &route) const {
-	if (route.empty()) return _tryFiles;
-	std::map<std::string, LocationContext>::const_iterator it;
-	it = _locations.find(route);
-	if (it == _locations.end() || it->second.getTryFiles().empty())
-		return _tryFiles;
-	else
-		return it->second.getTryFiles();
 }
 
 std::map<short, std::string> Server::getErrorPages(
@@ -479,13 +459,6 @@ std::ostream &operator<<(std::ostream &os, const Server &context) {
 	   << "\n";
 
 	os << "Client Max Body Size: " << context.getClientMaxBodySize() << "\n";
-
-	os << "Try Files:\n";
-	std::vector<std::string> tryFiles = context.getTryFiles();
-	for (std::vector<std::string>::const_iterator it = tryFiles.begin();
-		 it != tryFiles.end(); ++it) {
-		os << "  " << *it << "\n";
-	}
 
 	os << "Error Pages:\n";
 	std::map<short, std::string> errorPages = context.getErrorPages();
