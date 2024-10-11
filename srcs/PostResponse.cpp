@@ -316,8 +316,8 @@ short PostResponse::uploadFile() {
 		return FORBIDDEN;
 
 	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
-
-	total_used_storage += _request.message_body.size();
+	
+  total_used_storage += _request.message_body.size();
 
 	return OK;
 }
