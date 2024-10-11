@@ -23,8 +23,7 @@ unsigned short HTTP_Request_Parser::parse_HTTP_headers(
 		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos) {
 		response_status = BAD_REQUEST;
 		return response_status;
-	}  // TODO: Check what happens with empty
-	// requests....... client on nginx hangs :x
+	}
 
 	// Buffers for parsing
 	std::stringstream buffer_stream(buffer_request);
