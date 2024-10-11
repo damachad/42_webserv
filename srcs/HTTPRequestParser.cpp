@@ -13,6 +13,7 @@
 #include "HTTPRequestParser.hpp"
 
 #include "Helpers.hpp"
+#include "Webserv.hpp"
 
 static int response_status = OK;
 
@@ -74,9 +75,13 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 	std::string url;
 	line_stream >> url;
 	std::string decoded_uri = decode(url);
-	if (decoded_uri.size() == 0 ||
-		!url_is_valid(decoded_uri)) {  // TODO: URL SIZE
+	if (decoded_uri.size() == 0 || !url_is_valid(decoded_uri)) {
 		response_status = BAD_REQUEST;
+		return false;
+	}
+
+	if (decoded_uri.size() > URL_MAX_SIZE) {
+		response_status = URI_TOO_LONG;
 		return false;
 	}
 

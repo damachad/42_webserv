@@ -72,7 +72,6 @@ bool PostResponse::send100Continue() {
 	ssize_t bytesSent =
 		send(_client_fd, "HTTP/1.1 100 Continue\r\n\r\n", 25, 0);
 	if (bytesSent < 0) {
-		perror("Error sending 100 Continue");  // TODO: Remove?
 		response_status = INTERNAL_SERVER_ERROR;
 		return false;
 	}
@@ -85,7 +84,6 @@ bool PostResponse::readBody() {
 	int nfds = epoll_wait(_epoll_fd, events, 1,
 						  -1);	// Wait indefinitely for new data
 	if (nfds < 0) {
-		perror("Error in epoll_wait");	// TODO: Remove?
 		response_status = INTERNAL_SERVER_ERROR;
 		return false;
 	}
@@ -121,7 +119,7 @@ void PostResponse::readContentLength() {
 	unsigned long content_length = stringToNumber<unsigned long>(
 		_request.header_fields.find("content-length")->second);
 
-	ssize_t bytes_to_read = content_length - _request.message_body.size();
+	ssize_t bytes_to_read = content_length - _request.message_body.size() - 1;
 	ssize_t total_bytes_read = 0;
 
 	while (total_bytes_read < bytes_to_read) {
@@ -289,25 +287,25 @@ short PostResponse::uploadFile() {
 
 	std::string directory = _server.getUpload(_locationRoute);
 	if (directory.empty())
-		return 500;	 // TODO: if upload_store empty, return error or have a
-					 // default?
+		directory = assemblePath(_server.getRoot(_locationRoute),
+								 "default_upload_directory");
 	if (directory.at(directory.length() - 1) != '/') directory += "/";
 	if (!createDirectory(directory)) return FORBIDDEN;
 	std::string target = directory + _file_to_upload.file_name;
 
 	int file_fd =
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
-	if (file_fd == -1) return (FORBIDDEN);	// TODO: Adjust error
+	if (file_fd == -1) return FORBIDDEN;
 
 	size_t bytes_to_write = _file_to_upload.file_contents.size();
 
 	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
 		-1)
-		return 500;	 // TODO: Adjust error, as well as binary octet stream
+		return FORBIDDEN;
 
-	if (close(file_fd) == -1) return (500);	 // TODO: Adjust error
+	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
 
-	return 200;
+	return OK;
 }
 
 short PostResponse::checkBody() {
@@ -315,14 +313,14 @@ short PostResponse::checkBody() {
 		_request.header_fields.find("content-type")
 				->second.find("multipart/") == 0) {
 		_boundary = getBoundary();
-		if (_boundary.empty()) return 400;
+		if (_boundary.empty()) return BAD_REQUEST;
 
 		_multipart_body = getMultipartBody(_boundary);
-		if (_multipart_body.empty()) return 400;
+		if (_multipart_body.empty()) return BAD_REQUEST;
 	} else
 		return 400;
 
-	return 200;
+	return OK;
 }
 
 // Returns boundary, returns empty if no boundary. Also checks content-type

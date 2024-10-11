@@ -16,7 +16,6 @@
 #include "Server.hpp"
 
 #define BUFFER_SIZE 8096
-#define HTTP_REQUEST_INCOMPLETE 2000  // TODO: CHANGE
 
 class Server;
 struct HTTP_Request;

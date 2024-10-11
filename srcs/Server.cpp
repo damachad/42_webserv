@@ -96,10 +96,6 @@ static bool isValidIp(const std::string &ip) {
 }
 
 // Handlers
-
-// TODO: implement IPv6? default_server ?
-// test what happens in NGINX address:<nothing> or <nothing>:port,
-// is it the same as not including that parameter?
 void Server::handleListen(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Too many arguments in listen directive.");
@@ -227,7 +223,8 @@ void Server::handleReturn(std::vector<std::string> &tokens) {
 }
 
 void Server::handleUpload(std::vector<std::string> &tokens) {
-	if (tokens.size() != 2) throw ConfigError("Invalid upload_store directive.");
+	if (tokens.size() != 2)
+		throw ConfigError("Invalid upload_store directive.");
 	_uploadStore = tokens[1];
 }
 
@@ -301,9 +298,7 @@ std::map<std::string, LocationContext> Server::getLocations() const {
 
 std::pair<short, std::string> Server::getReturn() const { return _return; }
 
-std::string Server::getUpload() const {
-	return _uploadStore;
-}
+std::string Server::getUpload() const { return _uploadStore; }
 
 std::string Server::getRoot(const std::string &route) const {
 	if (route.empty()) return _root;
@@ -412,7 +407,6 @@ void Server::setup_server(void) {
 
 		// Set the socket option SO_REUSEADDR
 		// NOTE: Allows for quicker debugging because socket doesn't get held
-		// TODO: REMOVE AT THE END????
 		int optval = 1;
 		if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
 					   sizeof(optval)) < 0) {
