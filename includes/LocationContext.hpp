@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:37:41 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/24 11:13:03 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 10:57:25 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ class LocationContext {
 	std::vector<std::string> _index;
 	State _autoIndex;
 	long _clientMaxBodySize;
-	std::vector<std::string> _tryFiles;
 	std::set<Method> _allowedMethods;
 	std::map<short, std::string> _errorPages;
 	std::pair<short, std::string> _return;
@@ -45,7 +44,6 @@ class LocationContext {
 	std::vector<std::string> getIndex() const;
 	State getAutoIndex() const;
 	long getClientMaxBodySize() const;
-	std::vector<std::string> getTryFiles() const;
 	std::set<Method> getAllowedMethods() const;
 	std::map<short, std::string> getErrorPages() const;
 	std::pair<short, std::string> getReturn() const;
@@ -54,7 +52,6 @@ class LocationContext {
 	// Handlers for directives
 	void handleRoot(std::vector<std::string> &tokens);
 	void handleIndex(std::vector<std::string> &tokens);
-	void handleTryFiles(std::vector<std::string> &tokens);
 	void handleLimitExcept(std::vector<std::string> &tokens);
 	void handleErrorPage(std::vector<std::string> &tokens);
 	void handleCliMaxSize(std::vector<std::string> &tokens);
