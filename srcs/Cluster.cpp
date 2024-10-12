@@ -69,9 +69,14 @@ Cluster::Cluster(const std::vector<Server>& servers)
 
 // Destructor
 // Closes _epoll_fd if it was open
+// Also closes all listening sockets
 Cluster::~Cluster() {
 	//	std::cout << "Cluster Destructor called" << std::endl;
 	if (_epoll_fd >= 0) close(_epoll_fd);
+
+	for (std::vector<int>::iterator it = _listening_sockets.begin();
+		 it != _listening_sockets.end(); it++)
+		close(*it);
 }
 
 // Accesses ith server of _server array when asking Cluster[i]
@@ -112,6 +117,9 @@ int Cluster::createAndBindSocket(const std::string& IP,
 	// Create a socket (IPv4, TCP)
 	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_fd == -1) throw SocketSetupError("socket");
+
+	// Adds socket to _listening_sockets
+	_listening_sockets.push_back(sock_fd);
 
 	// Set the socket option SO_REUSEADDR
 	int optval = 1;
@@ -217,7 +225,6 @@ void Cluster::setupCluster(void) {
 		addSocketsToEpoll(sock_fd);
 
 		// Adds listening socket to _listening_socket vector
-		_listening_sockets.push_back(sock_fd);
 	}
 }
 

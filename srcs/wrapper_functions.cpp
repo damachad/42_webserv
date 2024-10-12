@@ -17,7 +17,7 @@ int listen_call_counter = 0;
 int epoll_wait_call_counter = 0;
 
 bool check_failure(const char *fail_env, int call_counter) {
-	const char *sys_count_env = std::getenv("SYS_COUNT");
+	const char *sys_count_env = std::getenv("SYS_CALL");
 
 	if (getenv(fail_env) && sys_count_env &&
 		std::atoi(sys_count_env) == call_counter)
