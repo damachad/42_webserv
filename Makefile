@@ -30,7 +30,6 @@ RM = rm -rf
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ FLAGS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
 CXXFLAGS 	= -Wall -Werror -Wextra -Wshadow -pedantic -std=c++98 -g #-fsanitize=address
-TESTFLAGS   =
 
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ PATHS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
@@ -52,12 +51,12 @@ OBJ 		= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILES)))
 all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJ)
-	@$(CXX) $(CXXFLAGS) $(TESTFLAGS) $(SRC) -o $(NAME) -I $(INC)
+	@$(CXX) $(CXXFLAGS) $(SRC) -o $(NAME) -I $(INC)
 	@echo "[$(NAME) created]"
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp 
 	@mkdir -p $(@D)
-	@$(CXX) $(CXXFLAGS) $(TESTFLAGS) -c $< -o $@ -I $(INC)
+	@$(CXX) $(CXXFLAGS) -c $< -o $@ -I $(INC)
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
