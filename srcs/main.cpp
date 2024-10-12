@@ -59,7 +59,12 @@ int main(int argc, char** argv) {
 	}
 
 	// Runs the server on an infinite loop
-	server_cluster.run();
+	try {
+		server_cluster.run();
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
 
 	return 0;
 }

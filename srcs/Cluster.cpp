@@ -25,6 +25,7 @@
 #include "Helpers.hpp"
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
+#include "wrapper_functions.hpp"
 
 unsigned int total_used_storage = 0;
 // NOTE: Keeps track of how many bytes have been uploaded/deleted to server
@@ -268,7 +269,6 @@ void Cluster::handleClientRequest(int connection_fd) {
 	while (request.find("\r\n\r\n") ==
 		   std::string::npos) {	 // NOTE: While all the headers haven't been
 								 // received
-		//
 		memset(buffer_request, 0, sizeof(buffer_request));
 
 		ssize_t bytesRead =
@@ -331,9 +331,6 @@ const std::string Cluster::getResponse(HTTP_Request& request,
 	AResponse* response_check;
 
 	const Server* server = getContext(client_fd, request);
-
-	// NOTE: Remove the following line! Just here for testing!
-	// error_status = OK;
 
 	if (error_status != OK)
 		response_check =

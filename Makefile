@@ -30,6 +30,7 @@ RM = rm -rf
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ FLAGS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
 CXXFLAGS 	= -Wall -Werror -Wextra -Wshadow -pedantic -std=c++98 -g #-fsanitize=address
+TESTFLAGS   =
 
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ PATHS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
@@ -41,7 +42,7 @@ OBJ_DIR		= objs
 
 NAME 		= webserv
 
-FILES 		= main Helpers ConfigParser Exceptions Server Cluster utils LocationContext HTTPRequestParser AResponse GetResponse PostResponse DeleteResponse RequestErrorResponse 
+FILES 		= main Helpers ConfigParser Exceptions Server Cluster utils LocationContext HTTPRequestParser AResponse GetResponse PostResponse DeleteResponse RequestErrorResponse wrapper_functions
 
 SRC 		= $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILES)))
 OBJ 		= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILES)))
@@ -51,12 +52,12 @@ OBJ 		= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILES)))
 all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJ)
-	@$(CXX) $(CXXFLAGS) $(SRC) -o $(NAME) -I $(INC)
+	@$(CXX) $(CXXFLAGS) $(TESTFLAGS) $(SRC) -o $(NAME) -I $(INC)
 	@echo "[$(NAME) created]"
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp 
 	@mkdir -p $(@D)
-	@$(CXX) $(CXXFLAGS) -c $< -o $@ -I $(INC)
+	@$(CXX) $(CXXFLAGS) $(TESTFLAGS) -c $< -o $@ -I $(INC)
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
