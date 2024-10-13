@@ -127,7 +127,7 @@ int Cluster::createAndBindSocket(const std::string& IP,
 		0)
 		throw SocketSetupError("Could not set SO_REUSEADDR");
 
-	// Listen to connections on socket
+	// Sets up socket configurations
 	struct sockaddr_in sockaddr;
 	std::memset(&sockaddr, 0,
 				sizeof(sockaddr));	// Clears the struct
@@ -146,7 +146,7 @@ int Cluster::createAndBindSocket(const std::string& IP,
 	sockaddr.sin_port = htons(
 		stringToNumber<int>(port));	 // Converts number to network byte order
 
-	// Binds to socket
+	// Binds configuration to socket
 	if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
 		close(sock_fd);
 		throw SocketSetupError("bind");
@@ -223,8 +223,6 @@ void Cluster::setupCluster(void) {
 
 		// Adds socket to epoll for monitoring
 		addSocketsToEpoll(sock_fd);
-
-		// Adds listening socket to _listening_socket vector
 	}
 }
 
