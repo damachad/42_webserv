@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/11 14:37:46 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 12:18:32 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ static std::map<short, std::string> initStatusMessages() {
 	m.insert(std::make_pair(410, "Gone"));
 	m.insert(std::make_pair(411, "Length Required"));
 	m.insert(std::make_pair(412, "Precondition Failed"));
-	m.insert(std::make_pair(413, "Content Too Large"));
+	m.insert(std::make_pair(413, "Payload Too Large"));
 	m.insert(std::make_pair(414, "URI Too Long"));
 	m.insert(std::make_pair(415, "Unsupported Media Type"));
 	m.insert(std::make_pair(416, "Range Not Satisfiable"));
@@ -130,8 +130,8 @@ AResponse::~AResponse() {}
 
 AResponse::AResponse(const Server& server, const HTTP_Request& request)
 	: _request(request), _server(server) {
-		_response.status = 200;
-	}
+	_response.status = 200;
+}
 
 AResponse::AResponse(const AResponse& src)
 	: _request(src._request),
@@ -226,13 +226,13 @@ short AResponse::checkFile(const std::string& path) const {
 			return 404;	 // file does not exist
 		else if (errno == EACCES)
 			return 403;	 // permission denied
-		else
-			return 500;	 // TODO: Check if necessary later
-	} else if ((info.st_mode & S_IFMT) != S_IFDIR &&
-			   (info.st_mode & S_IFMT) !=
-				   S_IFREG)	 // Check if it is a directory or a regular file
-							 // (not a link or device)
-		return 403;			 // permission denied
+	}
+	bool expectDir = !path.empty() && (path.at(path.size() - 1) == '/'); // check if url ends with '/'
+	if (expectDir && (info.st_mode & S_IFMT) != S_IFDIR) return 404;
+	if ((info.st_mode & S_IFMT) != S_IFREG &&
+		(info.st_mode & S_IFMT) != S_IFDIR)	 // Check if it is not regular file
+											 // (not a link or device)
+		return 403;							 // permission denied
 	return 200;
 }
 
@@ -267,7 +267,6 @@ const std::string AResponse::getIndexFile(const std::string& path) const {
 }
 
 // Joins both string and ensures there is a '/' in the middle
-//  TODO: review edge cases (double '/')
 const std::string AResponse::assemblePath(const std::string& l,
 										  const std::string& r) const {
 	if (r.empty()) return l;
@@ -305,9 +304,9 @@ void AResponse::loadCommonHeaders() {
 	_response.headers.insert(
 		std::make_pair(std::string("Server"), std::string(SERVER)));
 	if (_response.body.size()) {
-		_response.headers.insert(
-			std::make_pair(std::string("Content-Length"),
-					   numberToString<unsigned long>(_response.body.size())));
+		_response.headers.insert(std::make_pair(
+			std::string("Content-Length"),
+			numberToString<unsigned long>(_response.body.size())));
 	}
 	_response.headers.insert(
 		std::make_pair(std::string("Cache-Control"), std::string("no-store")));
@@ -329,7 +328,7 @@ void AResponse::loadReturn() {
 //  TODO: Review check empty logic
 bool AResponse::hasReturn() const {
 	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
-	if (redirect.second.empty()) return false;
+	if (redirect.first == -1 || redirect.second.empty()) return false;
 	return true;
 }
 
@@ -377,8 +376,7 @@ std::string AResponse::addFileEntry(std::string& name,
 		displayName = name.substr(0, 49) + "..";  // Truncate and add ".."
 	else
 		displayName = name;
-	if (name != "." && name != "..")
-		name = assemblePath(_request.uri, name);
+	if (name != "." && name != "..") name = assemblePath(_request.uri, name);
 	std::string WP1;
 	if (displayName.length() < 51)
 		WP1 = std::string(51 - displayName.length(), ' ');	// Pad with spaces
@@ -405,7 +403,7 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	}
 	// Sort the vector alphabetically
 	std::sort(entries.begin(), entries.end());
-	entries.erase(entries.begin()); // Hide "."
+	entries.erase(entries.begin());	 // Hide "."
 	for (std::vector<std::string>::iterator it = entries.begin();
 		 it != entries.end(); ++it) {
 		std::string entryName = *it;
