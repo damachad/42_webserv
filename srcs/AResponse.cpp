@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/14 11:22:11 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 12:18:32 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -267,7 +267,6 @@ const std::string AResponse::getIndexFile(const std::string& path) const {
 }
 
 // Joins both string and ensures there is a '/' in the middle
-//  TODO: review edge cases (double '/')
 const std::string AResponse::assemblePath(const std::string& l,
 										  const std::string& r) const {
 	if (r.empty()) return l;
@@ -329,7 +328,7 @@ void AResponse::loadReturn() {
 //  TODO: Review check empty logic
 bool AResponse::hasReturn() const {
 	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
-	if (redirect.second.empty()) return false;
+	if (redirect.first == -1 || redirect.second.empty()) return false;
 	return true;
 }
 
