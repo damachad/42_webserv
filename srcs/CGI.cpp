@@ -192,7 +192,9 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     dup2(pipeOut[1], STDOUT_FILENO);
     close(pipeIn[1]);
     close(pipeOut[0]);
-    setCGIEnv();
+    short status = setCGIEnv();
+    if (status != 200)
+      return numberToString(status);
     setLimits(64);
     std::string dirName = scriptPath.substr(0, scriptPath.find_last_of("/"));
     if (chdir(dirName.c_str()) < 0) return "500";
@@ -211,8 +213,6 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
     cgiOutput = createCgiOutput(pid, pipeOut);
   }
   close(pipeOut[0]);
-
-  // std::cout << cgiOutput << std::endl; // TESTE
   return cgiOutput;
 }
 
