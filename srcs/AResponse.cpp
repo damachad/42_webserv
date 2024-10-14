@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/11 16:08:46 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 19:06:51 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,13 +216,6 @@ void AResponse::setMatchLocationRoute() {
 // Returns path to look for resource in location, root + (uri - locationRoute)
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
-	if (isCGI()) {
-		if (_request.uri.find("cgi-bin") != std::string::npos)
-		return (assemblePath(root,
-							 _request.uri.substr(_locationRoute.size())));
-		return (assemblePath(assemblePath(root, "cgi-bin"),
-							 _request.uri.substr(_locationRoute.size())));
-	}
 	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
 
 }
@@ -521,39 +514,3 @@ const std::string AResponse::loadErrorPage(short status) {
 const std::string AResponse::loadContinueMessage(void) {
 	return "HTTP/1.1 100 Continue";
 }
-
-// Example implementation (case GET)
-// Order of functions is important
-// std::string AResponse::generateResponse() {
-// 	setMatchLocationRoute();
-// 	short status = checkSize();
-// 	if (status != 200) return loadErrorPage(status);
-// 	status = checkMethod();
-// 	if (status != 200) return loadErrorPage(status);
-// 	if (hasReturn()) {
-// 		loadReturn();
-// 		return getResponseStr();
-// 	}
-// 	std::string path = getPath();
-
-// 	status = checkFile(path);
-// 	if (status != 200) return loadErrorPage(status);
-// 	if (!isDirectory(path)) {
-// 		// status = loadFile(path);  // if GET
-// 		if (status != 200) return loadErrorPage(status);
-// 	} else {  // is a directory
-// 		std::string indexFile = getIndexFile(path);
-// 		if (!indexFile.empty() &&
-// 			!isDirectory(indexFile)) {	// TODO: deal with
-// directory in index?
-// 			// status = loadFile(indexFile);  // if GET
-// 			if (status != 200) return loadErrorPage(status);
-// 		} else if (hasAutoindex()) {
-// 			status = loadDirectoryListing(path);
-// 			if (status != 200) return loadErrorPage(status);
-// 		} else
-// 			loadErrorPage(404);
-// 	}
-
-// 	return getResponseStr();
-// }
