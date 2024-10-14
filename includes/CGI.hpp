@@ -33,7 +33,7 @@ private:
   std::string fetchCookies();
 
   // Env setter
-  void setCGIEnv();
+  short setCGIEnv();
 
   // Parsers
   std::multimap<std::string, std::string>

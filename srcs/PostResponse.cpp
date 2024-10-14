@@ -271,6 +271,7 @@ std::string PostResponse::generateResponse() {
 		std::string path = getPath();
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
+		if (_response.status != 200) loadErrorPage(_response.status);
 		loadCommonHeaders();
 	}
 

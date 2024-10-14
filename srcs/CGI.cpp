@@ -82,63 +82,50 @@ std::string intToString(int value) {
   return ss.str();
 }
 
-void CGI::setCGIEnv() {
-  try {
+short CGI::setCGIEnv() {
     if (setenv("REQUEST_METHOD", intToString(_request.method).c_str(), 1) !=
         0) {
-      throw std::runtime_error(
-          "Error: Failed to set REQUEST_METHOD environment variable.");
+      return 500;
     }
     std::string contentType = getHeaderEnvValue("content-type");
     if (_request.method == POST && contentType.empty()) {
-      throw std::runtime_error("Error: Missing 'Content-Type' header.");
+      return 500;
     }
     if (setenv("CONTENT_TYPE", contentType.c_str(), 1) != 0) {
-      throw std::runtime_error(
-          "Error: Failed to set CONTENT_TYPE environment variable.");
+      return 500;
     }
     if (setenv("PATH_INFO", _path.c_str(), 1) != 0) {
-      throw std::runtime_error(
-          "Error: Failed to set PATH_INFO environment variable.");
+      return 500;
     }
 
     std::string contentLength = getHeaderEnvValue("content-length");
     if (_request.method == POST && contentLength.empty()) {
-      throw std::runtime_error("Error: Missing 'Content-Length' header.");
+      return 500;
     }
     if (setenv("CONTENT_LENGTH", contentLength.c_str(), 1) != 0) {
-      throw std::runtime_error(
-          "Error: Failed to set CONTENT_LENGTH environment variable.");
+      return 500;
     }
 
     std::string queryString = getQueryFields();
     if (setenv("QUERY_STRING", queryString.c_str(), 1) != 0) {
-      throw std::runtime_error(
-          "Error: Failed to set QUERY_STRING environment variable.");
+      return 500;
     }
 
     if (setenv("SCRIPT_NAME", _request.uri.c_str(), 1) != 0) {
-      throw std::runtime_error(
-          "Error: Failed to set SCRIPT_NAME environment variable.");
+      return 500;
     }
 
     if (setenv("SERVER_PROTOCOL", _request.protocol_version.c_str(), 1) != 0) {
-      throw std::runtime_error(
-          "Error: Failed to set SERVER_PROTOCOL environment variable.");
+      return 500;
     }
 
     std::string cookies = fetchCookies();
     if (!cookies.empty()) {
       if (setenv("HTTP_COOKIE", cookies.c_str(), 1) != 0) {
-        throw std::runtime_error(
-            "Error: Failed to set HTTP_COOKIE environment variable.");
+        return 500;
       }
     }
-
-  } catch (const std::exception &e) {
-    std::cerr << e.what() << std::endl;
-    throw;
-  }
+    return 200;
 }
 
 std::string readHtmlFile(const std::string &filePath) {
@@ -255,10 +242,7 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
     std::string value = it->second;
 
     if (key == "Content-Type" && value.empty()) {
-      throw std::runtime_error("Error: Missing 'Content-Type' header.");
-    }
-    if (key == "Content-Length" && value.empty()) {
-      throw std::runtime_error("Error: Missing 'Content-Length' header.");
+      _response.status = 500;;
     }
 
     headerEnv.insert(std::make_pair(key, value));
@@ -281,12 +265,7 @@ void CGI::handleCGIResponse() {
     _response.headers.insert(headerEnv.begin(), headerEnv.end());
     _response.status = 200;
     _response.body = body;
-    if (_request.method == POST &&
-        headerEnv.find("content-type") == headerEnv.end()) {
-      throw std::runtime_error("Missing 'Content-Type' in CGI headers.");
-    }
   } else {
-    throw std::runtime_error(
-        "Error: Malformed CGI output, no valid headers found.");
+    _response.status = 500;
   }
 }
