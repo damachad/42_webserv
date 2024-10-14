@@ -26,18 +26,24 @@
             const fileName = fileInput.files[0].name;
 
             // Send DELETE request with the file name
-            fetch('https://localhost:999', {
+            fetch('/' + encodeURIComponent(fileName), {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ fileName: fileName })
             })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('response').innerText = data.message || 'File deleted successfully!';
+            .then(response => {
+                // Extract the status code and status text directly
+                const status = response.status;
+                const statusText = response.statusText;
+
+                // Check if the request was successful (status code in the range 200-299)
+                if (status >= 200 && status < 300) {
+                    document.getElementById('response').innerText = `Success ${status}: ${statusText}`;
+                } else {
+                    // Display the status and status text for errors
+                    document.getElementById('response').innerText = `Error ${status}: ${statusText}`;
+                }
             })
             .catch(error => {
+                // Handle any network or unexpected errors
                 document.getElementById('response').innerText = 'Error deleting file';
                 console.error('Error:', error);
             });

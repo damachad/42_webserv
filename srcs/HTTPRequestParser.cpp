@@ -13,17 +13,17 @@
 #include "HTTPRequestParser.hpp"
 
 #include "Helpers.hpp"
+#include "Webserv.hpp"
 
 static int response_status = OK;
 
-unsigned short HTTP_Request_Parser::parse_HTTP_request(
+unsigned short HTTP_Request_Parser::parse_HTTP_headers(
 	const std::string& buffer_request, HTTP_Request& HTTP) {
 	if (buffer_request.empty() ||
 		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos) {
 		response_status = BAD_REQUEST;
 		return response_status;
-	}  // TODO: Check what happens with empty
-	// requests....... client on nginx hangs :x
+	}
 
 	// Buffers for parsing
 	std::stringstream buffer_stream(buffer_request);
@@ -48,19 +48,12 @@ unsigned short HTTP_Request_Parser::parse_HTTP_request(
 		}
 	}
 
-	if (header_is_parsed) {
-		// Read the rest of the stream as the message body
-		std::string remaining_body(
-			(std::istreambuf_iterator<char>(buffer_stream)),
-			std::istreambuf_iterator<char>());
-		HTTP.message_body = remaining_body;	 // Append the body
-	}
-	trimNulls(HTTP.message_body);
 	extract_queries(HTTP);
-	if (!check_validity_of_header_fields(HTTP)) return response_status;
 
-	// if (HTTP.header_fields.find("expect") != HTTP.header_fields.end())
-	//	return check_expect_validity(HTTP);
+	std::string remaining_body((std::istreambuf_iterator<char>(buffer_stream)),
+							   std::istreambuf_iterator<char>());
+	HTTP.message_body =
+		remaining_body;	 // Append the remaining body, if such exists
 
 	return response_status;
 }
@@ -81,9 +74,13 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 	std::string url;
 	line_stream >> url;
 	std::string decoded_uri = decode(url);
-	if (decoded_uri.size() == 0 ||
-		!url_is_valid(decoded_uri)) {  // TODO: URL SIZE
+	if (decoded_uri.size() == 0 || !url_is_valid(decoded_uri)) {
 		response_status = BAD_REQUEST;
+		return false;
+	}
+
+	if (decoded_uri.size() > URL_MAX_SIZE) {
+		response_status = URI_TOO_LONG;
 		return false;
 	}
 
@@ -172,7 +169,8 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	bool has_firefox = user_agent.find("Firefox") != std::string::npos;
 	bool has_siege = user_agent.find("siege") != std::string::npos;
 
-	// Checks that the request is from Curl, Mozilla Firefox or Mozilla Siege
+	// Checks that the request is from Curl, Mozilla Firefox or Mozilla
+	// Siege
 	if (!(has_curl || (has_mozilla && (has_firefox || has_siege)))) {
 		response_status = BAD_REQUEST;
 		return false;
@@ -186,25 +184,29 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 		return false;
 	}
 
-	// Only one content-length is allowed
-	if (HTTP.header_fields.count("content-length") > 1) {
+	// Only one of content-length or transfer-encoding is allowed
+	if (HTTP.header_fields.count("content-length") +
+			HTTP.header_fields.count("transfer-encoding") >
+		1) {
 		response_status = BAD_REQUEST;
 		return false;
 	}
 
-	// Checks if content-length is bigger than body, or if a body exists with no
-	// content length
+	// Checks if content-length is bigger than body, or if a body exists
+	// with no content length nor transfer-encoding
 	if (HTTP.header_fields.find("content-length") != HTTP.header_fields.end()) {
-		size_t content_length =
-			static_cast<size_t>(stringToNumber<unsigned long>(
-				HTTP.header_fields.find("content-length")->second));
+		unsigned long content_length = stringToNumber<unsigned long>(
+			HTTP.header_fields.find("content-length")->second);
 		if (content_length != HTTP.message_body.size()) {
-			response_status = PAYLOAD_TOO_LARGE;
+			response_status = BAD_REQUEST;
 			return false;
 		}
 	} else	// If there is no content-length
 	{
-		if (!HTTP.message_body.empty())  // If there is a body
+		if (!HTTP.message_body.empty() &&
+			HTTP.header_fields.find("transfer-encoding") !=
+				HTTP.header_fields.end())  // If there is a body and no
+										   // transfer-encoding either
 		{
 			response_status = LENGTH_REQUIRED;
 			return false;
@@ -212,13 +214,6 @@ bool HTTP_Request_Parser::check_validity_of_header_fields(HTTP_Request& HTTP) {
 	}
 
 	return true;
-}
-
-unsigned short HTTP_Request_Parser::check_expect_validity(HTTP_Request& HTTP) {
-	if (HTTP.header_fields.find("expect")->second != "100-continue")
-		return BAD_REQUEST;
-
-	return CONTINUE;
 }
 
 void HTTP_Request_Parser::extract_queries(HTTP_Request& HTTP) {
@@ -264,7 +259,7 @@ std::string HTTP_Request_Parser::trim(const std::string& str) {
 // Function to trim null characters ('\0') from a string
 void HTTP_Request_Parser::trimNulls(std::string& s) {
 	size_t pos = s.find_last_not_of('\0');
-	
+
 	if (pos == std::string::npos) {
 		s.clear();
 	} else {

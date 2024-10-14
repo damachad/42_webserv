@@ -22,6 +22,7 @@ Server::Server() : _autoIndex(FALSE), _clientMaxBodySize(1048576) {
 	methods.insert(POST);
 	methods.insert(DELETE);
 	_allowedMethods = methods;
+	_return = std::make_pair(-1, "");
 }
 
 Server::Server(const Server &src)
@@ -31,7 +32,6 @@ Server::Server(const Server &src)
 	  _index(src.getIndex()),
 	  _autoIndex(src.getAutoIndex()),
 	  _clientMaxBodySize(src.getClientMaxBodySize()),
-	  _tryFiles(src.getTryFiles()),
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _locations(src.getLocations()),
@@ -45,7 +45,6 @@ Server &Server::operator=(const Server &src) {
 	_index = src.getIndex();
 	_autoIndex = src.getAutoIndex();
 	_clientMaxBodySize = src.getClientMaxBodySize();
-	_tryFiles = src.getTryFiles();
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
 	_locations = src.getLocations();
@@ -62,7 +61,6 @@ void Server::initializeDirectiveMap(void) {
 	_directiveMap["server_name"] = &Server::handleServerName;
 	_directiveMap["root"] = &Server::handleRoot;
 	_directiveMap["index"] = &Server::handleIndex;
-	_directiveMap["try_files"] = &Server::handleTryFiles;
 	_directiveMap["error_page"] = &Server::handleErrorPage;
 	_directiveMap["client_max_body_size"] = &Server::handleCliMaxSize;
 	_directiveMap["autoindex"] = &Server::handleAutoIndex;
@@ -96,10 +94,6 @@ static bool isValidIp(const std::string &ip) {
 }
 
 // Handlers
-
-// TODO: implement IPv6? default_server ?
-// test what happens in NGINX address:<nothing> or <nothing>:port,
-// is it the same as not including that parameter?
 void Server::handleListen(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Too many arguments in listen directive.");
@@ -143,11 +137,6 @@ void Server::handleRoot(std::vector<std::string> &tokens) {
 void Server::handleIndex(std::vector<std::string> &tokens) {
 	tokens.erase(tokens.begin());
 	_index = tokens;
-}
-
-void Server::handleTryFiles(std::vector<std::string> &tokens) {
-	tokens.erase(tokens.begin());
-	_tryFiles = tokens;
 }
 
 void Server::handleErrorPage(std::vector<std::string> &tokens) {
@@ -221,13 +210,14 @@ void Server::handleReturn(std::vector<std::string> &tokens) {
 	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
 		errorCode != static_cast<short>(errorCode))	 // accepted NGINX values
 		throw ConfigError("Invalid error code for return directive.");
-	if (_return.first) return;
+	if (_return.first != -1) return;
 	_return.first = static_cast<short>(errorCode);
 	_return.second = tokens[2];
 }
 
 void Server::handleUpload(std::vector<std::string> &tokens) {
-	if (tokens.size() != 2) throw ConfigError("Invalid upload_store directive.");
+	if (tokens.size() != 2)
+		throw ConfigError("Invalid upload_store directive.");
 	_uploadStore = tokens[1];
 }
 
@@ -287,8 +277,6 @@ State Server::getAutoIndex() const { return _autoIndex; }
 
 long Server::getClientMaxBodySize() const { return _clientMaxBodySize; }
 
-std::vector<std::string> Server::getTryFiles() const { return _tryFiles; }
-
 std::set<Method> Server::getAllowedMethods() const { return _allowedMethods; }
 
 std::map<short, std::string> Server::getErrorPages() const {
@@ -301,9 +289,7 @@ std::map<std::string, LocationContext> Server::getLocations() const {
 
 std::pair<short, std::string> Server::getReturn() const { return _return; }
 
-std::string Server::getUpload() const {
-	return _uploadStore;
-}
+std::string Server::getUpload() const { return _uploadStore; }
 
 std::string Server::getRoot(const std::string &route) const {
 	if (route.empty()) return _root;
@@ -345,16 +331,6 @@ long Server::getClientMaxBodySize(const std::string &route) const {
 		return it->second.getClientMaxBodySize();
 }
 
-std::vector<std::string> Server::getTryFiles(const std::string &route) const {
-	if (route.empty()) return _tryFiles;
-	std::map<std::string, LocationContext>::const_iterator it;
-	it = _locations.find(route);
-	if (it == _locations.end() || it->second.getTryFiles().empty())
-		return _tryFiles;
-	else
-		return it->second.getTryFiles();
-}
-
 std::map<short, std::string> Server::getErrorPages(
 	const std::string &route) const {
 	if (route.empty()) return _errorPages;
@@ -381,7 +357,7 @@ std::pair<short, std::string> Server::getReturn(
 	if (route.empty()) return _return;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
-	if (it == _locations.end() || it->second.getReturn().first == 0)
+	if (it == _locations.end() || it->second.getReturn().first == -1)
 		return _return;
 	else
 		return it->second.getReturn();
@@ -412,7 +388,6 @@ void Server::setup_server(void) {
 
 		// Set the socket option SO_REUSEADDR
 		// NOTE: Allows for quicker debugging because socket doesn't get held
-		// TODO: REMOVE AT THE END????
 		int optval = 1;
 		if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
 					   sizeof(optval)) < 0) {
@@ -486,13 +461,6 @@ std::ostream &operator<<(std::ostream &os, const Server &context) {
 
 	os << "Client Max Body Size: " << context.getClientMaxBodySize() << "\n";
 
-	os << "Try Files:\n";
-	std::vector<std::string> tryFiles = context.getTryFiles();
-	for (std::vector<std::string>::const_iterator it = tryFiles.begin();
-		 it != tryFiles.end(); ++it) {
-		os << "  " << *it << "\n";
-	}
-
 	os << "Error Pages:\n";
 	std::map<short, std::string> errorPages = context.getErrorPages();
 	for (std::map<short, std::string>::const_iterator it = errorPages.begin();
@@ -502,7 +470,7 @@ std::ostream &operator<<(std::ostream &os, const Server &context) {
 
 	os << "Return:\n";
 	std::pair<short, std::string> returns = context.getReturn();
-	if (returns.first)
+	if (returns.first != -1)
 		os << "    " << returns.first << " : " << returns.second << "\n";
 
 	os << "Locations:\n";

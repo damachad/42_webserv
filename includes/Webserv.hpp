@@ -47,13 +47,17 @@
 enum Method { GET = 1, POST, DELETE, UNKNOWN };
 enum State { FALSE, TRUE, UNSET };
 
-// Magic numbers		 // TODO: Do we need them?
-#define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
+// TODO: Decide what global definitions we want
+// Magic numbers and strings
+#define MAX_CONNECTIONS 100
+#define MAX_STORAGE_SIZE 100000
 #define REG_FILE 0
 #define DIRECTORY 1
 #define URL_MAX_SIZE 8094
 #define SERVER "webserv"
 
 extern const std::map<short, std::string> STATUS_MESSAGES;
+
+extern unsigned int total_used_storage;
 
 #endif

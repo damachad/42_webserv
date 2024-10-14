@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/30 16:29:01 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 12:40:31 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
+#include <cerrno>
 #include <utility>
 
 #include "AResponse.hpp"
@@ -24,6 +25,9 @@
 #include "Helpers.hpp"
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
+
+unsigned int total_used_storage = 0;
+// NOTE: Keeps track of how many bytes have been uploaded/deleted to server
 
 // Constructor
 // Create a vector of servers from provided context vector
@@ -259,23 +263,32 @@ void Cluster::handleNewConnection(int listening_fd) {
 // Handles a client request
 void Cluster::handleClientRequest(int connection_fd) {
 	char buffer_request[BUFFER_SIZE] = {};
-	ssize_t count = read(connection_fd, buffer_request, sizeof(buffer_request));
+	std::string request;
 
-	if (count == -1) {
-		if (errno != EAGAIN) {
+	while (request.find("\r\n\r\n") ==
+		   std::string::npos) {	 // NOTE: While all the headers haven't been
+								 // received
+		//
+		memset(buffer_request, 0, sizeof(buffer_request));
+
+		ssize_t bytesRead =
+			recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
+
+		if (bytesRead < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) return;
+			if (errno != EAGAIN) {
+				closeAndRemoveSocket(connection_fd, _epoll_fd);
+				throw ClusterRunError("read failed");
+			}
+		} else if (bytesRead == 0) {
+			// Connection closed
 			closeAndRemoveSocket(connection_fd, _epoll_fd);
-			throw ClusterRunError("read failed");
-		}
-		return;	 // No data to read, just return
+			return;
+		} else
+			// Bytes have been read. Append them to request.
+			request.append(buffer_request, bytesRead);
 	}
 
-	if (count == 0) {
-		// Connection closed
-		closeAndRemoveSocket(connection_fd, _epoll_fd);
-		return;
-	}
-
-	std::string request(buffer_request, BUFFER_SIZE);
 	processRequest(connection_fd, request);
 }
 
@@ -283,28 +296,19 @@ void Cluster::handleClientRequest(int connection_fd) {
 void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
 	HTTP_Request request;
 	unsigned short error_status =
-		HTTP_Request_Parser::parse_HTTP_request(buffer_request, request);
+		HTTP_Request_Parser::parse_HTTP_headers(buffer_request, request);
 
-	// if (error_status == CONTINUE &&
-	// 	(request.method == GET || request.method == DELETE))
-	// 	;  // Send continue message
+	std::string buffer_response = getResponse(request, error_status, client_fd);
 
-	if (error_status != CONTINUE) {
-		std::string buffer_response =
-			getResponse(request, error_status, client_fd);
+	ssize_t sent =
+		send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
 
-		ssize_t sent =
-			send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
-		if (sent == -1 && errno != EAGAIN) {
-			closeAndRemoveSocket(client_fd, _epoll_fd);
-			throw ClusterRunError("send failed");
-		}
+	if (sent == -1 && errno != EAGAIN) {
 		closeAndRemoveSocket(client_fd, _epoll_fd);
-
-	} else if (error_status == CONTINUE && request.method == POST) {
-		// Wait for more data;
+		throw ClusterRunError("send failed");
 	}
-	(void)error_status;
+
+	closeAndRemoveSocket(client_fd, _epoll_fd);
 }
 
 // Sets sockets to non-blocking-mode
@@ -321,13 +325,15 @@ void Cluster::closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd) {
 }
 
 // Gets response from server
-const std::string Cluster::getResponse(const HTTP_Request& request,
+const std::string Cluster::getResponse(HTTP_Request& request,
 									   unsigned short& error_status,
 									   int client_fd) {
-
 	AResponse* response_check;
 
 	const Server* server = getContext(client_fd, request);
+
+	// NOTE: Remove the following line! Just here for testing!
+	// error_status = OK;
 
 	if (error_status != OK)
 		response_check =
@@ -338,7 +344,8 @@ const std::string Cluster::getResponse(const HTTP_Request& request,
 				response_check = new GetResponse(*server, request);
 				break;
 			case (POST):
-				response_check = new PostResponse(*server, request);
+				response_check =
+					new PostResponse(*server, request, client_fd, _epoll_fd);
 				break;
 			case (DELETE):
 				response_check = new DeleteResponse(*server, request);
@@ -347,7 +354,7 @@ const std::string Cluster::getResponse(const HTTP_Request& request,
 	}
 	std::string response = response_check->generateResponse();
 	delete response_check;
-	
+
 	return response;
 }
 
@@ -429,9 +436,6 @@ const Server* Cluster::getContext(int client_fd, const HTTP_Request& request) {
 	}
 
 	// If no server names were found, just return the first one
-	//  TODO: Check in case of URIs??
-	//  TODO: Check in case of defaults?? (perhaps switch them to the first
-	//  position in that case)
 	return valid_servers.front();
 }
 

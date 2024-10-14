@@ -16,7 +16,6 @@
 #include "Server.hpp"
 
 #define BUFFER_SIZE 8096
-#define HTTP_REQUEST_INCOMPLETE 2000  // TODO: CHANGE
 
 class Server;
 struct HTTP_Request;
@@ -89,10 +88,11 @@ class Cluster {
 	void handleClientRequest(int connection_fd);
 	//// Processes the request
 	void processRequest(int connection_fd, const std::string& buffer_request);
+
 	//// Closes socket and removes it from epoll
 	static void closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd);
 	//// Gets response from server
-	const std::string getResponse(const HTTP_Request& request,
+	const std::string getResponse(HTTP_Request& request,
 								  unsigned short& error_status, int client_fd);
 	// Gets correct context from client_fd
 	const Server* getContext(int client_fd, const HTTP_Request& request);

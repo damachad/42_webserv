@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/24 11:11:17 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 12:17:34 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 LocationContext::LocationContext() : _autoIndex(UNSET), _clientMaxBodySize(-1) {
 	initializeDirectiveMap();
+	_return = std::make_pair(-1, "");
 }
 
 LocationContext::LocationContext(const LocationContext &src)
@@ -21,7 +22,6 @@ LocationContext::LocationContext(const LocationContext &src)
 	  _index(src.getIndex()),
 	  _autoIndex(src.getAutoIndex()),
 	  _clientMaxBodySize(src.getClientMaxBodySize()),
-	  _tryFiles(src.getTryFiles()),
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _return(src.getReturn()),
@@ -32,7 +32,6 @@ LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_index = src.getIndex();
 	_autoIndex = src.getAutoIndex();
 	_clientMaxBodySize = src.getClientMaxBodySize();
-	_tryFiles = src.getTryFiles();
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
 	_return = src.getReturn();
@@ -47,7 +46,6 @@ void LocationContext::initializeDirectiveMap(void) {
 	_directiveMap["root"] = &LocationContext::handleRoot;
 	_directiveMap["index"] = &LocationContext::handleIndex;
 	_directiveMap["limit_except"] = &LocationContext::handleLimitExcept;
-	_directiveMap["try_files"] = &LocationContext::handleTryFiles;
 	_directiveMap["error_page"] = &LocationContext::handleErrorPage;
 	_directiveMap["client_max_body_size"] = &LocationContext::handleCliMaxSize;
 	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
@@ -82,11 +80,6 @@ void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
 			throw ConfigError("Unsupported method detected.");
 	}
 	_allowedMethods = methods;
-}
-
-void LocationContext::handleTryFiles(std::vector<std::string> &tokens) {
-	tokens.erase(tokens.begin());
-	_tryFiles = tokens;
 }
 
 void LocationContext::handleErrorPage(std::vector<std::string> &tokens) {
@@ -159,7 +152,7 @@ void LocationContext::handleReturn(std::vector<std::string> &tokens) {
 	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
 		errorCode != static_cast<short>(errorCode))	 // accepted NGINX values
 		throw ConfigError("Invalid error code for return directive.");
-	if (_return.first) return;
+	if (_return.first != -1) return;
 	_return.first = static_cast<short>(errorCode);
 	_return.second = tokens[2];
 }
@@ -191,10 +184,6 @@ State LocationContext::getAutoIndex() const { return _autoIndex; }
 
 long LocationContext::getClientMaxBodySize() const {
 	return _clientMaxBodySize;
-}
-
-std::vector<std::string> LocationContext::getTryFiles() const {
-	return _tryFiles;
 }
 
 std::set<Method> LocationContext::getAllowedMethods() const {
@@ -231,13 +220,6 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 
 	os << "  Client Max Body Size: " << context.getClientMaxBodySize() << "\n";
 
-	os << "  Try Files:\n";
-	std::vector<std::string> tryFiles = context.getTryFiles();
-	for (std::vector<std::string>::const_iterator it = tryFiles.begin();
-		 it != tryFiles.end(); ++it) {
-		os << "    " << *it << "\n";
-	}
-
 	os << "  Allowed Methods: ";
 	std::set<Method> methods = context.getAllowedMethods();
 	for (std::set<Method>::const_iterator it = methods.begin();
@@ -267,7 +249,7 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 
 	os << "  Return:\n";
 	std::pair<short, std::string> returns = context.getReturn();
-	if (returns.first)
+	if (returns.first != -1)
 		os << "    " << returns.first << " : " << returns.second << "\n";
 	
 	os << "  Upload Store: " << context.getUpload() << "\n";

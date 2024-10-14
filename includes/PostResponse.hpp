@@ -26,7 +26,8 @@ struct file {
 
 class PostResponse : public AResponse {
    public:
-	PostResponse(const Server& server, const HTTP_Request& request);
+	PostResponse(const Server& server, HTTP_Request& request, int client_fd,
+				 int epoll_fd);
 	PostResponse(const PostResponse& src);
 	~PostResponse();
 
@@ -36,6 +37,17 @@ class PostResponse : public AResponse {
 	PostResponse();
 	PostResponse& operator=(const PostResponse& src);
 
+	// Functions to parse the remainder of the body
+	unsigned short parse_HTTP_body();
+	bool send100Continue();
+	bool readBody();
+	void readContentLength();
+	void removeFirstChunk();
+	void readChunks();
+	ssize_t readChunkSizeFromSocket();
+	int skipTrailingCRLF();
+	bool requestHasHeader(const std::string& header);
+	bool requestIsCGI();
 	short checkBody();
 	short extractFile();
 	short uploadFile();
@@ -50,6 +62,9 @@ class PostResponse : public AResponse {
 	std::vector<std::multimap<std::string, std::string> > _multipart_body;
 	std::string _boundary;
 	struct file _file_to_upload;
+
+	int _client_fd;
+	int _epoll_fd;
 };
 
 #endif

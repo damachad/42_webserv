@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/24 11:28:23 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/11 10:57:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,11 +191,6 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 			  << "\n";
 	std::cout << "Client Max Body Size: "
 			  << _servers[serverNum].getClientMaxBodySize(route) << '\n';
-	std::cout << "Try Files:\n";
-	std::vector<std::string> tryFiles = _servers[serverNum].getTryFiles(route);
-	for (std::vector<std::string>::const_iterator it = tryFiles.begin();
-		 it != tryFiles.end(); ++it)
-		std::cout << "  " << *it << "\n";
 	std::cout << "Error Pages:\n";
 	std::map<short, std::string> errorPages =
 		_servers[serverNum].getErrorPages(route);
