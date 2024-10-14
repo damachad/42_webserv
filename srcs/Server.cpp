@@ -234,8 +234,7 @@ void Server::processDirective(std::string &line) {
 		throw ConfigError("Unkown directive: " + tokens[0]);
 }
 
-// TODO: improve flow of function
-//		load inherited values?
+// Loads a location block and adds it to the map in server
 void Server::processLocation(std::string block, size_t start, size_t end) {
 	std::string route;
 	std::string line;

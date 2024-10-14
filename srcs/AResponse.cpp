@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/14 15:03:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 15:09:25 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -325,7 +325,6 @@ void AResponse::loadReturn() {
 }
 
 // Checks if there is a return directive
-//  TODO: Review check empty logic
 bool AResponse::hasReturn() const {
 	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
 	if (redirect.first == -1 || redirect.second.empty()) return false;
@@ -388,7 +387,6 @@ std::string AResponse::addFileEntry(std::string& name,
 }
 
 // Loads response with a page containing directory listing for that location
-// TODO: Add file last modified date and size, format
 short AResponse::loadDirectoryListing(const std::string& path) {
 	DIR* dir = opendir(path.c_str());
 	if (dir == NULL) return 403;
@@ -499,38 +497,3 @@ const std::string AResponse::loadErrorPage(short status) {
 const std::string AResponse::loadContinueMessage(void) {
 	return "HTTP/1.1 100 Continue";
 }
-
-// Example implementation (case GET)
-// Order of functions is important
-// std::string AResponse::generateResponse() {
-// 	setMatchLocationRoute();
-// 	short status = checkSize();
-// 	if (status != 200) return loadErrorPage(status);
-// 	status = checkMethod();
-// 	if (status != 200) return loadErrorPage(status);
-// 	if (hasReturn()) {
-// 		loadReturn();
-// 		return getResponseStr();
-// 	}
-// 	std::string path = getPath();
-
-// 	status = checkFile(path);
-// 	if (status != 200) return loadErrorPage(status);
-// 	if (!isDirectory(path)) {
-// 		// status = loadFile(path);  // if GET
-// 		if (status != 200) return loadErrorPage(status);
-// 	} else {  // is a directory
-// 		std::string indexFile = getIndexFile(path);
-// 		if (!indexFile.empty() &&
-// 			!isDirectory(indexFile)) {	// TODO: deal with directory in index?
-// 			// status = loadFile(indexFile);  // if GET
-// 			if (status != 200) return loadErrorPage(status);
-// 		} else if (hasAutoindex()) {
-// 			status = loadDirectoryListing(path);
-// 			if (status != 200) return loadErrorPage(status);
-// 		} else
-// 			loadErrorPage(404);
-// 	}
-
-// 	return getResponseStr();
-// }

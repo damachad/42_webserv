@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/14 12:17:34 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 15:09:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,6 @@ void LocationContext::handleIndex(std::vector<std::string> &tokens) {
 	_index = tokens;
 }
 
-// TODO: review logic
 void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
 	std::set<Method> methods;
 	std::vector<std::string>::const_iterator it;
