@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/11 12:40:31 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 19:59:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,7 +224,7 @@ void Cluster::setupCluster(void) {
 void Cluster::run(void) {
 	std::vector<struct epoll_event> events(MAX_CONNECTIONS);
 
-	while (true) {
+	while (running) {
 		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
 		if (n == -1) throw ClusterSetupError("epoll_wait");
 

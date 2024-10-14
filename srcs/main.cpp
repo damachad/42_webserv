@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/24 10:33:39 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 20:06:54 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
 		std::cout << "Usage: ./webserv [configuration file]\n";
 		return (1);
 	}
+	signal(SIGINT, sigIntHandler);
 	ConfigParser parser("conf/default2.conf");
 	if (argc == 2) parser = ConfigParser(argv[1]);
 
@@ -59,7 +60,12 @@ int main(int argc, char** argv) {
 	}
 
 	// Runs the server on an infinite loop
-	server_cluster.run();
+	try {
+		server_cluster.run();
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
 
 	return 0;
 }
