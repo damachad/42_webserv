@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/11 15:52:00 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 11:29:30 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,15 +228,16 @@ void Cluster::setupCluster(void) {
 void Cluster::run(void) {
   std::vector<struct epoll_event> events(MAX_CONNECTIONS);
 
-  while (true) {
-    int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
-    if (n == -1)
-      throw ClusterSetupError("epoll_wait");
+	while (running) {
+		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
+		if ((n == -1) && (errno == EINTR))
+			continue ;
+		else if (n == -1)
+			throw ClusterSetupError("epoll_wait");
 
-    for (int i = 0; i < n; ++i) {
-      int fd = events[i].data.fd;
-
-
+		for (int i = 0; i < n; ++i) {
+      		int fd = events[i].data.fd;
+			
 			if (isListeningSocket(fd))
 				handleNewConnection(fd);
 			else

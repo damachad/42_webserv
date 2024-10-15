@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import cgi
 import os
 import urllib.parse
 
@@ -24,28 +23,36 @@ def main():
 
     # Handle GET and POST data
     print("<h2>Form Data</h2>")
-    form = cgi.FieldStorage()
 
-    if os.environ.get('REQUEST_METHOD') == 'POST':
+    # Check if the request is a POST or GET request
+    request_method = os.environ.get('REQUEST_METHOD', 'GET')
+
+    if request_method == 'POST':
         print("<h3>POST Data</h3>")
-        if form:
+        # Read the POST data from stdin
+        content_length = int(os.environ.get('CONTENT_LENGTH', 0))
+        post_data = os.stdin.read(content_length) if content_length > 0 else ''
+        
+        # Parse the POST data using urllib
+        if post_data:
+            params = urllib.parse.parse_qs(post_data)
             print("<ul>")
-            for key in form.keys():
-                value = form.getvalue(key)
-                print(f"<li><strong>{key}:</strong> {value}</li>")
+            for key, values in params.items():
+                for value in values:
+                    print(f"<li><strong>{key}:</strong> {value}</li>")
             print("</ul>")
     else:
         print("<h3>GET Data</h3>")
         query_string = os.environ.get('QUERY_STRING', '')
         if query_string:
             print("<ul>")
-            # Use urllib.parse.parse_qs instead of cgi.parse_qs
+            # Parse the GET data using urllib
             params = urllib.parse.parse_qs(query_string)
             for key, values in params.items():
                 for value in values:
                     print(f"<li><strong>{key}:</strong> {value}</li>")
             print("</ul>")
-    # print("Current dir: ", os.getcwd())
+
     # Print HTML end
     print("</body>")
     print("</html>")

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/11 16:57:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 11:21:28 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <unistd.h>	 // For read
 #include <sys/resource.h>
+#include <signal.h>
 
 #include <cctype>	// For islanum
 #include <cstdlib>	// For exit() and EXIT_FAILURE
@@ -60,5 +61,6 @@ enum State { FALSE, TRUE, UNSET };
 extern const std::map<short, std::string> STATUS_MESSAGES;
 
 extern unsigned int total_used_storage;
+extern bool running;
 
 #endif

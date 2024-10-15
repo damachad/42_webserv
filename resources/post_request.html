@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/css/style.css">
     <title>POST Request Test</title>
 </head>
 <body>
     <h1>Test POST Request</h1>
-    <form action="test_post_cgi.py" method="POST" enctype="multipart/form-data">
+    <form action="/upload" method="POST" enctype="multipart/form-data">
         <label for="file">Choose a file to upload:</label><br><br>
         <input type="file" id="file" name="file" required><br><br>
         <input type="submit" value="Upload">
     </form>
+    <br>
+    <a href="index.html">Back to Index</a>
 </body>
 </html>

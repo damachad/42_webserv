@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/11 10:58:15 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/14 15:09:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 LocationContext::LocationContext() : _autoIndex(UNSET), _clientMaxBodySize(-1) {
 	initializeDirectiveMap();
+	_return = std::make_pair(-1, "");
 }
 
 LocationContext::LocationContext(const LocationContext &src)
@@ -64,7 +65,6 @@ void LocationContext::handleIndex(std::vector<std::string> &tokens) {
 	_index = tokens;
 }
 
-// TODO: review logic
 void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
 	std::set<Method> methods;
 	std::vector<std::string>::const_iterator it;
@@ -151,7 +151,7 @@ void LocationContext::handleReturn(std::vector<std::string> &tokens) {
 	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
 		errorCode != static_cast<short>(errorCode))	 // accepted NGINX values
 		throw ConfigError("Invalid error code for return directive.");
-	if (_return.first) return;
+	if (_return.first != -1) return;
 	_return.first = static_cast<short>(errorCode);
 	_return.second = tokens[2];
 }
@@ -248,7 +248,7 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 
 	os << "  Return:\n";
 	std::pair<short, std::string> returns = context.getReturn();
-	if (returns.first)
+	if (returns.first != -1)
 		os << "    " << returns.first << " : " << returns.second << "\n";
 	
 	os << "  Upload Store: " << context.getUpload() << "\n";

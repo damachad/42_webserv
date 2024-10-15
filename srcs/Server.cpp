@@ -13,15 +13,16 @@
 #include "Server.hpp"
 
 Server::Server() : _autoIndex(FALSE), _clientMaxBodySize(1048576) {
-  // NGINX defaults
-  _index.push_back("index.html");
-  _index.push_back("index.htm");
-  initializeDirectiveMap();
-  std::set<Method> methods;
-  methods.insert(GET);
-  methods.insert(POST);
-  methods.insert(DELETE);
-  _allowedMethods = methods;
+	// NGINX defaults
+	_index.push_back("index.html");
+	_index.push_back("index.htm");
+	initializeDirectiveMap();
+	std::set<Method> methods;
+	methods.insert(GET);
+	methods.insert(POST);
+	methods.insert(DELETE);
+	_allowedMethods = methods;
+	_return = std::make_pair(-1, "");
 }
 
 Server::Server(const Server &src)
@@ -211,18 +212,16 @@ void Server::handleAutoIndex(std::vector<std::string> &tokens) {
 }
 
 void Server::handleReturn(std::vector<std::string> &tokens) {
-  if (tokens.size() != 3)
-    throw ConfigError("Invalid return directive.");
-  // check if there is overflow
-  char *endPtr = NULL;
-  long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
-  if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
-      errorCode != static_cast<short>(errorCode)) // accepted NGINX values
-    throw ConfigError("Invalid error code for return directive.");
-  if (_return.first)
-    return;
-  _return.first = static_cast<short>(errorCode);
-  _return.second = tokens[2];
+	if (tokens.size() != 3) throw ConfigError("Invalid return directive.");
+	// check if there is overflow
+	char *endPtr = NULL;
+	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
+	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
+		errorCode != static_cast<short>(errorCode))	 // accepted NGINX values
+		throw ConfigError("Invalid error code for return directive.");
+	if (_return.first != -1) return;
+	_return.first = static_cast<short>(errorCode);
+	_return.second = tokens[2];
 }
 
 void Server::handleUpload(std::vector<std::string> &tokens) {
@@ -244,8 +243,7 @@ void Server::processDirective(std::string &line) {
     throw ConfigError("Unkown directive: " + tokens[0]);
 }
 
-// TODO: improve flow of function
-//		load inherited values?
+// Loads a location block and adds it to the map in server
 void Server::processLocation(std::string block, size_t start, size_t end) {
   std::string route;
   std::string line;
@@ -371,16 +369,15 @@ std::set<Method> Server::getAllowedMethods(const std::string &route) const {
     return it->second.getAllowedMethods();
 }
 
-std::pair<short, std::string>
-Server::getReturn(const std::string &route) const {
-  if (route.empty())
-    return _return;
-  std::map<std::string, LocationContext>::const_iterator it;
-  it = _locations.find(route);
-  if (it == _locations.end() || it->second.getReturn().first == 0)
-    return _return;
-  else
-    return it->second.getReturn();
+std::pair<short, std::string> Server::getReturn(
+	const std::string &route) const {
+	if (route.empty()) return _return;
+	std::map<std::string, LocationContext>::const_iterator it;
+	it = _locations.find(route);
+	if (it == _locations.end() || it->second.getReturn().first == -1)
+		return _return;
+	else
+		return it->second.getReturn();
 }
 
 std::string Server::getUpload(const std::string &route) const {
@@ -496,10 +493,10 @@ std::ostream &operator<<(std::ostream &os, const Server &context) {
 		os << "  " << it->first << " : " << it->second << "\n";
 	}
 
-  os << "Return:\n";
-  std::pair<short, std::string> returns = context.getReturn();
-  if (returns.first)
-    os << "    " << returns.first << " : " << returns.second << "\n";
+	os << "Return:\n";
+	std::pair<short, std::string> returns = context.getReturn();
+	if (returns.first != -1)
+		os << "    " << returns.first << " : " << returns.second << "\n";
 
   os << "Locations:\n";
   std::map<std::string, LocationContext> locations = context.getLocations();

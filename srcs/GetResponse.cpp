@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/11 16:45:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 11:27:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,13 @@ short GetResponse::loadFile(std::string &path) {
 		_response.body.assign((std::istreambuf_iterator<char>(file)),
 							  (std::istreambuf_iterator<char>()));
 		file.close();
+		if (_request.uri.find("download") != std::string::npos) {
+		size_t posSlash = _request.uri.find_last_of("/");
+		std::string fileName = _request.uri.substr(posSlash + 1);
+		if (fileName.empty()) fileName = "download";
+		_response.headers.insert(
+			std::make_pair(std::string("Content-Disposition"), std::string("attachment; filename=\"" + fileName + "\"")));
+	}
 		setMimeType(path);
 	}
 	loadCommonHeaders();
@@ -44,10 +51,7 @@ short GetResponse::loadFile(std::string &path) {
 
 std::string GetResponse::generateResponse() {
 	setMatchLocationRoute();
-	short status;
-	// status = checkSize();
-	// if (status != 200) return loadErrorPage(status);
-	status = checkMethod();
+	short status = checkMethod();
 	if (status != 200) return loadErrorPage(status);
 	if (hasReturn()) {
 		loadReturn();
@@ -62,8 +66,8 @@ std::string GetResponse::generateResponse() {
 		if (status != 200) return loadErrorPage(status);
 	} else {  // is a directory
 		std::string indexFile = getIndexFile(path);
-		if (!indexFile.empty() &&
-			!isDirectory(indexFile)) {	// TODO: deal with directory in index?
+		if (!indexFile.empty() && 
+			(checkFile(indexFile) == 200)) {
 			status = loadFile(indexFile);
 			if (status != 200) return loadErrorPage(status);
 		} else if (hasAutoindex()) {
