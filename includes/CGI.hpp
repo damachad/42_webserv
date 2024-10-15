@@ -1,17 +1,17 @@
-#pragma once
-#include <sys/wait.h>
-#include <unistd.h>
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   CGI.hpp                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/10/15 13:04:53 by damachad          #+#    #+#             */
+/*   Updated: 2024/10/15 13:05:10 by damachad         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <iostream>
-#include <map>
-#include <signal.h>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#ifndef CGI_HPP
+#define CGI_HPP
 
 #include "AResponse.hpp"
 #include "HTTPRequestParser.hpp"
@@ -47,3 +47,5 @@ public:
   std::string executeCGI(const std::string &scriptPath);
   std::string getHeaderEnvValue(std::string key);
 };
+
+#endif
