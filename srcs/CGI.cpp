@@ -153,7 +153,7 @@ std::string createCgiOutput(pid_t pid, int *pipeOut) {
 			break;
 		}
 
-		if (currentTime.tv_sec - startTime.tv_sec > 2) {
+		if (currentTime.tv_sec - startTime.tv_sec > TIMEOUT) {
 			kill(pid, SIGKILL);
 			return "504";
 		}
@@ -187,7 +187,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 		close(pipeOut[0]);
 		short status = setCGIEnv();
 		if (status != 200) return numberToString(status);
-		setLimits(64);
+		setLimits(MEMORYCHILD);
 		std::string dirName =
 			scriptPath.substr(0, scriptPath.find_last_of("/"));
 		if (chdir(dirName.c_str()) < 0) return "500";
