@@ -41,7 +41,7 @@ OBJ_DIR		= objs
 
 NAME 		= webserv
 
-FILES 		= main Helpers ConfigParser Exceptions Server Cluster utils LocationContext HTTPRequestParser AResponse GetResponse PostResponse DeleteResponse RequestErrorResponse 
+FILES 		= main Helpers ConfigParser Exceptions Server Cluster utils LocationContext HTTPRequestParser AResponse GetResponse PostResponse DeleteResponse RequestErrorResponse wrapper_functions
 
 SRC 		= $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILES)))
 OBJ 		= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILES)))

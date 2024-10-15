@@ -25,6 +25,7 @@
 #include "Helpers.hpp"
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
+#include "wrapper_functions.hpp"
 
 unsigned int total_used_storage = 0;
 // NOTE: Keeps track of how many bytes have been uploaded/deleted to server
@@ -68,9 +69,14 @@ Cluster::Cluster(const std::vector<Server>& servers)
 
 // Destructor
 // Closes _epoll_fd if it was open
+// Also closes all listening sockets
 Cluster::~Cluster() {
 	//	std::cout << "Cluster Destructor called" << std::endl;
 	if (_epoll_fd >= 0) close(_epoll_fd);
+
+	for (std::vector<int>::iterator it = _listening_sockets.begin();
+		 it != _listening_sockets.end(); it++)
+		close(*it);
 }
 
 // Accesses ith server of _server array when asking Cluster[i]
@@ -112,13 +118,16 @@ int Cluster::createAndBindSocket(const std::string& IP,
 	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_fd == -1) throw SocketSetupError("socket");
 
+	// Adds socket to _listening_sockets
+	_listening_sockets.push_back(sock_fd);
+
 	// Set the socket option SO_REUSEADDR
 	int optval = 1;
 	if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) <
 		0)
 		throw SocketSetupError("Could not set SO_REUSEADDR");
 
-	// Listen to connections on socket
+	// Sets up socket configurations
 	struct sockaddr_in sockaddr;
 	std::memset(&sockaddr, 0,
 				sizeof(sockaddr));	// Clears the struct
@@ -137,7 +146,7 @@ int Cluster::createAndBindSocket(const std::string& IP,
 	sockaddr.sin_port = htons(
 		stringToNumber<int>(port));	 // Converts number to network byte order
 
-	// Binds to socket
+	// Binds configuration to socket
 	if (bind(sock_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
 		close(sock_fd);
 		throw SocketSetupError("bind");
@@ -214,9 +223,6 @@ void Cluster::setupCluster(void) {
 
 		// Adds socket to epoll for monitoring
 		addSocketsToEpoll(sock_fd);
-
-		// Adds listening socket to _listening_socket vector
-		_listening_sockets.push_back(sock_fd);
 	}
 }
 
@@ -271,7 +277,6 @@ void Cluster::handleClientRequest(int connection_fd) {
 	while (request.find("\r\n\r\n") ==
 		   std::string::npos) {	 // NOTE: While all the headers haven't been
 								 // received
-		//
 		memset(buffer_request, 0, sizeof(buffer_request));
 
 		ssize_t bytesRead =
@@ -334,9 +339,6 @@ const std::string Cluster::getResponse(HTTP_Request& request,
 	AResponse* response_check;
 
 	const Server* server = getContext(client_fd, request);
-
-	// NOTE: Remove the following line! Just here for testing!
-	// error_status = OK;
 
 	if (error_status != OK)
 		response_check =
