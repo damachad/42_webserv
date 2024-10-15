@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/11 16:46:15 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 13:10:06 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -434,22 +434,17 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 }
 // TODO: Protect finds!
 short PostResponse::extractFile() {
-	std::cout << "*** ENTROU 1***" << std::endl;  // TESTE
 
 	std::string content_disposition =
 		_multipart_body[0].find("Content-Disposition")->second;
-	std::cout << "*** ENTROU 2***" << std::endl;  // TESTE
 
 	_file_to_upload.name = extractFieldValue(content_disposition, "name");
-	std::cout << "*** ENTROU 3***" << std::endl;  // TESTE
 
 	_file_to_upload.file_name =
 		extractFieldValue(content_disposition, "filename");
-	std::cout << "*** ENTROU 4***" << std::endl;  // TESTE
 
-	//   _file_to_upload.content_type =
-	//       _multipart_body[0].find("Content-Type")->second;
-	std::cout << "*** ENTROU 5***" << std::endl;  // TESTE
+	_file_to_upload.content_type =
+	    _multipart_body[0].find("Content-Type")->second;
 
 	_file_to_upload.file_contents =
 		_multipart_body[0].find("_File Contents")->second;
