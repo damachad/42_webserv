@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 12:58:21 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 13:15:37 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,8 +42,7 @@ short GetResponse::loadFile(std::string &path) {
 	}
 		setMimeType(path);
 	}
-	loadCommonHeaders();
-	_response.status = 200;
+	loadCommonHeaders();	
 	return 200;
 }
 

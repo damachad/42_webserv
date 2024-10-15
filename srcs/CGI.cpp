@@ -256,7 +256,6 @@ void CGI::handleCGIResponse() {
 		std::multimap<std::string, std::string> headerEnv =
 			parseCGIHeaders(headers);
 		_response.headers.insert(headerEnv.begin(), headerEnv.end());
-		_response.status = 200;
 		_response.body = body;
 	} else {
 		_response.status = 500;
