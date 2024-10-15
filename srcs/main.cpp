@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 09:45:27 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 12:38:09 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
 		std::cerr << e.what() << std::endl;
 		return 1;
 	}
+
 	std::cout << "\nThank you for using Webserv.\n";
 
 	return 0;
