@@ -450,12 +450,6 @@ void Server::setup_server(void) {
   }
 }
 
-// std::map<pid_t, time_t> Server::getPidStartTimeMap() const {
-//   return _pidStartTime;
-// }
-
-// std::map<pid_t, int> Server::getProcessMap() const { return _processMap; }
-
 std::ostream &operator<<(std::ostream &os, const Server &context) {
   os << "Network Addresses:\n";
   std::vector<Listen> networkAddress = context.getNetworkAddress();

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 11:23:14 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 12:55:50 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,9 +154,12 @@ short AResponse::checkSize() const {
 		return 400;	 // Bad Request
 	std::multimap<std::string, std::string>::const_iterator it =
 		_request.header_fields.find("content-length");
+	size_t size = -1;
 	if (it != _request.header_fields.end()) {
 		char *endPtr = NULL;
+		size = std::strtol(it->second.c_str(), &endPtr, 10);
 		if (*endPtr != '\0') return 400;
+		if (size != _request.message_body.size()) return 400;
 	}
 	return 200;
 }
@@ -216,7 +219,7 @@ void AResponse::setMatchLocationRoute() {
 // Returns path to look for resource in location, root + (uri - locationRoute)
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
-	return (assemblePath(root, _request.uri.substr(_locationRoute.size())));
+	return (assemblePath(root, _request.uri));
 
 }
 

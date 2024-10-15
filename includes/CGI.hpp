@@ -16,8 +16,6 @@
 #include "AResponse.hpp"
 #include "HTTPRequestParser.hpp"
 
-extern std::map<pid_t, time_t> pidStartTimeMap;
-
 class CGI {
 private:
   const HTTP_Request &_request;

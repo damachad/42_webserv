@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 11:21:28 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 12:58:05 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@
 #include <unistd.h>	 // For read
 #include <sys/resource.h>
 #include <signal.h>
+#include <sys/time.h>
+#include <sys/wait.h>
 
 #include <cctype>	// For islanum
 #include <cstdlib>	// For exit() and EXIT_FAILURE

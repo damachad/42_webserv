@@ -6,16 +6,14 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 11:27:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 12:58:21 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "GetResponse.hpp"
-
-#include <unistd.h>
-
 #include "AResponse.hpp"
 #include "CGI.hpp"
+
 GetResponse::~GetResponse() {}
 
 GetResponse::GetResponse(const GetResponse &src) : AResponse(src) {}

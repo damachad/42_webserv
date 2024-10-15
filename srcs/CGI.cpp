@@ -1,11 +1,5 @@
 #include "CGI.hpp"
-
-#include <sys/time.h>
-#include <sys/wait.h>
-
 #include "AResponse.hpp"
-
-std::map<pid_t, time_t> pidStartTimeMap;
 
 CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
 		 const std::string &path)

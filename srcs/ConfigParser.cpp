@@ -6,12 +6,11 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 10:15:48 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 12:58:52 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ConfigParser.hpp"
-
 #include "Exceptions.hpp"
 
 ConfigParser::ConfigParser(void) {}
