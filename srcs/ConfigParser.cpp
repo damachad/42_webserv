@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/14 15:08:48 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 10:15:48 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,6 +153,12 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	}
 }
 
+static bool hasQuotes(std::string text) {
+	size_t dQuote = text.find("\"");
+	size_t sQuote = text.find("\'");
+	return (dQuote != std::string::npos || sQuote != std::string::npos);
+}
+
 void ConfigParser::loadConfigs() {
 	std::ifstream file(_configFile.c_str());
 	if (!file.is_open())
@@ -165,6 +171,7 @@ void ConfigParser::loadConfigs() {
 	trimOuterSpaces(fileContents);
 	trimComments(fileContents);
 	if (fileContents.empty()) throw ConfigError("Configuration file is empty.");
+	if (hasQuotes(fileContents)) throw ConfigError("Quotes not supported");
 	std::vector<std::string> serverBlocks;
 	serverBlocks = splitServerBlocks(fileContents);
 	loadIntoContext(serverBlocks);
