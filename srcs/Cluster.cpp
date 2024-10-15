@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/14 19:59:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 09:43:53 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -226,7 +226,10 @@ void Cluster::run(void) {
 
 	while (running) {
 		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
-		if (n == -1) throw ClusterSetupError("epoll_wait");
+		if ((n == -1) && (errno == EINTR))
+			continue ;
+		else if (n == -1)
+			throw ClusterSetupError("epoll_wait");
 
 		for (int i = 0; i < n; ++i) {
 			int fd = events[i].data.fd;
