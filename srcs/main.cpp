@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/24 10:33:39 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 12:38:09 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
 		std::cout << "Usage: ./webserv [configuration file]\n";
 		return (1);
 	}
+	signal(SIGINT, sigIntHandler);
 	ConfigParser parser("conf/default2.conf");
 	if (argc == 2) parser = ConfigParser(argv[1]);
 
@@ -30,12 +31,6 @@ int main(int argc, char** argv) {
 	try {
 		parser.loadConfigs();
 		servers = parser.getServers();
-		// for (std::vector<Server>::const_iterator it = servers.begin();
-		// 	 it != servers.end(); ++it)
-		// 	std::cout << (*it) << "\n";
-		// std::string route = "/test";
-		// unsigned int serverNum = 0;
-		//  parser.printLocationValues(serverNum, route);
 	} catch (std::exception& e) {
 		std::cerr << e.what();
 		return 1;
@@ -65,6 +60,8 @@ int main(int argc, char** argv) {
 		std::cerr << e.what() << std::endl;
 		return 1;
 	}
+
+	std::cout << "\nThank you for using Webserv.\n";
 
 	return 0;
 }

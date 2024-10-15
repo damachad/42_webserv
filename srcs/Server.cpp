@@ -22,6 +22,7 @@ Server::Server() : _autoIndex(FALSE), _clientMaxBodySize(1048576) {
 	methods.insert(POST);
 	methods.insert(DELETE);
 	_allowedMethods = methods;
+	_return = std::make_pair(-1, "");
 }
 
 Server::Server(const Server &src)
@@ -209,7 +210,7 @@ void Server::handleReturn(std::vector<std::string> &tokens) {
 	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
 		errorCode != static_cast<short>(errorCode))	 // accepted NGINX values
 		throw ConfigError("Invalid error code for return directive.");
-	if (_return.first) return;
+	if (_return.first != -1) return;
 	_return.first = static_cast<short>(errorCode);
 	_return.second = tokens[2];
 }
@@ -233,8 +234,7 @@ void Server::processDirective(std::string &line) {
 		throw ConfigError("Unkown directive: " + tokens[0]);
 }
 
-// TODO: improve flow of function
-//		load inherited values?
+// Loads a location block and adds it to the map in server
 void Server::processLocation(std::string block, size_t start, size_t end) {
 	std::string route;
 	std::string line;
@@ -356,7 +356,7 @@ std::pair<short, std::string> Server::getReturn(
 	if (route.empty()) return _return;
 	std::map<std::string, LocationContext>::const_iterator it;
 	it = _locations.find(route);
-	if (it == _locations.end() || it->second.getReturn().first == 0)
+	if (it == _locations.end() || it->second.getReturn().first == -1)
 		return _return;
 	else
 		return it->second.getReturn();
@@ -469,7 +469,7 @@ std::ostream &operator<<(std::ostream &os, const Server &context) {
 
 	os << "Return:\n";
 	std::pair<short, std::string> returns = context.getReturn();
-	if (returns.first)
+	if (returns.first != -1)
 		os << "    " << returns.first << " : " << returns.second << "\n";
 
 	os << "Locations:\n";

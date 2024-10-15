@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/18 14:31:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 10:48:40 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,11 @@ short DeleteResponse::deleteFile(const std::string& path) {
 		return 404;  // Not Found
 	if (!(fileInfo.st_mode & S_IWUSR)) // No write permission
 		return 403;  // Forbidden
-
-	if (std::remove(path.c_str()) == 0)
+	size_t fileSize = fileInfo.st_size;
+	if (std::remove(path.c_str()) == 0) {
+		total_used_storage -= fileSize;
 		return 200;
+	}
 	else {
 		if (errno == EACCES)
 			return 403;  // Permission denied
