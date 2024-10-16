@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 12:55:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 09:19:58 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -315,14 +315,16 @@ void AResponse::setMimeType(const std::string &path) {
 // Adds Date, Server and Content-Length headers to _response
 void AResponse::loadCommonHeaders() {
 	_response.headers.insert(
-		std::make_pair(std::string("Date"), getHttpDate()));
-	_response.headers.insert(
-		std::make_pair(std::string("Server"), std::string(SERVER)));
+		std::make_pair(std::string("Connection"), std::string("keep-alive")));
 	if (_response.body.size()) {
 		_response.headers.insert(std::make_pair(
 			std::string("Content-Length"),
 			numberToString<unsigned long>(_response.body.size())));
 	}
+	_response.headers.insert(
+		std::make_pair(std::string("Date"), getHttpDate()));
+	_response.headers.insert(
+		std::make_pair(std::string("Server"), std::string(SERVER)));
 	_response.headers.insert(
 		std::make_pair(std::string("Cache-Control"), std::string("no-cache")));
 }
@@ -337,6 +339,8 @@ void AResponse::loadReturn() {
 		_response.headers.insert(
 			std::make_pair(std::string("Location"), redirect.second));
 	}
+	_response.headers.insert(
+		std::make_pair(std::string("Content-Type"), std::string("application/octet-stream")));
 }
 
 // Checks if there is a return directive
@@ -438,7 +442,7 @@ const std::string AResponse::getResponseStr() const {
 		STATUS_MESSAGES.find(_response.status);
 	std::string message = (itStatus != STATUS_MESSAGES.end())
 							  ? itStatus->second
-							  : "Unknown status code";
+							  : "";
 	std::string headersStr;
 	std::multimap<std::string, std::string>::const_iterator itHead;
 	for (itHead = _response.headers.begin(); itHead != _response.headers.end();
@@ -456,7 +460,7 @@ static std::string loadDefaultErrorPage(short status) {
 		STATUS_MESSAGES.find(status);
 	std::string message = (itStatus != STATUS_MESSAGES.end())
 							  ? itStatus->second
-							  : "Unknown status code";
+							  : "";
 	std::string response =
 		"<!DOCTYPE html>\n"
 		"<html lang=\"en\">\n"

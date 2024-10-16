@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/10 11:13:40 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 09:12:21 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,7 @@ HTTPResponseError::HTTPResponseError(const short status) throw() {
 		STATUS_MESSAGES.find(status);
 	std::string message = (itStatus != STATUS_MESSAGES.end())
 							  ? itStatus->second
-							  : "Unknown status code";
+							  : "";
 	std::string headers = "Date: " + getHttpDate() + "\r\n" +
 						  "Server: " + SERVER + "\r\n" +
 						  "Connection: close\r\n";	// close the connection?
