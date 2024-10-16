@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/14 15:09:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 12:25:59 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,8 @@ LocationContext::LocationContext(const LocationContext &src)
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _return(src.getReturn()),
-	  _uploadStore(src.getUpload()) {}
+	  _uploadStore(src.getUpload()),
+	  _cgiExt(src.getCgiExt()) {}
 
 LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_root = src.getRoot();
@@ -36,6 +37,7 @@ LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_errorPages = src.getErrorPages();
 	_return = src.getReturn();
 	_uploadStore = src.getUpload();
+	_cgiExt = src.getCgiExt();
 	return (*this);
 }
 
@@ -51,6 +53,7 @@ void LocationContext::initializeDirectiveMap(void) {
 	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
 	_directiveMap["return"] = &LocationContext::handleReturn;
 	_directiveMap["upload_store"] = &LocationContext::handleUpload;
+	_directiveMap["cgi_ext"] = &LocationContext::handleCgiExt;
 }
 
 // Handlers
@@ -161,6 +164,11 @@ void LocationContext::handleUpload(std::vector<std::string> &tokens) {
 	_uploadStore = tokens[1];
 }
 
+void LocationContext::handleCgiExt(std::vector<std::string> &tokens) {
+	if (tokens.size() > 2) throw ConfigError("Invalid cgi_ext directive.");
+	_cgiExt = tokens[1];
+}
+
 void LocationContext::processDirective(std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = ConfigParser::tokenizeLine(line);
@@ -199,6 +207,10 @@ std::pair<short, std::string> LocationContext::getReturn() const {
 
 std::string LocationContext::getUpload() const {
 	return _uploadStore;
+}
+
+std::string LocationContext::getCgiExt() const {
+	return _cgiExt;
 }
 
 std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
@@ -252,6 +264,7 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 		os << "    " << returns.first << " : " << returns.second << "\n";
 	
 	os << "  Upload Store: " << context.getUpload() << "\n";
+	os << "  CGI Extension: " << context.getCgiExt() << "\n";
 
 	return os;
 }
