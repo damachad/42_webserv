@@ -41,9 +41,13 @@ class CGI {
 		const std::string &headers);
 	std::multimap<std::string, std::string> parseRequestHeaders();
 
+	// Output related
+	std::string createCgiOutput(pid_t pid, int *pipeOut);
+
 	// Utils
 	std::string intToString(int value);
 	char **vectorToCharArray(const std::vector<std::string> &vec);
+	std::string readHtmlFile(const std::string &filePath);
 
    public:
 	CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,

@@ -6,7 +6,14 @@ CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
 		 const std::string &path)
 	: _request(httpRequest), _response(httpResponse), _path(path) {}
 
-CGI::~CGI() {}
+CGI::~CGI() {
+	if (_cgiEnv) {
+		for (size_t i = 0; _cgiEnv[i] != NULL; ++i) {
+			delete[] _cgiEnv[i];
+		}
+		delete[] _cgiEnv;
+	}
+}
 
 bool CGI::isSingleValueHeader(std::string &key) {
 	if (key == "Accept" || key == "Accept-Encoding" || key == "Cache-Control" ||
@@ -123,7 +130,7 @@ short CGI::setCGIEnv() {
 	return 200;
 }
 
-std::string readHtmlFile(const std::string &filePath) {
+std::string CGI::readHtmlFile(const std::string &filePath) {
 	std::ifstream file(filePath.c_str());
 	if (!file.is_open()) {
 		std::cerr << "Error: Could not open HTML file." << std::endl;
@@ -135,7 +142,7 @@ std::string readHtmlFile(const std::string &filePath) {
 	return buffer.str();
 }
 
-std::string createCgiOutput(pid_t pid, int *pipeOut) {
+std::string CGI::createCgiOutput(pid_t pid, int *pipeOut) {
 	std::string cgiOutput;
 	char buffer[1024];
 	ssize_t bytesRead;
@@ -173,14 +180,6 @@ static void setLimits(int limitMb) {
 	setrlimit(RLIMIT_AS, &limit);
 }
 
-// TESTE
-void printCharArray(char **charArray) {
-	// Iterate through the array until NULL is encountered
-	for (size_t i = 0; charArray[i] != NULL; ++i) {
-		std::cerr << "Index " << i << ": " << charArray[i] << std::endl;
-	}
-}
-// TESTE
 std::string CGI::executeCGI(const std::string &scriptPath) {
 	int pipeIn[2];
 	int pipeOut[2];
@@ -197,7 +196,6 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 		close(pipeIn[1]);
 		close(pipeOut[0]);
 		short status = setCGIEnv();
-		printCharArray(_cgiEnv);
 		if (status != 200) return numberToString(status);
 		setLimits(MEMORYCHILD);
 		std::string dirName =
