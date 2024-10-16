@@ -177,26 +177,36 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 	std::string cgiOutput;
 
 	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1) return "500";
+				std::cout << "!!CAIU 1" << std::endl; // TESTE
 
 	pid_t pid = fork();
 	if (pid == -1) return "500";
+				std::cout << "!!CAIU 2" << std::endl; // TESTE
+
 	if (pid == 0) {
 		dup2(pipeIn[0], STDIN_FILENO);
 		dup2(pipeOut[1], STDOUT_FILENO);
 		close(pipeIn[1]);
 		close(pipeOut[0]);
 		short status = setCGIEnv();
+		std::cerr << "!!STATUS: " << status << std::endl; // TESTE
 		if (status != 200) return numberToString(status);
 		setLimits(MEMORYCHILD);
 		std::string dirName =
 			scriptPath.substr(0, scriptPath.find_last_of("/"));
+			std::cerr << "!!DIR NAME: " << dirName << std::endl; // TESTE
 		if (chdir(dirName.c_str()) < 0) return "500";
+					std::cerr << "!!CAIU 3" << std::endl; // TESTE
+
 		char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
 		if (execve(scriptPath.c_str(), argv, environ) == -1) return "500";
+					std::cerr << "!!CAIU 4" << std::endl; // TESTE
+
 	} else {
 		close(pipeIn[0]);
 		close(pipeOut[1]);
-
+		write(1, _request.message_body.c_str(),
+				  _request.message_body.size()); //TESTE
 		if (!_request.message_body.empty())
 			write(pipeIn[1], _request.message_body.c_str(),
 				  _request.message_body.size());
@@ -234,8 +244,8 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 		std::string value = it->second;
 
 		if (key == "Content-Type" && value.empty()) {
+			std::cout << "!!CAIU 5" << std::endl; // TESTE
 			_response.status = 500;
-			;
 		}
 
 		headerEnv.insert(std::make_pair(key, value));
@@ -244,20 +254,39 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 }
 
 void CGI::handleCGIResponse() {
-	std::string cgiOutput = executeCGI(_path);
-	if (std::atoi(cgiOutput.c_str()) != 0) {
-		_response.status = std::atoi(cgiOutput.c_str());
-		return;
-	}
-	size_t pos = cgiOutput.find("\r\n\r\n");
-	if (pos != std::string::npos) {
-		std::string headers = cgiOutput.substr(0, pos);
-		std::string body = cgiOutput.substr(pos + 4);
-		std::multimap<std::string, std::string> headerEnv =
-			parseCGIHeaders(headers);
-		_response.headers.insert(headerEnv.begin(), headerEnv.end());
-		_response.body = body;
-	} else {
-		_response.status = 500;
-	}
+    std::string cgiOutput = executeCGI(_path);
+    
+    // Check if the CGI output is an error status
+    if (std::atoi(cgiOutput.c_str()) != 0) {
+        _response.status = std::atoi(cgiOutput.c_str());
+        return;
+    }
+
+    size_t pos = cgiOutput.find("\r\n\r\n");
+    if (pos != std::string::npos) {
+        std::string headers = cgiOutput.substr(0, pos);
+        std::string body = cgiOutput.substr(pos + 4);
+        std::multimap<std::string, std::string> headerEnv = parseCGIHeaders(headers);
+
+        // Preserve existing headers if necessary
+        for (std::multimap<std::string, std::string>::const_iterator it = headerEnv.begin(); 
+             it != headerEnv.end(); ++it) {
+            // Check if the header is already set
+            std::multimap<std::string, std::string>::iterator responseIt = _response.headers.find(it->first);
+            if (responseIt == _response.headers.end()) {
+                // If the header is not already present, insert it
+                _response.headers.insert(*it);
+            } else {
+                // If the header is present, log a message or handle as needed
+                std::cout << "Header already exists: " << it->first << std::endl;
+            }
+        }
+
+        _response.body = body;
+        std::cout << "!!RESPONSE BODY: " << _response.body << std::endl;
+    } else {
+        std::cout << "!!CAIU 7" << std::endl; // TESTE
+        _response.status = 500;
+    }
 }
+

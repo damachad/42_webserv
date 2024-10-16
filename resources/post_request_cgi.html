@@ -4,34 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>POST Request Form</title>
-  <script>
-    async function fetchAndPopulate() {
-      const formData = new FormData(document.getElementById('postForm'));
-      try {
-        // Send the form data via POST to your server (adjust URL as needed)
-        const response = await fetch('/cgi-bin/json/data.json', {
-          method: 'POST',
-          body: formData,
-        });
-
-        // Fetch a JSON file after the POST request (adjust URL as needed)
-        const jsonResponse = await fetch('/cgi-bin/json/data.json');
-        const jsonData = await jsonResponse.json();
-
-        // Populate form fields based on JSON data
-        document.getElementById('name').value = jsonData.name;
-        document.getElementById('email').value = jsonData.email;
-        document.getElementById('message').value = jsonData.message;
-      } catch (error) {
-        console.error('Error fetching JSON data:', error);
-      }
-    }
-  </script>
 </head>
 <body>
   <h1>POST Request Form</h1>
 
-  <form id="postForm" onsubmit="event.preventDefault(); fetchAndPopulate();">
+  <form id="postForm" action="/cgi-bin/post_request_cgi.py" method="POST">
     <label for="name">Name:</label>
     <input type="text" id="name" name="name"><br><br>
 

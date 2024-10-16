@@ -268,6 +268,9 @@ std::string PostResponse::generateResponse() {
 	} else {
 		// Send to CGI;
 		std::string path = getPath();
+		std::cout << "!!PATH: " << path << std::endl;
+		std::cout << "!!REQUEST: " << _request << std::endl;
+		
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
 		if (_response.status != 200) loadErrorPage(_response.status);
@@ -331,17 +334,26 @@ short PostResponse::uploadFile() {
 }
 
 short PostResponse::checkBody() {
-	if (requestHasHeader("content-type") &&
+	std::cout << "URI: " << _request.uri << std::endl; // TESTE
+	std::cout << "HAS HEADER: " << requestHasHeader("content-type") << std::endl; // TESTE
+	std::cout << "MULTIPART == 0: " << _request.header_fields.find("content-type")->second.find("multipart/") << std::endl; // TESTE
+	std::cout << "BOUNDARY: " << _boundary << std::endl; // TESTE
+	
+	if (requestHasHeader("content-type") /*&&
 		_request.header_fields.find("content-type")
-				->second.find("multipart/") == 0) {
+				->second.find("multipart/") == 0*/) {
 		_boundary = getBoundary();
-		if (_boundary.empty()) return BAD_REQUEST;
-
+		std::cout << "1\n"; // TESTE
+		// if (_boundary.empty()) return BAD_REQUEST;
+		std::cout << "2\n"; // TESTE
 		_multipart_body = getMultipartBody(_boundary);
-		if (_multipart_body.empty()) return BAD_REQUEST;
-	} else
+		// if (_multipart_body.empty()) return BAD_REQUEST;
+		std::cout << "3\n"; // TESTE
+	} else {
+		std::cout << "4\n"; // TESTE
 		return 400;
-
+	}
+	std::cout << "RETURNED: OK\n"; // TESTE
 	return OK;
 }
 
