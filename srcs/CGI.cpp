@@ -80,7 +80,7 @@ void CGI::setSingleEnv(std::vector<std::string> &env, std::string key, std::stri
 	env.push_back(key + "=" + envToAdd);
 }
 
-short CGI::setCGIEnv(std::vector<std::string> &_cgiEnv) {
+short CGI::setCGIEnv() {
 
 	if (_request.method == POST && getHeaderEnvValue("content-type").empty()) return 500;
 	if (_request.method == POST && getHeaderEnvValue("content-length").empty()) return 500;
@@ -165,7 +165,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 		dup2(pipeOut[1], STDOUT_FILENO);
 		close(pipeIn[1]);
 		close(pipeOut[0]);
-		short status = setCGIEnv(_cgiEnv);
+		short status = setCGIEnv();
 		if (status != 200) return numberToString(status);
 		setLimits(MEMORYCHILD);
 		std::string dirName =

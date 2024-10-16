@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/15 13:04:53 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 13:05:10 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 15:27:38 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ private:
 
   // Env setter
   void setSingleEnv(std::vector<std::string> &env, std::string key, std::string envToAdd);
-  short setCGIEnv(std::vector<std::string> &_cgiEnv);
+  short setCGIEnv();
 
   // Parsers
   std::multimap<std::string, std::string>
