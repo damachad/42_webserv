@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   PostResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:20:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 10:41:55 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/10/16 12:05:02 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,6 @@ class PostResponse : public AResponse {
 	ssize_t readChunkSizeFromSocket();
 	int skipTrailingCRLF();
 	bool requestHasHeader(const std::string& header);
-	bool requestIsCGI();
 	short checkBody();
 	short extractFile();
 	short uploadFile();

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/16 12:00:20 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 12:25:59 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,8 @@ LocationContext::LocationContext(const LocationContext &src)
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _return(src.getReturn()),
-	  _uploadStore(src.getUpload()) {}
+	  _uploadStore(src.getUpload()),
+	  _cgiExt(src.getCgiExt()) {}
 
 LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_root = src.getRoot();
@@ -36,6 +37,7 @@ LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_errorPages = src.getErrorPages();
 	_return = src.getReturn();
 	_uploadStore = src.getUpload();
+	_cgiExt = src.getCgiExt();
 	return (*this);
 }
 

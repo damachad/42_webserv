@@ -36,7 +36,8 @@ Server::Server(const Server &src)
 	  _errorPages(src.getErrorPages()),
 	  _locations(src.getLocations()),
 	  _return(src.getReturn()),
-	  _uploadStore(src.getUpload()) {}
+	  _uploadStore(src.getUpload()),
+    _cgiExt(src.getCgiExt()) {}
 
 Server &Server::operator=(const Server &src) {
 	_network_address = src.getNetworkAddress();
@@ -50,6 +51,7 @@ Server &Server::operator=(const Server &src) {
 	_locations = src.getLocations();
 	_return = src.getReturn();
 	_uploadStore = src.getUpload();
+  _cgiExt = src.getCgiExt();
 	return (*this);
 }
 

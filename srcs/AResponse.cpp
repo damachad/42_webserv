@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/16 09:19:58 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 12:27:45 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -256,8 +256,10 @@ bool AResponse::isDirectory(const std::string &path) const {
 
 // Checks if the request is calling a CGI script
 bool AResponse::isCGI() const {
-	if (_request.uri.length() > 3 &&
-		_request.uri.substr(_request.uri.length() - 3) == ".py")
+	std::string cgiExt = _server.getCgiExt(_locationRoute);
+	size_t dotPos = _request.uri.find_last_of(".");
+	if (dotPos != std::string::npos && !cgiExt.empty() &&
+		_request.uri.substr(dotPos) == cgiExt)
 		return true;
 	return false;
 }
