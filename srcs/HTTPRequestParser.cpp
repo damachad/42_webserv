@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/30 11:46:51 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 14:31:39 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,8 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 	line_stream >> method;
 	if (method.size() == 0 || !method_is_valid(method)) {
 		response_status = METHOD_NOT_ALLOWED;
+		if (methodExists(method))
+			response_status = NOT_IMPLEMENTED;
 		return false;
 	}
 
@@ -287,6 +289,12 @@ std::string HTTP_Request_Parser::decode(const std::string& encoded) {
 
 bool HTTP_Request_Parser::method_is_valid(const std::string& method) {
 	if (method == "GET" || method == "POST" || method == "DELETE") return true;
+	return false;
+}
+
+bool HTTP_Request_Parser::methodExists(const std::string& method) {
+	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "PATCH") 
+		return true;
 	return false;
 }
 
