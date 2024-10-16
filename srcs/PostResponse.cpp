@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/02 14:42:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 13:10:06 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,9 @@
 
 #include <sys/stat.h>
 
+#include <sstream>
+
+#include "CGI.hpp"
 #include "Helpers.hpp"
 #include "Webserv.hpp"
 
@@ -264,6 +267,11 @@ std::string PostResponse::generateResponse() {
 		if (status != OK) return loadErrorPage(status);
 	} else {
 		// Send to CGI;
+		std::string path = getPath();
+		CGI cgi(_request, _response, path);
+		cgi.handleCGIResponse();
+		if (_response.status != 200) loadErrorPage(_response.status);
+		loadCommonHeaders();
 	}
 
 	return getResponseStr();
@@ -424,8 +432,9 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 
 	return submap;
 }
-
+// TODO: Protect finds!
 short PostResponse::extractFile() {
+
 	std::string content_disposition =
 		_multipart_body[0].find("Content-Disposition")->second;
 
@@ -435,7 +444,7 @@ short PostResponse::extractFile() {
 		extractFieldValue(content_disposition, "filename");
 
 	_file_to_upload.content_type =
-		_multipart_body[0].find("Content-Type")->second;
+	    _multipart_body[0].find("Content-Type")->second;
 
 	_file_to_upload.file_contents =
 		_multipart_body[0].find("_File Contents")->second;

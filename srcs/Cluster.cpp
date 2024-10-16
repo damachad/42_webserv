@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/15 09:43:53 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 12:44:25 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,13 @@
 
 #include <netdb.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 
 #include <cerrno>
 #include <utility>
 
 #include "AResponse.hpp"
+#include "CGI.hpp"
 #include "DeleteResponse.hpp"
 #include "GetResponse.hpp"
 #include "HTTPRequestParser.hpp"
@@ -32,6 +34,7 @@ unsigned int total_used_storage = 0;
 
 // Constructor
 // Create a vector of servers from provided context vector
+
 Cluster::Cluster(const std::vector<Server>& servers)
 	: _servers(), _epoll_fd(-1) {
 	for (std::vector<Server>::const_iterator it = servers.begin();
@@ -80,9 +83,9 @@ Cluster::~Cluster() {
 }
 
 // Accesses ith server of _server array when asking Cluster[i]
-const Server& Cluster::operator[](unsigned int index) const {
-	if (index >= _servers.size())
-		throw OutOfBoundsError(numberToString<int>(index));
+const Server &Cluster::operator[](unsigned int index) const {
+  if (index >= _servers.size())
+    throw OutOfBoundsError(numberToString<int>(index));
 
 	return *_servers[index];
 }
@@ -228,7 +231,7 @@ void Cluster::setupCluster(void) {
 
 // Sets an infinite loop to listen to incoming connections
 void Cluster::run(void) {
-	std::vector<struct epoll_event> events(MAX_CONNECTIONS);
+  std::vector<struct epoll_event> events(MAX_CONNECTIONS);
 
 	while (running) {
 		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
@@ -238,35 +241,38 @@ void Cluster::run(void) {
 			throw ClusterSetupError("epoll_wait");
 
 		for (int i = 0; i < n; ++i) {
-			int fd = events[i].data.fd;
-
+      		int fd = events[i].data.fd;
+			
 			if (isListeningSocket(fd))
 				handleNewConnection(fd);
 			else
 				handleClientRequest(fd);
 		}
+		
 	}
 }
 
 // Checks if fd corresponds to listening socket
 bool Cluster::isListeningSocket(int fd) {
-	return std::find(_listening_sockets.begin(), _listening_sockets.end(),
-					 fd) != _listening_sockets.end();
+  return std::find(_listening_sockets.begin(), _listening_sockets.end(), fd) !=
+         _listening_sockets.end();
 }
 
 // Handles a new connection
 void Cluster::handleNewConnection(int listening_fd) {
-	int client_fd = accept(listening_fd, NULL, NULL);
-	if (client_fd == -1) throw ClusterSetupError("accept");
+  int client_fd = accept(listening_fd, NULL, NULL);
+  if (client_fd == -1)
+    throw ClusterSetupError("accept");
+
 
 	setSocketToNonBlocking(client_fd);
 
-	struct epoll_event client_event;
-	client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
-	client_event.data.fd = client_fd;
+  struct epoll_event client_event;
+  client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+  client_event.data.fd = client_fd;
 
-	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1)
-		throw ClusterRunError("epoll_ctl");
+  if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1)
+    throw ClusterRunError("epoll_ctl");
 }
 
 // Handles a client request
@@ -283,7 +289,9 @@ void Cluster::handleClientRequest(int connection_fd) {
 			recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
 
 		if (bytesRead < 0) {
+
 			if (errno == EAGAIN || errno == EWOULDBLOCK) return;
+
 			if (errno != EAGAIN) {
 				closeAndRemoveSocket(connection_fd, _epoll_fd);
 				throw ClusterRunError("read failed");
@@ -296,7 +304,6 @@ void Cluster::handleClientRequest(int connection_fd) {
 			// Bytes have been read. Append them to request.
 			request.append(buffer_request, bytesRead);
 	}
-
 	processRequest(connection_fd, request);
 }
 
@@ -305,9 +312,7 @@ void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
 	HTTP_Request request;
 	unsigned short error_status =
 		HTTP_Request_Parser::parse_HTTP_headers(buffer_request, request);
-
 	std::string buffer_response = getResponse(request, error_status, client_fd);
-
 	ssize_t sent =
 		send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
 
@@ -461,10 +466,10 @@ std::ostream& operator<<(std::ostream& outstream, const Cluster& cluster) {
 	outstream << "The Cluster has an epoll_fd of [" << cluster.getEpollFd()
 			  << "] and " << server_list.size() << " servers:" << std::endl;
 
-	for (size_t i = 0; i < server_list.size(); i++)
-		outstream << cluster[i] << std::endl;
+  for (size_t i = 0; i < server_list.size(); i++)
+    outstream << cluster[i] << std::endl;
 
-	outstream << std::endl;
+  outstream << std::endl;
 
-	return (outstream);
+  return (outstream);
 }

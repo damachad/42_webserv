@@ -6,46 +6,43 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/03 13:57:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 13:15:37 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "GetResponse.hpp"
-
 #include "AResponse.hpp"
+#include "CGI.hpp"
 
 GetResponse::~GetResponse() {}
 
-GetResponse::GetResponse(const GetResponse& src) : AResponse(src) {}
+GetResponse::GetResponse(const GetResponse &src) : AResponse(src) {}
 
-GetResponse::GetResponse(const Server& server, const HTTP_Request& request)
+GetResponse::GetResponse(const Server &server, const HTTP_Request &request)
 	: AResponse(server, request) {}
 
 // Loads response with contents of file and sets MIME type
-short GetResponse::loadFile(const std::string& path) {
-	std::ifstream file(path.c_str());
-	if (!file.is_open()) return 500;
-	// std::multimap<std::string, std::string>headers = _request.header_fields;
-	// std::multimap<std::string, std::string>::const_iterator it_modified = headers.find("if-modified-since"); 
-	// NOTE: headers with spaces not parsed for this
-	// if (it_modified != headers.end()) {
-	// 	std::string last_modified = getLastModificationDate(path);
-	// 	if (parseTime(it_modified->second) >= parseTime(last_modified))
-	// 		return 304;
-	// }
-	_response.body.assign((std::istreambuf_iterator<char>(file)),
-						  (std::istreambuf_iterator<char>()));
-	file.close();
-	loadCommonHeaders();
-	// If download in URI, GET request will download file
-	if (_request.uri.find("download") != std::string::npos) {
+short GetResponse::loadFile(std::string &path) {
+	if (isCGI()) {
+		CGI cgi(_request, _response, path);
+		cgi.handleCGIResponse();
+		if (_response.status != 200) loadErrorPage(_response.status);
+	} else {
+		std::ifstream file(path.c_str());
+		if (!file.is_open()) return 500;
+		_response.body.assign((std::istreambuf_iterator<char>(file)),
+							  (std::istreambuf_iterator<char>()));
+		file.close();
+		if (_request.uri.find("download") != std::string::npos) {
 		size_t posSlash = _request.uri.find_last_of("/");
 		std::string fileName = _request.uri.substr(posSlash + 1);
 		if (fileName.empty()) fileName = "download";
 		_response.headers.insert(
 			std::make_pair(std::string("Content-Disposition"), std::string("attachment; filename=\"" + fileName + "\"")));
 	}
-	setMimeType(path);
+		setMimeType(path);
+	}
+	loadCommonHeaders();	
 	return 200;
 }
 
@@ -74,7 +71,7 @@ std::string GetResponse::generateResponse() {
 			status = loadDirectoryListing(path);
 			if (status != 200) return loadErrorPage(status);
 		} else
-			loadErrorPage(403); // Forbiden
+			loadErrorPage(403);	 // Forbiden
 	}
 
 	return getResponseStr();

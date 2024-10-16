@@ -6,12 +6,14 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/03 10:31:23 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 11:21:08 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef ARESPONSE_HPP
 #define ARESPONSE_HPP
+
+#include <unistd.h>
 
 #include "HTTPRequestParser.hpp"
 #include "Server.hpp"
@@ -53,6 +55,7 @@ class AResponse {
 	bool hasAutoindex() const;
 	bool hasReturn() const;
 	bool isDirectory(const std::string& path) const;
+	bool isCGI() const;
 
 	// Response construtors
 	void setMatchLocationRoute();

@@ -73,6 +73,7 @@ bool HTTP_Request_Parser::add_req_line(HTTP_Request& HTTP,
 
 	std::string url;
 	line_stream >> url;
+
 	std::string decoded_uri = decode(url);
 	if (decoded_uri.size() == 0 || !url_is_valid(decoded_uri)) {
 		response_status = BAD_REQUEST;
