@@ -1,4 +1,5 @@
 #include "CGI.hpp"
+
 #include "AResponse.hpp"
 
 CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
@@ -69,33 +70,55 @@ std::string CGI::fetchCookies() {
 	return result;
 }
 
-std::string intToString(int value) {
+std::string CGI::intToString(int value) {
 	std::stringstream ss;
 	ss << value;
 	return ss.str();
 }
 
-void CGI::setSingleEnv(std::vector<std::string> &env, std::string key, std::string envToAdd)
-{
+char **CGI::vectorToCharArray(const std::vector<std::string> &vec) {
+	char **charArray = new char *[vec.size() + 1];
+
+	for (size_t i = 0; i < vec.size(); ++i) {
+		charArray[i] = new char[vec[i].size() + 1];
+		std::strcpy(charArray[i], vec[i].c_str());
+	}
+
+	charArray[vec.size()] = NULL;
+
+	return charArray;
+}
+
+void CGI::setSingleEnv(std::vector<std::string> &env, std::string key,
+					   std::string envToAdd) {
 	env.push_back(key + "=" + envToAdd);
 }
 
 short CGI::setCGIEnv() {
+	if (_request.method == POST && getHeaderEnvValue("content-type").empty())
+		return 500;
+	if (_request.method == POST && getHeaderEnvValue("content-length").empty())
+		return 500;
 
-	if (_request.method == POST && getHeaderEnvValue("content-type").empty()) return 500;
-	if (_request.method == POST && getHeaderEnvValue("content-length").empty()) return 500;
+	std::vector<std::string> cgiEnvironments;
 
-	setSingleEnv(_cgiEnv, "REQUEST_METHOD", intToString(_request.method).c_str());
-	setSingleEnv(_cgiEnv, "CONTENT_TYPE", getHeaderEnvValue("content-type").c_str());
-	setSingleEnv(_cgiEnv, "GATEWAY_INTERFACE", "CGI/1.1");
-	setSingleEnv(_cgiEnv, "PATH_INFO", _path.c_str());
-	setSingleEnv(_cgiEnv, "CONTENT_LENGTH", getHeaderEnvValue("content-length").c_str());
-	setSingleEnv(_cgiEnv, "QUERY_STRING", getQueryFields().c_str());
-	setSingleEnv(_cgiEnv, "SCRIPT_NAME", _request.uri.c_str());
-	setSingleEnv(_cgiEnv, "SERVER_PROTOCOL", _request.protocol_version.c_str());
+	setSingleEnv(cgiEnvironments, "REQUEST_METHOD",
+				 intToString(_request.method).c_str());
+	setSingleEnv(cgiEnvironments, "CONTENT_TYPE",
+				 getHeaderEnvValue("content-type").c_str());
+	setSingleEnv(cgiEnvironments, "GATEWAY_INTERFACE", "CGI/1.1");
+	setSingleEnv(cgiEnvironments, "PATH_INFO", _path.c_str());
+	setSingleEnv(cgiEnvironments, "CONTENT_LENGTH",
+				 getHeaderEnvValue("content-length").c_str());
+	setSingleEnv(cgiEnvironments, "QUERY_STRING", getQueryFields().c_str());
+	setSingleEnv(cgiEnvironments, "SCRIPT_NAME", _request.uri.c_str());
+	setSingleEnv(cgiEnvironments, "SERVER_PROTOCOL",
+				 _request.protocol_version.c_str());
 	std::string cookies = fetchCookies();
 	if (!cookies.empty())
-		setSingleEnv(_cgiEnv, "HTTP_COOKIE", cookies.c_str());
+		setSingleEnv(cgiEnvironments, "HTTP_COOKIE", cookies.c_str());
+
+	_cgiEnv = vectorToCharArray(cgiEnvironments);
 
 	return 200;
 }
@@ -150,6 +173,14 @@ static void setLimits(int limitMb) {
 	setrlimit(RLIMIT_AS, &limit);
 }
 
+// TESTE
+void printCharArray(char **charArray) {
+	// Iterate through the array until NULL is encountered
+	for (size_t i = 0; charArray[i] != NULL; ++i) {
+		std::cerr << "Index " << i << ": " << charArray[i] << std::endl;
+	}
+}
+// TESTE
 std::string CGI::executeCGI(const std::string &scriptPath) {
 	int pipeIn[2];
 	int pipeOut[2];
@@ -166,6 +197,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 		close(pipeIn[1]);
 		close(pipeOut[0]);
 		short status = setCGIEnv();
+		printCharArray(_cgiEnv);
 		if (status != 200) return numberToString(status);
 		setLimits(MEMORYCHILD);
 		std::string dirName =
@@ -173,7 +205,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 		if (chdir(dirName.c_str()) < 0) return "500";
 
 		char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
-		if (execve(scriptPath.c_str(), argv, environ) == -1) return "500";
+		if (execve(scriptPath.c_str(), argv, _cgiEnv) == -1) return "500";
 
 	} else {
 		close(pipeIn[0]);
@@ -224,32 +256,34 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 }
 
 void CGI::handleCGIResponse() {
-    std::string cgiOutput = executeCGI(_path);
-    
-    // Check if the CGI output is an error status
-    if (std::atoi(cgiOutput.c_str()) != 0) {
-        _response.status = std::atoi(cgiOutput.c_str());
-        return;
-    }
+	std::string cgiOutput = executeCGI(_path);
 
-    size_t pos = cgiOutput.find("\r\n\r\n");
-    if (pos != std::string::npos) {
-        std::string headers = cgiOutput.substr(0, pos);
-        std::string body = cgiOutput.substr(pos + 4);
-        std::multimap<std::string, std::string> headerEnv = parseCGIHeaders(headers);
+	// Check if the CGI output is an error status
+	if (std::atoi(cgiOutput.c_str()) != 0) {
+		_response.status = std::atoi(cgiOutput.c_str());
+		return;
+	}
 
-        // Preserve existing headers if necessary
-        for (std::multimap<std::string, std::string>::const_iterator it = headerEnv.begin(); 
-             it != headerEnv.end(); ++it) {
-            // Check if the header is already set
-            std::multimap<std::string, std::string>::iterator responseIt = _response.headers.find(it->first);
-            if (responseIt == _response.headers.end()) {
-                // If the header is not already present, insert it
-                _response.headers.insert(*it);
-            }
-        }
-        _response.body = body;
-    } else
-        _response.status = 500;
+	size_t pos = cgiOutput.find("\r\n\r\n");
+	if (pos != std::string::npos) {
+		std::string headers = cgiOutput.substr(0, pos);
+		std::string body = cgiOutput.substr(pos + 4);
+		std::multimap<std::string, std::string> headerEnv =
+			parseCGIHeaders(headers);
+
+		// Preserve existing headers if necessary
+		for (std::multimap<std::string, std::string>::const_iterator it =
+				 headerEnv.begin();
+			 it != headerEnv.end(); ++it) {
+			// Check if the header is already set
+			std::multimap<std::string, std::string>::iterator responseIt =
+				_response.headers.find(it->first);
+			if (responseIt == _response.headers.end()) {
+				// If the header is not already present, insert it
+				_response.headers.insert(*it);
+			}
+		}
+		_response.body = body;
+	} else
+		_response.status = 500;
 }
-
