@@ -66,6 +66,7 @@ void Server::initializeDirectiveMap(void) {
 	_directiveMap["autoindex"] = &Server::handleAutoIndex;
 	_directiveMap["return"] = &Server::handleReturn;
 	_directiveMap["upload_store"] = &Server::handleUpload;
+  _directiveMap["cgi_ext"] = &Server::handleCgiExt;
 }
 
 static bool isValidPort(const std::string &port) {
@@ -230,6 +231,12 @@ void Server::handleUpload(std::vector<std::string> &tokens) {
 	_uploadStore = tokens[1];
 }
 
+void Server::handleCgiExt(std::vector<std::string> &tokens) {
+  if (tokens.size() > 2)
+    throw ConfigError("Too many arguments in cgi_ext directive.");
+  _cgiExt = tokens[1];
+}
+
 void Server::processDirective(std::string &line) {
   std::vector<std::string> tokens;
   tokens = ConfigParser::tokenizeLine(line);
@@ -302,6 +309,8 @@ std::map<std::string, LocationContext> Server::getLocations() const {
 std::pair<short, std::string> Server::getReturn() const { return _return; }
 
 std::string Server::getUpload() const { return _uploadStore; }
+
+std::string Server::getCgiExt() const { return _cgiExt; }
 
 std::string Server::getRoot(const std::string &route) const {
   if (route.empty())
@@ -389,6 +398,17 @@ std::string Server::getUpload(const std::string &route) const {
     return _uploadStore;
   else
     return it->second.getUpload();
+}
+
+std::string Server::getCgiExt(const std::string &route) const {
+  if (route.empty())
+    return _cgiExt;
+  std::map<std::string, LocationContext>::const_iterator it;
+  it = _locations.find(route);
+  if (it == _locations.end() || it->second.getCgiExt().empty())
+    return _cgiExt;
+  else
+    return it->second.getCgiExt();
 }
 
 std::vector<int> Server::getListeningSockets(void) const {
@@ -500,6 +520,7 @@ std::ostream &operator<<(std::ostream &os, const Server &context) {
     os << "  " << it->first << " :\n" << it->second << "\n";
   }
   os << "  Upload Store: " << context.getUpload() << "\n";
+  os << "  CGI Extension: " << context.getCgiExt() << "\n";
 
   return os;
 }

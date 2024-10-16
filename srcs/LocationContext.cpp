@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/14 15:09:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 12:00:20 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ void LocationContext::initializeDirectiveMap(void) {
 	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
 	_directiveMap["return"] = &LocationContext::handleReturn;
 	_directiveMap["upload_store"] = &LocationContext::handleUpload;
+	_directiveMap["cgi_ext"] = &LocationContext::handleCgiExt;
 }
 
 // Handlers
@@ -161,6 +162,11 @@ void LocationContext::handleUpload(std::vector<std::string> &tokens) {
 	_uploadStore = tokens[1];
 }
 
+void LocationContext::handleCgiExt(std::vector<std::string> &tokens) {
+	if (tokens.size() > 2) throw ConfigError("Invalid cgi_ext directive.");
+	_cgiExt = tokens[1];
+}
+
 void LocationContext::processDirective(std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = ConfigParser::tokenizeLine(line);
@@ -199,6 +205,10 @@ std::pair<short, std::string> LocationContext::getReturn() const {
 
 std::string LocationContext::getUpload() const {
 	return _uploadStore;
+}
+
+std::string LocationContext::getCgiExt() const {
+	return _cgiExt;
 }
 
 std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
@@ -252,6 +262,7 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 		os << "    " << returns.first << " : " << returns.second << "\n";
 	
 	os << "  Upload Store: " << context.getUpload() << "\n";
+	os << "  CGI Extension: " << context.getCgiExt() << "\n";
 
 	return os;
 }
