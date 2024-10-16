@@ -334,26 +334,18 @@ short PostResponse::uploadFile() {
 }
 
 short PostResponse::checkBody() {
-	std::cout << "URI: " << _request.uri << std::endl; // TESTE
-	std::cout << "HAS HEADER: " << requestHasHeader("content-type") << std::endl; // TESTE
-	std::cout << "MULTIPART == 0: " << _request.header_fields.find("content-type")->second.find("multipart/") << std::endl; // TESTE
-	std::cout << "BOUNDARY: " << _boundary << std::endl; // TESTE
 	
+	// NOTE: mudei esta parte porque para um post form request, ele nao cai neste caso
 	if (requestHasHeader("content-type") /*&&
 		_request.header_fields.find("content-type")
 				->second.find("multipart/") == 0*/) {
 		_boundary = getBoundary();
-		std::cout << "1\n"; // TESTE
 		// if (_boundary.empty()) return BAD_REQUEST;
-		std::cout << "2\n"; // TESTE
 		_multipart_body = getMultipartBody(_boundary);
 		// if (_multipart_body.empty()) return BAD_REQUEST;
-		std::cout << "3\n"; // TESTE
 	} else {
-		std::cout << "4\n"; // TESTE
 		return 400;
 	}
-	std::cout << "RETURNED: OK\n"; // TESTE
 	return OK;
 }
 

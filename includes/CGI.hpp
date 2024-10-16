@@ -21,6 +21,7 @@ private:
   const HTTP_Request &_request;
   HTTP_Response &_response;
   const std::string &_path;
+  std::vector<std::string> _cgiEnv;
 
   // Checker
   bool isSingleValueHeader(std::string &key);
@@ -31,7 +32,8 @@ private:
   std::string fetchCookies();
 
   // Env setter
-  short setCGIEnv();
+  void setSingleEnv(std::vector<std::string> &env, std::string key, std::string envToAdd);
+  short setCGIEnv(std::vector<std::string> &_cgiEnv);
 
   // Parsers
   std::multimap<std::string, std::string>
