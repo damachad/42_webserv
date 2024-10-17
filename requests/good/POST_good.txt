@@ -1,0 +1,6 @@
+POST /cgi-bin/test_post_cgi.py HTTP/1.1
+Host: localhost
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 27
+
+name=John&age=30

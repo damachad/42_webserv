@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/14 15:09:25 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 13:42:56 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,8 @@ static std::map<std::string, std::string> initMimeTypes() {
 	mimeTypes["gz"] = "application/gzip";
 	mimeTypes["exe"] = "application/octet-stream";
 	mimeTypes["bin"] = "application/octet-stream";
+	mimeTypes["py"] = "text/plain";
+	mimeTypes["php"] = "text/plain";
 
 	// Microsoft formats
 	mimeTypes["doc"] = "application/msword";
@@ -128,12 +130,13 @@ static std::map<std::string, std::string> initMimeTypes() {
 
 AResponse::~AResponse() {}
 
+
 AResponse::AResponse(const Server& server, const HTTP_Request& request)
 	: _request(request), _server(server) {
 	_response.status = 200;
 }
 
-AResponse::AResponse(const AResponse& src)
+AResponse::AResponse(const AResponse &src)
 	: _request(src._request),
 	  _response(src._response),
 	  _server(src._server),
@@ -155,7 +158,7 @@ short AResponse::checkSize() const {
 		_request.header_fields.find("content-length");
 	size_t size = -1;
 	if (it != _request.header_fields.end()) {
-		char* endPtr = NULL;
+		char *endPtr = NULL;
 		size = std::strtol(it->second.c_str(), &endPtr, 10);
 		if (*endPtr != '\0') return 400;
 		if (size != _request.message_body.size()) return 400;
@@ -165,11 +168,16 @@ short AResponse::checkSize() const {
 
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
-	std::set<Method> allowedMethods = _server.getAllowedMethods(_locationRoute);
+	// Store the allowed methods in a local variable
+	const std::set<Method> allowedMethods =
+		_server.getAllowedMethods(_locationRoute);
+	// Find the request method in the allowed methods
 	std::set<Method>::const_iterator it = allowedMethods.find(_request.method);
-	if (it == _server.getAllowedMethods(_locationRoute).end())
+	// Check if the method is not allowed
+	if (it == allowedMethods.end()) {
 		return 405;	 // Method Not Allowed
-	return 200;
+	}
+	return 200;	 // OK
 }
 
 // Check if message body size is, at most, the maximum allowed body size
@@ -214,10 +222,11 @@ void AResponse::setMatchLocationRoute() {
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
 	return (assemblePath(root, _request.uri));
+
 }
 
 // Checks if file is a regular file and there are no problems opening it
-short AResponse::checkFile(const std::string& path) const {
+short AResponse::checkFile(const std::string &path) const {
 	struct stat info;
 
 	if (stat(path.c_str(), &info) != 0)	 // Error in getting file information
@@ -237,7 +246,7 @@ short AResponse::checkFile(const std::string& path) const {
 }
 
 // Checks if file (path) is a directory
-bool AResponse::isDirectory(const std::string& path) const {
+bool AResponse::isDirectory(const std::string &path) const {
 	struct stat info;
 
 	stat(path.c_str(), &info);
@@ -245,6 +254,16 @@ bool AResponse::isDirectory(const std::string& path) const {
 		return true;
 	else
 		return false;
+}
+
+// Checks if the request is calling a CGI script
+bool AResponse::isCGI() const {
+	std::string cgiExt = _server.getCgiExt(_locationRoute);
+	size_t dotPos = _request.uri.find_last_of(".");
+	if (dotPos != std::string::npos && !cgiExt.empty() &&
+		_request.uri.substr(dotPos) == cgiExt)
+		return true;
+	return false;
 }
 
 // Checks if autoindex is on
@@ -256,7 +275,7 @@ bool AResponse::hasAutoindex() const {
 }
 
 // Returns an index file if it exists or NULL (empty string)
-const std::string AResponse::getIndexFile(const std::string& path) const {
+const std::string AResponse::getIndexFile(const std::string &path) const {
 	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
 	std::vector<std::string>::const_iterator it;
 	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
@@ -278,7 +297,7 @@ const std::string AResponse::assemblePath(const std::string& l,
 }
 
 // Sets MIME type in Content-Type header based on file extension
-void AResponse::setMimeType(const std::string& path) {
+void AResponse::setMimeType(const std::string &path) {
 	static std::map<std::string, std::string> mimeTypes = initMimeTypes();
 
 	std::size_t dotPos = path.find_last_of('.');
@@ -300,14 +319,16 @@ void AResponse::setMimeType(const std::string& path) {
 // Adds Date, Server and Content-Length headers to _response
 void AResponse::loadCommonHeaders() {
 	_response.headers.insert(
-		std::make_pair(std::string("Date"), getHttpDate()));
-	_response.headers.insert(
-		std::make_pair(std::string("Server"), std::string(SERVER)));
+		std::make_pair(std::string("Connection"), std::string("keep-alive")));
 	if (_response.body.size()) {
 		_response.headers.insert(std::make_pair(
 			std::string("Content-Length"),
 			numberToString<unsigned long>(_response.body.size())));
 	}
+	_response.headers.insert(
+		std::make_pair(std::string("Date"), getHttpDate()));
+	_response.headers.insert(
+		std::make_pair(std::string("Server"), std::string(SERVER)));
 	_response.headers.insert(
 		std::make_pair(std::string("Cache-Control"), std::string("no-cache")));
 }
@@ -322,6 +343,8 @@ void AResponse::loadReturn() {
 		_response.headers.insert(
 			std::make_pair(std::string("Location"), redirect.second));
 	}
+	_response.headers.insert(
+		std::make_pair(std::string("Content-Type"), std::string("application/octet-stream")));
 }
 
 // Checks if there is a return directive
@@ -332,7 +355,7 @@ bool AResponse::hasReturn() const {
 }
 
 // Helper function to extract and format the directory name
-static std::string getDirectoryName(const std::string& path) {
+static std::string getDirectoryName(const std::string &path) {
 	std::string dirName;
 	std::string::size_type endPos = path.find_last_not_of("/");
 	if (endPos == std::string::npos) dirName = path;
@@ -349,12 +372,12 @@ std::string AResponse::getLastModificationDate(const std::string& path) const {
 		return "";	// Error handling or empty result
 	}
 	char dateBuffer[20];
-	struct tm* timeinfo = localtime(&fileStat.st_mtime);
+	struct tm *timeinfo = localtime(&fileStat.st_mtime);
 	std::strftime(dateBuffer, sizeof(dateBuffer), "%d-%b-%Y %H:%M", timeinfo);
 	return std::string(dateBuffer);
 }
 
-static std::string getFileSize(const std::string& path) {
+static std::string getFileSize(const std::string &path) {
 	struct stat fileStat;
 	if (stat(path.c_str(), &fileStat) != 0) {
 		return "";	// Error handling or empty result
@@ -364,6 +387,7 @@ static std::string getFileSize(const std::string& path) {
 		(S_ISDIR(fileStat.st_mode) ? "-" : numberToString<size_t>(size));
 	return sizeBuffer;
 }
+
 
 std::string AResponse::addFileEntry(std::string& name,
 									const std::string& path) {
@@ -394,7 +418,7 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	_response.body = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " +
 					 dirName + "</title>\n</head>\n<body>\n<h1>Index of " +
 					 dirName + "</h1>\n<hr>\n<pre>";
-	struct dirent* entry;
+	struct dirent *entry;
 	std::vector<std::string> entries;
 	while ((entry = readdir(dir)) != NULL) {
 		entries.push_back(std::string(entry->d_name));
@@ -422,7 +446,7 @@ const std::string AResponse::getResponseStr() const {
 		STATUS_MESSAGES.find(_response.status);
 	std::string message = (itStatus != STATUS_MESSAGES.end())
 							  ? itStatus->second
-							  : "Unknown status code";
+							  : "";
 	std::string headersStr;
 	std::multimap<std::string, std::string>::const_iterator itHead;
 	for (itHead = _response.headers.begin(); itHead != _response.headers.end();
@@ -440,7 +464,7 @@ static std::string loadDefaultErrorPage(short status) {
 		STATUS_MESSAGES.find(status);
 	std::string message = (itStatus != STATUS_MESSAGES.end())
 							  ? itStatus->second
-							  : "Unknown status code";
+							  : "";
 	std::string response =
 		"<!DOCTYPE html>\n"
 		"<html lang=\"en\">\n"

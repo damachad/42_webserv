@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/02 14:42:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 12:05:38 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,9 @@
 
 #include <sys/stat.h>
 
+#include <sstream>
+
+#include "CGI.hpp"
 #include "Helpers.hpp"
 #include "Webserv.hpp"
 
@@ -39,7 +42,7 @@ unsigned short PostResponse::parse_HTTP_body() {
 
 	// If it's chunked, get all the chunk
 	// NOTE: In our server, chunked is only useful for CGI!?
-	else if (requestHasHeader("transfer-encoding") && requestIsCGI())
+	else if (requestHasHeader("transfer-encoding") && isCGI())
 		readChunks();
 	// If there's no content-length nor chunked, return error
 	// No need to test for both existing at the same time: already tested on
@@ -256,7 +259,7 @@ std::string PostResponse::generateResponse() {
 	status = checkBody();
 	if (status != OK) return loadErrorPage(status);
 
-	if (!requestIsCGI()) {
+	if (!isCGI()) {
 		status = extractFile();
 		if (status != OK) return loadErrorPage(status);
 
@@ -264,6 +267,11 @@ std::string PostResponse::generateResponse() {
 		if (status != OK) return loadErrorPage(status);
 	} else {
 		// Send to CGI;
+		std::string path = getPath();
+		CGI cgi(_request, _response, path);
+		cgi.handleCGIResponse();
+		if (_response.status != 200) loadErrorPage(_response.status);
+		loadCommonHeaders();
 	}
 
 	return getResponseStr();
@@ -274,14 +282,6 @@ bool PostResponse::requestHasHeader(const std::string &header) {
 		return true;
 
 	return false;
-}
-
-bool PostResponse::requestIsCGI() {
-	if (_request.uri.length() < 4) return false;
-
-	std::string ending = _request.uri.substr(_request.uri.length() - 3);
-
-	return (ending == ".py");
 }
 
 // Function to create directory
@@ -424,8 +424,9 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 
 	return submap;
 }
-
+// TODO: Protect finds!
 short PostResponse::extractFile() {
+
 	std::string content_disposition =
 		_multipart_body[0].find("Content-Disposition")->second;
 
@@ -435,7 +436,7 @@ short PostResponse::extractFile() {
 		extractFieldValue(content_disposition, "filename");
 
 	_file_to_upload.content_type =
-		_multipart_body[0].find("Content-Type")->second;
+	    _multipart_body[0].find("Content-Type")->second;
 
 	_file_to_upload.file_contents =
 		_multipart_body[0].find("_File Contents")->second;

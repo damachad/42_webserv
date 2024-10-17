@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/14 19:58:16 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/15 13:54:55 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>	 // For read
+#include <sys/resource.h>
 #include <signal.h>
+#include <sys/time.h>
+#include <sys/wait.h>
 
 #include <cctype>	// For islanum
 #include <cstdlib>	// For exit() and EXIT_FAILURE
@@ -55,6 +58,8 @@ enum State { FALSE, TRUE, UNSET };
 #define REG_FILE 0
 #define DIRECTORY 1
 #define URL_MAX_SIZE 8094
+#define TIMEOUT 5
+#define MEMORYCHILD 200
 #define SERVER "webserv"
 
 extern const std::map<short, std::string> STATUS_MESSAGES;
