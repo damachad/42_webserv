@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/30 11:45:06 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 14:31:21 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,7 @@ class HTTP_Request_Parser {
 	static void trimNulls(std::string& s);
 	static std::string decode(const std::string& encoded);
 	static bool method_is_valid(const std::string& method);
+	static bool methodExists(const std::string& method);
 	static bool url_is_valid(const std::string& url);
 	static bool protocol_version_is_valid(
 		const ::std::string& protocol_version);
