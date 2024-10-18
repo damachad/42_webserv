@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/17 15:58:53 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 14:35:14 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,15 @@ short GetResponse::loadFile(std::string &path) {
 	} else {
 		std::ifstream file(path.c_str());
 		if (!file.is_open()) return INTERNAL_SERVER_ERROR;
+		// Check If-Modified-Since header
+		std::multimap<std::string, std::string>headers = _request.header_fields;
+		std::multimap<std::string, std::string>::const_iterator it_modified = headers.find("if-modified-since"); 
+
+		if (it_modified != headers.end()) {
+			std::string last_modified = getLastModificationDate(path);
+			if (parseTime(it_modified->second) >= parseTime(last_modified))
+				return NOT_MODIFIED;
+		}
 		_response.body.assign((std::istreambuf_iterator<char>(file)),
 							  (std::istreambuf_iterator<char>()));
 		file.close();
