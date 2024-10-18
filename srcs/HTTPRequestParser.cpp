@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/16 15:08:04 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 14:36:30 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ bool HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 	}
 
 	// Extract key and value
-	std::string key = line.substr(0, colon_pos);
+	std::string key = line.substr(0, colon_pos);	
 	std::string comma_separated_values = line.substr(colon_pos + 1);
 
 	// Trim whitespace from key and value
@@ -135,7 +135,12 @@ bool HTTP_Request_Parser::add_header_fields(HTTP_Request& HTTP,
 	// Add comma_separated_values into a set
 	std::stringstream ss(comma_separated_values);
 	std::string value;
-
+	
+	if (key == "date" || key == "if-modified-since" || key == "last-modified") {
+		HTTP.header_fields.insert(
+				std::pair<std::string, std::string>(key, comma_separated_values));
+		return true;
+	}
 	while (std::getline(ss, value, ',')) {
 		value.erase(value.find_last_not_of(" \n\r\t") + 1);
 		value.erase(0, value.find_first_not_of(" \n\r\t"));

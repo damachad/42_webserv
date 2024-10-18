@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/16 12:27:37 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 14:35:14 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,19 @@ short GetResponse::loadFile(std::string &path) {
 	if (isCGI()) {
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
-		if (_response.status != 200) loadErrorPage(_response.status);
+		if (_response.status != OK) loadErrorPage(_response.status);
 	} else {
 		std::ifstream file(path.c_str());
-		if (!file.is_open()) return 500;
+		if (!file.is_open()) return INTERNAL_SERVER_ERROR;
+		// Check If-Modified-Since header
+		std::multimap<std::string, std::string>headers = _request.header_fields;
+		std::multimap<std::string, std::string>::const_iterator it_modified = headers.find("if-modified-since"); 
+
+		if (it_modified != headers.end()) {
+			std::string last_modified = getLastModificationDate(path);
+			if (parseTime(it_modified->second) >= parseTime(last_modified))
+				return NOT_MODIFIED;
+		}
 		_response.body.assign((std::istreambuf_iterator<char>(file)),
 							  (std::istreambuf_iterator<char>()));
 		file.close();
@@ -43,13 +52,14 @@ short GetResponse::loadFile(std::string &path) {
 		setMimeType(path);
 	}
 	loadCommonHeaders();	
-	return 200;
+	return OK;
 }
 
+// Returns Get response as string
 std::string GetResponse::generateResponse() {
 	setMatchLocationRoute();
 	short status = checkMethod();
-	if (status != 200) return loadErrorPage(status);
+	if (status != OK) return loadErrorPage(status);
 	if (hasReturn()) {
 		loadReturn();
 		return getResponseStr();
@@ -57,21 +67,21 @@ std::string GetResponse::generateResponse() {
 	std::string path = getPath();
 
 	status = checkFile(path);
-	if (status != 200) return loadErrorPage(status);
+	if (status != OK) return loadErrorPage(status);
 	if (!isDirectory(path)) {
 		status = loadFile(path);
-		if (status != 200) return loadErrorPage(status);
+		if (status != OK) return loadErrorPage(status);
 	} else {  // is a directory
 		std::string indexFile = getIndexFile(path);
 		if (!indexFile.empty() && 
-			(checkFile(indexFile) == 200)) {
+			(checkFile(indexFile) == OK)) {
 			status = loadFile(indexFile);
-			if (status != 200) return loadErrorPage(status);
+			if (status != OK) return loadErrorPage(status);
 		} else if (hasAutoindex()) {
 			status = loadDirectoryListing(path);
-			if (status != 200) return loadErrorPage(status);
+			if (status != OK) return loadErrorPage(status);
 		} else
-			loadErrorPage(403);	 // Forbiden
+			loadErrorPage(FORBIDDEN);
 	}
 
 	return getResponseStr();

@@ -103,6 +103,7 @@ void CGI::setSingleEnv(std::vector<std::string> &env, std::string key,
 
 short CGI::setCGIEnv() {
 	if (_request.method == POST && getHeaderEnvValue("content-type").empty())
+
 		return 500;
 	if (_request.method == POST && getHeaderEnvValue("content-length").empty())
 		return 500;
