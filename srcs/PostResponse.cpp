@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/15 13:10:06 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 11:25:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,7 +306,8 @@ static bool createDirectory(const std::string &path) {
 }
 
 short PostResponse::uploadFile() {
-	extractFile();
+	short status = extractFile();
+	if (status != OK) return status;
 
 	std::string directory = _server.getUpload(_locationRoute);
 	if (directory.empty())
@@ -436,24 +437,36 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 
 	return submap;
 }
-// TODO: Protect finds!
+
+
 short PostResponse::extractFile() {
 
-	std::string content_disposition =
-		_multipart_body[0].find("Content-Disposition")->second;
+	if (_multipart_body.empty())
+		return 500;
 
-	_file_to_upload.name = extractFieldValue(content_disposition, "name");
+    std::multimap<std::string, std::string>::iterator content_disposition_it = 
+		_multipart_body[0].find("Content-Disposition");
+    if (content_disposition_it == _multipart_body[0].end())
+        return 500;
+    std::string content_disposition = content_disposition_it->second;
 
-	_file_to_upload.file_name =
+    _file_to_upload.name = extractFieldValue(content_disposition, "name");
+    _file_to_upload.file_name = 
 		extractFieldValue(content_disposition, "filename");
 
-	_file_to_upload.content_type =
-	    _multipart_body[0].find("Content-Type")->second;
+    std::multimap<std::string, std::string>::iterator content_type_it = 
+		_multipart_body[0].find("Content-Type");
+    if (content_type_it == _multipart_body[0].end())
+        return 500;
+    _file_to_upload.content_type = content_type_it->second;
 
-	_file_to_upload.file_contents =
-		_multipart_body[0].find("_File Contents")->second;
+    std::multimap<std::string, std::string>::iterator file_contents_it = 
+		_multipart_body[0].find("_File Contents");
+    if (file_contents_it == _multipart_body[0].end())
+        return 500;
+    _file_to_upload.file_contents = file_contents_it->second;
 
-	return 200;
+    return 200;
 }
 
 // Function to extract the value of a specified key (either "name" or
