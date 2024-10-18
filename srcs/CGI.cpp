@@ -4,7 +4,7 @@
 
 CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
 		 const std::string &path)
-	: _request(httpRequest), _response(httpResponse), _path(path) {}
+	: _request(httpRequest), _response(httpResponse), _path(path), _cgiEnv(NULL) {}
 
 CGI::~CGI() {
 	if (_cgiEnv) {
@@ -110,7 +110,7 @@ short CGI::setCGIEnv() {
 	std::vector<std::string> cgiEnvironments;
 
 	setSingleEnv(cgiEnvironments, "REQUEST_METHOD",
-				 intToString(_request.method).c_str());
+				 methodToString(_request.method).c_str());
 	setSingleEnv(cgiEnvironments, "CONTENT_TYPE",
 				 getHeaderEnvValue("content-type").c_str());
 	setSingleEnv(cgiEnvironments, "GATEWAY_INTERFACE", "CGI/1.1");

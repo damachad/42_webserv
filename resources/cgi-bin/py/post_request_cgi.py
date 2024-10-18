@@ -2,23 +2,49 @@
 
 import cgi
 import cgitb
-import sys
+import json
+import os
 
 cgitb.enable()  # Enable debugging
+
+# Path to the JSON file
+json_file_path = "../json/data.json"  # Update this path accordingly
 
 # Get form data
 form = cgi.FieldStorage()
 
-# Log the form data to stderr (which is often logged by the server)
-print("Content-Type: text/html")  # Properly format the HTTP response header
+# Properly format the HTTP response header
+print("Content-Type: text/html")
 print("\r\n\r\n")  # End of headers
-
-# Check if the form data is received
 
 # Retrieve form fields
 name = form.getvalue("name", "No name provided")
 email = form.getvalue("email", "No email provided")
 message = form.getvalue("message", "No message provided")
+
+# Create a dictionary with the form data
+form_data = {
+    "name": name,
+    "email": email,
+    "message": message
+}
+
+# Read the existing JSON file (if it exists)
+if os.path.exists(json_file_path):
+    with open(json_file_path, "r") as json_file:
+        try:
+            data = json.load(json_file)
+        except json.JSONDecodeError:
+            data = []  # If file is corrupted or empty, initialize as empty list
+else:
+    data = []  # Initialize an empty list if the file doesn't exist
+
+# Append the new form data to the list
+data.append(form_data)
+
+# Write the updated data back to the JSON file
+with open(json_file_path, "w") as json_file:
+    json.dump(data, json_file, indent=4)
 
 # Display the user's input in an HTML format
 print(f"""

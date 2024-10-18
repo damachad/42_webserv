@@ -256,20 +256,20 @@ std::string PostResponse::generateResponse() {
 	status = checkClientBodySize();
 	if (status != OK) return loadErrorPage(status);
 
-	status = checkBody();
-	if (status != OK) return loadErrorPage(status);
-
 	if (!isCGI()) {
+
+		status = checkBody();
+		if (status != OK) return loadErrorPage(status);
+
 		status = extractFile();
 		if (status != OK) return loadErrorPage(status);
 
 		status = uploadFile();
 		if (status != OK) return loadErrorPage(status);
 	} else {
+
 		// Send to CGI;
 		std::string path = getPath();
-		std::cout << "!!PATH: " << path << std::endl;
-		std::cout << "!!REQUEST: " << _request << std::endl;
 		
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
@@ -329,13 +329,13 @@ short PostResponse::uploadFile() {
 short PostResponse::checkBody() {
 	
 	// NOTE: mudei esta parte porque para um post form request, ele nao cai neste caso
-	if (requestHasHeader("content-type") /*&&
+	if (requestHasHeader("content-type") &&
 		_request.header_fields.find("content-type")
-				->second.find("multipart/") == 0*/) {
+				->second.find("multipart/") == 0) {
 		_boundary = getBoundary();
-		// if (_boundary.empty()) return BAD_REQUEST;
+		if (_boundary.empty()) return BAD_REQUEST;
 		_multipart_body = getMultipartBody(_boundary);
-		// if (_multipart_body.empty()) return BAD_REQUEST;
+		if (_multipart_body.empty()) return BAD_REQUEST;
 	} else {
 		return 400;
 	}
