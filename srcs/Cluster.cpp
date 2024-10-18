@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/15 12:44:25 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 11:34:38 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,7 +235,6 @@ void Cluster::run(void) {
 
 	while (running) {
 		try {
-			std::cout << "I got here!\n";
 			int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
 			if ((n == -1) && (errno == EINTR))
 				continue;
