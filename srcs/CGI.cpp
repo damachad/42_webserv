@@ -69,14 +69,8 @@ std::string CGI::fetchCookies() {
 	return result;
 }
 
-std::string intToString(int value) {
-	std::stringstream ss;
-	ss << value;
-	return ss.str();
-}
-
 short CGI::setCGIEnv() {
-	if (setenv("REQUEST_METHOD", intToString(_request.method).c_str(), 1) !=
+	if (setenv("REQUEST_METHOD", numberToString<int>(_request.method).c_str(), 1) !=
 		0) {
 		return 500;
 	}

@@ -6,19 +6,11 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 12:31:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/16 09:12:21 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/17 16:32:47 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Exceptions.hpp"
-
-FileReadError::FileReadError(const std::string &str) throw() {
-	_message = "Unable to read from: " + str + '\n';
-}
-
-const char *FileReadError::what() const throw() { return (_message.c_str()); }
-
-FileReadError::~FileReadError() throw() {}
 
 /* Configuration File Errors */
 ConfigError::ConfigError(const std::string &str) throw() {
@@ -39,17 +31,6 @@ const char *OutOfBoundsError::what() const throw() {
 }
 
 OutOfBoundsError::~OutOfBoundsError() throw() {}
-
-/* ValueNotFound Error for when value is not found in vector */
-ValueNotFoundError::ValueNotFoundError(const std::string &str) throw() {
-	_message = "Error: could not find value " + str + "!\n";
-}
-
-const char *ValueNotFoundError::what() const throw() {
-	return (_message.c_str());
-}
-
-ValueNotFoundError::~ValueNotFoundError() throw() {}
 
 /* SocketSetup Error for when there are errors with socket / bind / listen */
 SocketSetupError::SocketSetupError(const std::string &str) throw() {
@@ -84,34 +65,3 @@ ClusterRunError::ClusterRunError(const std::string &str) throw() {
 const char *ClusterRunError::what() const throw() { return (_message.c_str()); }
 
 ClusterRunError::~ClusterRunError() throw() {}
-
-/* HTTP Header error for when there are errors during its parsing */
-HTTPHeaderError::HTTPHeaderError(const std::string &str) throw() {
-	_message = "Wrong HTTP Header (" + str + ")\n";
-}
-
-const char *HTTPHeaderError::what() const throw() { return (_message.c_str()); }
-
-HTTPHeaderError::~HTTPHeaderError() throw() {}
-
-/* HTTP Response error for when there are errors during HTTP request
- * interpretation */
-HTTPResponseError::HTTPResponseError(const short status) throw() {
-	std::map<short, std::string>::const_iterator itStatus =
-		STATUS_MESSAGES.find(status);
-	std::string message = (itStatus != STATUS_MESSAGES.end())
-							  ? itStatus->second
-							  : "";
-	std::string headers = "Date: " + getHttpDate() + "\r\n" +
-						  "Server: " + SERVER + "\r\n" +
-						  "Connection: close\r\n";	// close the connection?
-
-	_response = "HTTP/1.1 " + numberToString<int>(status) + message + "\r\n" +
-				headers + "\r\n";
-}
-
-const char *HTTPResponseError::what() const throw() {
-	return (_response.c_str());
-}
-
-HTTPResponseError::~HTTPResponseError() throw() {}

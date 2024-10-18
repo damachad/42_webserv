@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:07 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/14 19:57:27 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/17 16:42:55 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,5 @@ T stringToNumber(const std::string& value) {
 void sigIntHandler(int signum);
 time_t parseTime(const std::string& http_time);
 std::string getHttpDate();
-std::ostream& operator<<(std::ostream& outstream,
-						 const struct Context configuration);
+
 #endif

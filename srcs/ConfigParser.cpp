@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/16 12:01:03 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/17 16:19:05 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &src) {
 	return (*this);
 }
 
-/* remove leading and trailing whitespaces */
+// Removes leading and trailing whitespaces
 void ConfigParser::trimOuterSpaces(std::string &s) {
 	if (s.empty()) return;
 	while (std::isspace(s[0])) s.erase(s.begin());
@@ -38,7 +38,7 @@ void ConfigParser::trimOuterSpaces(std::string &s) {
 	while (std::isspace(s[s.length() - 1])) s.erase(s.end() - 1);
 }
 
-/* remove comments */
+// Removes comments 
 void ConfigParser::trimComments(std::string &s) {
 	if (s.empty()) return;
 	size_t comment = s.find('#');
@@ -49,6 +49,7 @@ void ConfigParser::trimComments(std::string &s) {
 	}
 }
 
+// Checks if a block has matching '{}' and returns position of closing '}'
 size_t ConfigParser::advanceBlock(std::string content, size_t start) {
 	short scope = 0;
 	while (content[start]) {
@@ -64,6 +65,7 @@ size_t ConfigParser::advanceBlock(std::string content, size_t start) {
 	throw ConfigError("Unmatched '{}'.");
 }
 
+// Separates server blocks into vector of strings and returns it
 std::vector<std::string> ConfigParser::splitServerBlocks(std::string content) {
 	size_t start = 0;
 	size_t end = 0;
@@ -72,7 +74,7 @@ std::vector<std::string> ConfigParser::splitServerBlocks(std::string content) {
 	std::string firstWord;
 	while (content[start]) {
 		firstWord = (content.substr(start, 6));
-		if (stringToLower(firstWord) != "server")
+		if (toLower(firstWord) != "server")
 			throw ConfigError("No server block present.");
 		start += 6;
 		while (std::isspace(content[start])) start++;
@@ -104,21 +106,23 @@ std::vector<std::string> ConfigParser::tokenizeLine(std::string line) {
 	return (tokens);
 }
 
+// Checks if two Listens have the same IP and port
 static bool areListenEqual(const Listen &a, const Listen &b) {
 	return (a.port == b.port) && (a.IP == b.IP);
 }
 
+// Checks if a server has repeated IP:port combinations
 static bool hasDuplicates(const std::vector<Listen> &vec) {
 	for (size_t i = 0; i < vec.size(); ++i) {
 		for (size_t j = i + 1; j < vec.size(); ++j) {
-			if (areListenEqual(vec[i], vec[j])) {
-				return true;  // Duplicate found
-			}
+			if (areListenEqual(vec[i], vec[j]))
+				return true;
 		}
 	}
-	return false;  // No duplicates
+	return false;
 }
 
+// Loads information from directives into the server blocks
 void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	std::string line;
 	std::vector<std::string>::iterator it;
@@ -133,11 +137,11 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 			if (line.empty()) throw ConfigError("Unparsable block detected.");
 			std::istringstream readLine(line);
 			readLine >> firstWord;
-			if (stringToLower(firstWord) == "location") {
+			if (toLower(firstWord) == "location") {
 				size_t endPos = (*it).find("}", startPos);
 				server.processLocation((*it), startPos, endPos);
 				std::getline(block, line, '}');
-			} else if (stringToLower(firstWord) == "}")
+			} else if (toLower(firstWord) == "}")
 				break;
 			else
 				server.processDirective(line);
@@ -152,12 +156,14 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 	}
 }
 
+// Checks if a string has double or single quotes present
 static bool hasQuotes(std::string text) {
 	size_t dQuote = text.find("\"");
 	size_t sQuote = text.find("\'");
 	return (dQuote != std::string::npos || sQuote != std::string::npos);
 }
 
+// Loads information from configuration file into classes Server and Location
 void ConfigParser::loadConfigs() {
 	std::ifstream file(_configFile.c_str());
 	if (!file.is_open())
@@ -176,8 +182,10 @@ void ConfigParser::loadConfigs() {
 	loadIntoContext(serverBlocks);
 }
 
+// Returns vector of Servers
 std::vector<Server> ConfigParser::getServers(void) { return (this->_servers); }
 
+// Prints information of a location, given its server and route
 void ConfigParser::printLocationValues(unsigned int serverNum,
 									   const std::string &route) {
 	std::cout << "Getting diretive values from location '" << route;
