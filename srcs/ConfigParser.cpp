@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 12:58:52 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 12:01:03 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,4 +227,5 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 	if (returns.first) std::cout << returns.first << " : " << returns.second;
 	std::cout << std::endl;
 	std::cout << "Upload Store: " << _servers[serverNum].getUpload(route) << '\n';
+	std::cout << "CGI Extension: " << _servers[serverNum].getCgiExt(route) << '\n';
 }

@@ -36,7 +36,8 @@ Server::Server(const Server &src)
 	  _errorPages(src.getErrorPages()),
 	  _locations(src.getLocations()),
 	  _return(src.getReturn()),
-	  _uploadStore(src.getUpload()) {}
+	  _uploadStore(src.getUpload()),
+    _cgiExt(src.getCgiExt()) {}
 
 Server &Server::operator=(const Server &src) {
 	_network_address = src.getNetworkAddress();
@@ -50,6 +51,7 @@ Server &Server::operator=(const Server &src) {
 	_locations = src.getLocations();
 	_return = src.getReturn();
 	_uploadStore = src.getUpload();
+  _cgiExt = src.getCgiExt();
 	return (*this);
 }
 
@@ -66,6 +68,7 @@ void Server::initializeDirectiveMap(void) {
 	_directiveMap["autoindex"] = &Server::handleAutoIndex;
 	_directiveMap["return"] = &Server::handleReturn;
 	_directiveMap["upload_store"] = &Server::handleUpload;
+  _directiveMap["cgi_ext"] = &Server::handleCgiExt;
 }
 
 static bool isValidPort(const std::string &port) {
@@ -101,7 +104,7 @@ static bool isValidIp(const std::string &ip) {
 // Handlers
 void Server::handleListen(std::vector<std::string> &tokens) {
   if (tokens.size() > 2)
-    throw ConfigError("Too many arguments in listen directive.");
+    throw ConfigError("Invalid number of arguments in listen directive.");
   std::vector<std::string>::const_iterator
       it; // check if accept just one token (if not implementing
           // default_server)
@@ -113,7 +116,7 @@ void Server::handleListen(std::vector<std::string> &tokens) {
       listening.IP = value.substr(0, colonPos);
       listening.port = value.substr(colonPos + 1);
       if (listening.IP.empty() || listening.port.empty())
-        throw ConfigError("Invalid IP:Port.");
+        throw ConfigError("Invalid IP:Port in listen directive.");
     } else {
       if ((*it).find_first_not_of("0123456789") == std::string::npos)
         listening.port = value;
@@ -125,7 +128,7 @@ void Server::handleListen(std::vector<std::string> &tokens) {
     if (listening.port.empty())
       listening.port = "80"; // default
     if (!isValidIp(listening.IP) || !isValidPort(listening.port))
-      throw ConfigError("Invalid IP:Port.");
+      throw ConfigError("Invalid IP:Port in listen directive.");
     _network_address.push_back(listening);
   }
 }
@@ -137,7 +140,7 @@ void Server::handleServerName(std::vector<std::string> &tokens) {
 
 void Server::handleRoot(std::vector<std::string> &tokens) {
   if (tokens.size() > 2)
-    throw ConfigError("Too many arguments in root directive.");
+    throw ConfigError("Invalid number of arguments in root directive.");
   _root = tokens[1];
 }
 
@@ -148,7 +151,7 @@ void Server::handleIndex(std::vector<std::string> &tokens) {
 
 void Server::handleErrorPage(std::vector<std::string> &tokens) {
   if (tokens.size() < 3)
-    throw ConfigError("Invalid error_page directive.");
+    throw ConfigError("Invalid number of arguments in error_page directive.");
   std::string page = tokens.back();
   for (size_t i = 1; i < tokens.size() - 1; i++) {
     char *end;
@@ -162,7 +165,7 @@ void Server::handleErrorPage(std::vector<std::string> &tokens) {
 
 void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
   if (tokens.size() != 2)
-    throw ConfigError("Invalid client_max_body_size directive.");
+    throw ConfigError("Invalid number of arguments in client_max_body_size directive.");
   std::string maxSize = tokens[1];
   char unit = maxSize[maxSize.size() - 1];
   if (!std::isdigit(unit))
@@ -172,7 +175,7 @@ void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
   char *endPtr = NULL;
   long size = std::strtol(maxSize.c_str(), &endPtr, 10);
   if (*endPtr != '\0')
-    throw ConfigError("Invalid numeric value for client_max_body_size.");
+    throw ConfigError("Invalid value for client_max_body_size.");
   _clientMaxBodySize = size;
   if (!std::isdigit(unit)) {
     // check for overflow during multiplication
@@ -208,11 +211,11 @@ void Server::handleAutoIndex(std::vector<std::string> &tokens) {
   else if (tokens[1] == "off")
     _autoIndex = FALSE;
   else
-    throw ConfigError("Invalid syntax.");
+    throw ConfigError("Invalid value in autoindex directive.");
 }
 
 void Server::handleReturn(std::vector<std::string> &tokens) {
-	if (tokens.size() != 3) throw ConfigError("Invalid return directive.");
+	if (tokens.size() != 3) throw ConfigError("Invalid number of arguments in return directive.");
 	// check if there is overflow
 	char *endPtr = NULL;
 	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
@@ -226,21 +229,27 @@ void Server::handleReturn(std::vector<std::string> &tokens) {
 
 void Server::handleUpload(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
-		throw ConfigError("Invalid upload_store directive.");
+		throw ConfigError("Invalid number of arguments in upload_store directive.");
 	_uploadStore = tokens[1];
+}
+
+void Server::handleCgiExt(std::vector<std::string> &tokens) {
+  if (tokens.size() > 2)
+    throw ConfigError("Invalid number of arguments in cgi_ext directive.");
+  _cgiExt = tokens[1];
 }
 
 void Server::processDirective(std::string &line) {
   std::vector<std::string> tokens;
   tokens = ConfigParser::tokenizeLine(line);
   if (tokens.size() < 2)
-    throw ConfigError("No value for directive: " + tokens[0]);
+    throw ConfigError("Invalid number of arguments in \"" + tokens[0] + "\" directive.");
   std::map<std::string, DirectiveHandler>::const_iterator it;
   it = _directiveMap.find(tokens[0]);
   if (it != _directiveMap.end())
     (this->*(it->second))(tokens);
   else
-    throw ConfigError("Unkown directive: " + tokens[0]);
+    throw ConfigError("Unkown directive \"" + tokens[0] + "\"");
 }
 
 // Loads a location block and adds it to the map in server
@@ -302,6 +311,8 @@ std::map<std::string, LocationContext> Server::getLocations() const {
 std::pair<short, std::string> Server::getReturn() const { return _return; }
 
 std::string Server::getUpload() const { return _uploadStore; }
+
+std::string Server::getCgiExt() const { return _cgiExt; }
 
 std::string Server::getRoot(const std::string &route) const {
   if (route.empty())
@@ -389,6 +400,17 @@ std::string Server::getUpload(const std::string &route) const {
     return _uploadStore;
   else
     return it->second.getUpload();
+}
+
+std::string Server::getCgiExt(const std::string &route) const {
+  if (route.empty())
+    return _cgiExt;
+  std::map<std::string, LocationContext>::const_iterator it;
+  it = _locations.find(route);
+  if (it == _locations.end() || it->second.getCgiExt().empty())
+    return _cgiExt;
+  else
+    return it->second.getCgiExt();
 }
 
 std::vector<int> Server::getListeningSockets(void) const {
@@ -500,6 +522,7 @@ std::ostream &operator<<(std::ostream &os, const Server &context) {
     os << "  " << it->first << " :\n" << it->second << "\n";
   }
   os << "  Upload Store: " << context.getUpload() << "\n";
+  os << "  CGI Extension: " << context.getCgiExt() << "\n";
 
   return os;
 }

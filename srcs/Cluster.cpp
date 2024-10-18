@@ -234,19 +234,24 @@ void Cluster::run(void) {
   std::vector<struct epoll_event> events(MAX_CONNECTIONS);
 
 	while (running) {
-		int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
-		if ((n == -1) && (errno == EINTR))
-			continue ;
-		else if (n == -1)
-			throw ClusterSetupError("epoll_wait");
+		try {
+			std::cout << "I got here!\n";
+			int n = epoll_wait(_epoll_fd, &events[0], MAX_CONNECTIONS, -1);
+			if ((n == -1) && (errno == EINTR))
+				continue;
+			else if (n == -1)
+				throw ClusterSetupError("epoll_wait");
 
-		for (int i = 0; i < n; ++i) {
-      		int fd = events[i].data.fd;
-			
-			if (isListeningSocket(fd))
-				handleNewConnection(fd);
-			else
-				handleClientRequest(fd);
+			for (int i = 0; i < n; ++i) {
+				int fd = events[i].data.fd;
+
+				if (isListeningSocket(fd))
+					handleNewConnection(fd);
+				else
+					handleClientRequest(fd);
+			}
+		} catch (const std::exception& e) {
+			std::cerr << e.what() << std::endl;
 		}
 		
 	}

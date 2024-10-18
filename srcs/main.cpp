@@ -54,12 +54,7 @@ int main(int argc, char** argv) {
 	}
 
 	// Runs the server on an infinite loop
-	try {
-		server_cluster.run();
-	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return 1;
-	}
+	server_cluster.run();
 
 	std::cout << "\nThank you for using Webserv.\n";
 

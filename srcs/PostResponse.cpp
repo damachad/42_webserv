@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 11:25:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 11:33:16 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ unsigned short PostResponse::parse_HTTP_body() {
 
 	// If it's chunked, get all the chunk
 	// NOTE: In our server, chunked is only useful for CGI!?
-	else if (requestHasHeader("transfer-encoding") && requestIsCGI())
+	else if (requestHasHeader("transfer-encoding") && isCGI())
 		readChunks();
 	// If there's no content-length nor chunked, return error
 	// No need to test for both existing at the same time: already tested on
@@ -259,7 +259,7 @@ std::string PostResponse::generateResponse() {
 	status = checkBody();
 	if (status != OK) return loadErrorPage(status);
 
-	if (!requestIsCGI()) {
+	if (!isCGI()) {
 		status = extractFile();
 		if (status != OK) return loadErrorPage(status);
 
@@ -285,14 +285,6 @@ bool PostResponse::requestHasHeader(const std::string &header) {
 		return true;
 
 	return false;
-}
-
-bool PostResponse::requestIsCGI() {
-	if (_request.uri.length() < 4) return false;
-
-	std::string ending = _request.uri.substr(_request.uri.length() - 3);
-
-	return (ending == ".py");
 }
 
 // Function to create directory
@@ -328,8 +320,8 @@ short PostResponse::uploadFile() {
 		return FORBIDDEN;
 
 	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
-	
-  total_used_storage += _request.message_body.size();
+
+	total_used_storage += _request.message_body.size();
 
 	return OK;
 }

@@ -54,7 +54,8 @@ class Server {
 	std::map<std::string, LocationContext> _locations;
 	std::pair<short, std::string> _return;
 	std::string _uploadStore;
-	// Later add cgi related variables
+	std::string _cgiExt;
+
 	typedef void (Server::*DirectiveHandler)(std::vector<std::string> &);
 	std::map<std::string, DirectiveHandler> _directiveMap;
 
@@ -81,6 +82,7 @@ class Server {
 	std::map<std::string, LocationContext> getLocations() const;
 	std::pair<short, std::string> getReturn() const;
 	std::string getUpload() const;
+	std::string getCgiExt() const;
 
 	std::string getRoot(const std::string &route) const;
 	std::vector<std::string> getIndex(const std::string &route) const;
@@ -90,6 +92,7 @@ class Server {
 	std::set<Method> getAllowedMethods(const std::string &route) const;
 	std::pair<short, std::string> getReturn(const std::string &route) const;
 	std::string getUpload(const std::string &route) const;
+	std::string getCgiExt(const std::string &route) const;
 
 	std::vector<int> getListeningSockets(void) const;
 
@@ -103,6 +106,7 @@ class Server {
 	void handleAutoIndex(std::vector<std::string> &tokens);
 	void handleReturn(std::vector<std::string> &tokens);
 	void handleUpload(std::vector<std::string> &tokens);
+	void handleCgiExt(std::vector<std::string> &tokens);
 
 	void initializeDirectiveMap();
 	void processDirective(std::string &line);
