@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 15:34:55 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 15:39:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -438,7 +438,7 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 }
 
 // TODO: Protect finds!
-short PostResponse::extractFile() {
+unsigned short PostResponse::extractFile() {
 
 	std::string content_disposition =
 		_multipart_body[0].find("Content-Disposition")->second;
