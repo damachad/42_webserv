@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/13 20:04:31 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/10/15 13:54:55 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>	 // For read
+#include <sys/resource.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <sys/wait.h>
 
 #include <cctype>	// For islanum
 #include <cstdlib>	// For exit() and EXIT_FAILURE
@@ -47,13 +51,20 @@
 enum Method { GET = 1, POST, DELETE, UNKNOWN };
 enum State { FALSE, TRUE, UNSET };
 
-// Magic numbers		 // TODO: Do we need them?
-#define MAX_CONNECTIONS 100	 // TODO: We have to think what should be the max
+// TODO: Decide what global definitions we want
+// Magic numbers and strings
+#define MAX_CONNECTIONS 100
+#define MAX_STORAGE_SIZE 100000
 #define REG_FILE 0
 #define DIRECTORY 1
 #define URL_MAX_SIZE 8094
+#define TIMEOUT 5
+#define MEMORYCHILD 200
 #define SERVER "webserv"
 
 extern const std::map<short, std::string> STATUS_MESSAGES;
+
+extern unsigned int total_used_storage;
+extern bool running;
 
 #endif

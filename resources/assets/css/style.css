@@ -1,0 +1,58 @@
+/* assets/css/style.css */
+
+/* General Styles */
+body {
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5 {
+    color: #2c3e50;
+    text-align: center;
+    margin: 20px 0;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    text-align: center;
+}
+
+ul li {
+    display: inline;
+    margin: 0 10px;
+}
+
+a {
+    text-decoration: none;
+    color: #2980b9;
+    font-weight: bold;
+}
+
+a:hover {
+    color: #e74c3c;
+}
+
+/* Header Styles */
+.header {
+    background-color: #2980b9;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.header__inner {
+    color: #fff;
+    font-size: 1.5em;
+    font-family: 'Montserrat', cursive;
+}
+
+/* Container */
+.container {
+    width: 80%;
+    margin: 0 auto;
+    max-width: 1200px;
+}

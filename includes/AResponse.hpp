@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/02 14:51:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/17 15:34:46 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,13 +46,13 @@ class AResponse {
 	std::string _locationRoute;
 
 	// Validators
-	short checkSize() const;
 	short checkClientBodySize() const;
 	short checkMethod() const;
 	short checkFile(const std::string& path) const;
 	bool hasAutoindex() const;
 	bool hasReturn() const;
 	bool isDirectory(const std::string& path) const;
+	bool isCGI() const;
 
 	// Response construtors
 	void setMatchLocationRoute();
@@ -70,6 +70,7 @@ class AResponse {
 								   const std::string& r) const;
 	const std::string getIndexFile(const std::string& path) const;
 	const std::string getResponseStr() const;
+	std::string getLastModificationDate(const std::string& path) const;
 
    private:
 	AResponse();

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/02 14:42:19 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 15:34:55 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,11 @@
 
 #include <sys/stat.h>
 
+#include <sstream>
+
+#include "CGI.hpp"
 #include "Helpers.hpp"
+#include "Webserv.hpp"
 
 static unsigned short response_status = OK;
 
@@ -37,8 +41,8 @@ unsigned short PostResponse::parseHTTPBody() {
 	if (requestHasHeader("content-length")) readContentLength();
 
 	// If it's chunked, get all the chunk
-	// NOTE: In our server, chunked is only useful for CGI!
-	else if (requestHasHeader("transfer-encoding"))
+	// NOTE: In our server, chunked is only useful for CGI!?
+	else if (requestHasHeader("transfer-encoding") && isCGI())
 		readChunks();
 
 	// If there's no content-length nor chunked, return error
@@ -73,7 +77,6 @@ bool PostResponse::send100Continue() {
 	ssize_t bytesSent =
 		send(_client_fd, "HTTP/1.1 100 Continue\r\n\r\n", 25, 0);
 	if (bytesSent < 0) {
-		perror("Error sending 100 Continue");  // TODO: Remove?
 		response_status = INTERNAL_SERVER_ERROR;
 		return false;
 	}
@@ -81,12 +84,13 @@ bool PostResponse::send100Continue() {
 	return true;
 }
 
-bool PostResponse::readBody() {
+// NOTE: Remove??? Function not used?
+//
+/* bool PostResponse::readBody() {
 	struct epoll_event events[1];
 	int nfds = epoll_wait(_epoll_fd, events, 1,
 						  -1);	// Wait indefinitely for new data
 	if (nfds < 0) {
-		perror("Error in epoll_wait");	// TODO: Remove?
 		response_status = INTERNAL_SERVER_ERROR;
 		return false;
 	}
@@ -106,23 +110,28 @@ bool PostResponse::readBody() {
 					response_status = INTERNAL_SERVER_ERROR;
 					return false;
 				}
-			}
+			} else if (bytesRead == 0)
+				return true;
 
 			_request.message_body.append(newbuffer, bytesRead);
 		}
 	}
 
-	response_status =
-		INTERNAL_SERVER_ERROR;	// TODO: Error if timeout? I guess?
+	response_status = INTERNAL_SERVER_ERROR;
 
 	return false;
-}
+} */
 
 void PostResponse::readContentLength() {
 	unsigned long content_length = stringToNumber<unsigned long>(
 		_request.header_fields.find("content-length")->second);
 
-	ssize_t bytes_to_read = content_length - _request.message_body.size();
+	if (content_length + total_used_storage > MAX_STORAGE_SIZE) {
+		response_status = INTERNAL_SERVER_ERROR;
+		return;
+	}
+
+	ssize_t bytes_to_read = content_length - _request.message_body.size() - 1;
 	ssize_t total_bytes_read = 0;
 
 	while (total_bytes_read < bytes_to_read) {
@@ -134,13 +143,10 @@ void PostResponse::readContentLength() {
 		ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
 
 		if (bytes_read < 0) {
-			// Handle error case (e.g., log the error, close the connection,
-			// etc.)
-			perror("Error reading from socket");
-			break;	// Exit the loop on error
+			response_status = INTERNAL_SERVER_ERROR;
+			return;	 // Exit the loop on error
 		}
 
-		// Handle the case where the connection was closed prematurely
 		if (bytes_read == 0) {
 			// Client closed the connection
 			break;	// Exit the loop if the connection is closed
@@ -158,12 +164,23 @@ void PostResponse::readChunks() {
 	while (true) {
 		ssize_t chunk_size = readChunkSizeFromSocket();
 
+		if (chunk_size == -1) {
+			response_status = BAD_REQUEST;
+			return;
+		}
+
 		if (chunk_size == 0) break;
 
 		ssize_t total_bytes_read = 0;
 		char read_buffer[8096] = {};
 
 		while (total_bytes_read < chunk_size) {
+			if (total_used_storage + _request.message_body.size() >
+				MAX_STORAGE_SIZE) {
+				response_status = INTERNAL_SERVER_ERROR;
+				return;
+			}
+
 			ssize_t read_size = std::min(chunk_size - total_bytes_read,
 										 (ssize_t)sizeof(read_buffer));
 
@@ -171,7 +188,7 @@ void PostResponse::readChunks() {
 			if (bytes_read < 0) {
 				// Handle error case (e.g., log the error, close the connection,
 				// etc.)
-				perror("Error reading from socket");
+				response_status = INTERNAL_SERVER_ERROR;
 				break;	// Exit the loop on error
 			}
 			// Handle the case where the connection was closed prematurely
@@ -183,12 +200,16 @@ void PostResponse::readChunks() {
 			total_bytes_read += bytes_read;
 		}
 
-		skipTrailingCRLF();
+		if (skipTrailingCRLF() == -1) {
+			response_status = BAD_REQUEST;
+			return;
+		}
 	}
 }
 
 // TODO: Remove first bit of chunk from message body in case it got read on
 // run()
+// NOTE: (from future Miguel) Why???
 void PostResponse::removeFirstChunk() { ; }
 
 ssize_t PostResponse::readChunkSizeFromSocket() {
@@ -198,15 +219,8 @@ ssize_t PostResponse::readChunkSizeFromSocket() {
 	// Read byte by byte until we reach "\r\n" (end of chunk size line)
 	while (true) {
 		ssize_t bytes_read = recv(_client_fd, &buffer, 1, 0);
-		if (bytes_read < 0) {
-			// Handle error (e.g., log error, close connection, etc.)
-			perror("Error reading chunk size");
-			return -1;
-		}
-		if (bytes_read == 0) {
-			// Connection closed by the client
-			return 0;
-		}
+		if (bytes_read < 0) return -1;
+		if (bytes_read == 0) return 0;
 
 		chunk_size_str += buffer;
 
@@ -222,17 +236,16 @@ ssize_t PostResponse::readChunkSizeFromSocket() {
 	ssize_t chunk_size = 0;
 	chunk_size = std::strtol(chunk_size_str.c_str(), NULL, 16);
 
-	// TODO: Handle errors
-
 	return chunk_size;
 }
 
-void PostResponse::skipTrailingCRLF() {
+int PostResponse::skipTrailingCRLF() {
 	char crlf[2];
 	ssize_t bytes_read = recv(_client_fd, crlf, 2, 0);
 
-	if (bytes_read != 2 || crlf[0] != '\r' || crlf[1] != '\n')
-		return;	 // TODO: Handle error?
+	if (bytes_read != 2 || crlf[0] != '\r' || crlf[1] != '\n') return -1;
+
+	return 0;
 }
 
 std::string PostResponse::generateResponse() {
@@ -247,12 +260,18 @@ std::string PostResponse::generateResponse() {
 
 	if ((status = checkFormData()) != OK) return loadErrorPage(status);
 
-	if (!requestIsCGI()) {
-		if ((status = extractFile()) != OK) return loadErrorPage(status);
+	if (!isCGI()) {
+		status = extractFile();
+		if (status != OK) return loadErrorPage(status);
 
 		if ((status = uploadFile()) != OK) return loadErrorPage(status);
 	} else {
 		// Send to CGI;
+		std::string path = getPath();
+		CGI cgi(_request, _response, path);
+		cgi.handleCGIResponse();
+		if (_response.status != 200) loadErrorPage(_response.status);
+		loadCommonHeaders();
 	}
 
 	return getResponseStr();
@@ -263,14 +282,6 @@ bool PostResponse::requestHasHeader(const std::string &header) {
 		return true;
 
 	return false;
-}
-
-bool PostResponse::requestIsCGI() {
-	if (_request.uri.length() < 4) return false;
-
-	std::string ending = _request.uri.substr(_request.uri.length() - 3);
-
-	return (ending == ".py");
 }
 
 // Function to create directory
@@ -288,25 +299,27 @@ unsigned short PostResponse::uploadFile() {
 
 	std::string directory = _server.getUpload(_locationRoute);
 	if (directory.empty())
-		return 500;	 // TODO: if upload_store empty, return error or have a
-					 // default?
+		directory = assemblePath(_server.getRoot(_locationRoute),
+								 "default_upload_directory");
 	if (directory.at(directory.length() - 1) != '/') directory += "/";
 	if (!createDirectory(directory)) return FORBIDDEN;
 	std::string target = directory + _file_to_upload.file_name;
 
 	int file_fd =
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
-	if (file_fd == -1) return (FORBIDDEN);	// TODO: Adjust error
+	if (file_fd == -1) return FORBIDDEN;
 
 	size_t bytes_to_write = _file_to_upload.file_contents.size();
 
 	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
 		-1)
-		return 500;	 // TODO: Adjust error, as well as binary octet stream
+		return FORBIDDEN;
 
-	if (close(file_fd) == -1) return (500);	 // TODO: Adjust error
+	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
 
-	return 200;
+	total_used_storage += _request.message_body.size();
+
+	return OK;
 }
 
 unsigned short PostResponse::checkBody() {
@@ -314,14 +327,14 @@ unsigned short PostResponse::checkBody() {
 		_request.header_fields.find("content-type")
 				->second.find("multipart/") == 0) {
 		_boundary = getBoundary();
-		if (_boundary.empty()) return 400;
+		if (_boundary.empty()) return BAD_REQUEST;
 
 		_multipart_body = getMultipartBody(_boundary);
-		if (_multipart_body.empty()) return 400;
+		if (_multipart_body.empty()) return BAD_REQUEST;
 	} else
 		return 400;
 
-	return 200;
+	return OK;
 }
 
 unsigned short PostResponse::checkFormData() {
@@ -424,7 +437,9 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 	return submap;
 }
 
-unsigned short PostResponse::extractFile() {
+// TODO: Protect finds!
+short PostResponse::extractFile() {
+
 	std::string content_disposition =
 		_multipart_body[0].find("Content-Disposition")->second;
 
@@ -434,7 +449,7 @@ unsigned short PostResponse::extractFile() {
 		extractFieldValue(content_disposition, "filename");
 
 	_file_to_upload.content_type =
-		_multipart_body[0].find("Content-Type")->second;
+	    _multipart_body[0].find("Content-Type")->second;
 
 	_file_to_upload.file_contents =
 		_multipart_body[0].find("_File Contents")->second;

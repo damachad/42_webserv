@@ -16,7 +16,6 @@
 #include "Server.hpp"
 
 #define BUFFER_SIZE 8096
-#define HTTP_REQUEST_INCOMPLETE 2000  // TODO: CHANGE
 
 class Server;
 struct HTTP_Request;
@@ -92,6 +91,7 @@ class Cluster {
 
 	//// Closes socket and removes it from epoll
 	static void closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd);
+
 	//// Gets response from server
 	const std::string getResponse(HTTP_Request& request,
 								  unsigned short& error_status, int client_fd);

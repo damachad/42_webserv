@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 14:13:04 by damachad          #+#    #+#             */
-/*   Updated: 2024/08/21 16:48:41 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/17 16:18:41 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@ class ConfigParser {
 	void loadIntoContext(std::vector<std::string> &blocks);
 	size_t advanceBlock(std::string content, size_t start);
 	std::vector<std::string> splitServerBlocks(std::string content);
-	void processDirective(Server &server, std::string &line);
 	std::vector<Server> getServers(void);
 
 	void printLocationValues(unsigned int serverNumconst,
@@ -43,9 +42,5 @@ class ConfigParser {
 	static std::vector<std::string> tokenizeLine(std::string line);
 	static void trimOuterSpaces(std::string &s);
 };
-
-// Utils
-std::string stringToLower(std::string str);
-std::string stringToUpper(std::string str);
 
 #endif

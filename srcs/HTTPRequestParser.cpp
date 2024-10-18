@@ -6,24 +6,25 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/30 11:46:51 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 15:33:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPRequestParser.hpp"
 
 #include "Helpers.hpp"
+#include "Webserv.hpp"
 
 static int response_status = OK;
 
 unsigned short HTTP_Request_Parser::parseHTTPHeaders(
 	const std::string& buffer_request, HTTP_Request& HTTP) {
+	response_status = OK;
 	if (buffer_request.empty() ||
 		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos) {
 		response_status = BAD_REQUEST;
 		return response_status;
-	}  // TODO: Check what happens with empty
-	// requests....... client on nginx hangs :x
+	}
 
 	// Buffers for parsing
 	std::stringstream buffer_stream(buffer_request);
@@ -68,15 +69,22 @@ bool HTTP_Request_Parser::addRequestLine(HTTP_Request& HTTP,
 	line_stream >> method;
 	if (method.size() == 0 || !methodIsValid(method)) {
 		response_status = METHOD_NOT_ALLOWED;
+		if (methodExists(method))
+			response_status = NOT_IMPLEMENTED;
 		return false;
 	}
 
 	std::string url;
 	line_stream >> url;
+
 	std::string decoded_uri = decode(url);
-	if (decoded_uri.size() == 0 ||
-		!urlIsValid(decoded_uri)) {	 // TODO: URL SIZE
+	if (decoded_uri.size() == 0 || !urlIsValid(decoded_uri)) {
 		response_status = BAD_REQUEST;
+		return false;
+	}
+
+	if (decoded_uri.size() > URL_MAX_SIZE) {
+		response_status = URI_TOO_LONG;
 		return false;
 	}
 
@@ -285,6 +293,12 @@ bool HTTP_Request_Parser::methodIsValid(const std::string& method) {
 	return false;
 }
 
+bool HTTP_Request_Parser::methodExists(const std::string& method) {
+	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "PATCH") 
+		return true;
+	return false;
+}
+
 bool HTTP_Request_Parser::urlIsValid(const std::string& url) {
 	// Target should always start with a /
 	if (url[0] != '/') return false;
@@ -302,8 +316,6 @@ bool HTTP_Request_Parser::urlIsValid(const std::string& url) {
 		 std::count(url.begin(), url.end(), '&') + 1))
 		return false;
 
-	// URL_MAX_SIZE should not be bigger than default value
-	if (url.size() > URL_MAX_SIZE) return false;
 
 	return true;
 }

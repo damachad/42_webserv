@@ -6,12 +6,13 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/02 14:57:13 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/17 15:35:11 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "AResponse.hpp"
 
+// Initializes a map with status codes and returns it
 static std::map<short, std::string> initStatusMessages() {
 	std::map<short, std::string> m;
 	m.insert(std::make_pair(100, "Continue"));
@@ -47,7 +48,7 @@ static std::map<short, std::string> initStatusMessages() {
 	m.insert(std::make_pair(410, "Gone"));
 	m.insert(std::make_pair(411, "Length Required"));
 	m.insert(std::make_pair(412, "Precondition Failed"));
-	m.insert(std::make_pair(413, "Content Too Large"));
+	m.insert(std::make_pair(413, "Payload Too Large"));
 	m.insert(std::make_pair(414, "URI Too Long"));
 	m.insert(std::make_pair(415, "Unsupported Media Type"));
 	m.insert(std::make_pair(416, "Range Not Satisfiable"));
@@ -104,6 +105,8 @@ static std::map<std::string, std::string> initMimeTypes() {
 	mimeTypes["gz"] = "application/gzip";
 	mimeTypes["exe"] = "application/octet-stream";
 	mimeTypes["bin"] = "application/octet-stream";
+	mimeTypes["py"] = "text/plain";
+	mimeTypes["php"] = "text/plain";
 
 	// Microsoft formats
 	mimeTypes["doc"] = "application/msword";
@@ -130,46 +133,23 @@ AResponse::~AResponse() {}
 
 AResponse::AResponse(const Server& server, const HTTP_Request& request)
 	: _request(request), _server(server) {
-		_response.status = 200;
-	}
+	_response.status = 200;
+}
 
-AResponse::AResponse(const AResponse& src)
+AResponse::AResponse(const AResponse &src)
 	: _request(src._request),
 	  _response(src._response),
 	  _server(src._server),
 	  _locationRoute(src._locationRoute) {}
 
-// Checks if Content-Lenght is present once and if request body size matches
-// this value and value of client_max_body_size
-short AResponse::checkSize() const {
-	if (_request.header_fields.count("content-length") ==
-		0)			 // mandatory Content-Length header ?
-		return 411;	 // Length Required
-	if (_request.message_body.size() >
-		static_cast<size_t>(_server.getClientMaxBodySize(_locationRoute)))
-		return 413;	 // Request Entity Too Large
-	// How to handle multiple Content-Length values ?
-	if (_request.header_fields.count("content-length") > 1)
-		return 400;	 // Bad Request
-	std::multimap<std::string, std::string>::const_iterator it =
-		_request.header_fields.find("content-length");
-	size_t size = -1;
-	if (it != _request.header_fields.end()) {
-		char* endPtr = NULL;
-		size = std::strtol(it->second.c_str(), &endPtr, 10);
-		if (*endPtr != '\0') return 400;
-		if (size != _request.message_body.size()) return 400;
-	}
-	return 200;
-}
-
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
-	std::set<Method> allowedMethods = _server.getAllowedMethods(_locationRoute);
+	const std::set<Method> allowedMethods =
+		_server.getAllowedMethods(_locationRoute);
 	std::set<Method>::const_iterator it = allowedMethods.find(_request.method);
-	if (it == _server.getAllowedMethods(_locationRoute).end())
-		return 405;	 // Method Not Allowed
-	return 200;
+	if (it == allowedMethods.end())
+		return METHOD_NOT_ALLOWED;
+	return OK;
 }
 
 // Check if message body size is, at most, the maximum allowed body size
@@ -210,34 +190,35 @@ void AResponse::setMatchLocationRoute() {
 	_locationRoute = bestMatchRoute;
 }
 
-// Returns path to look for resource in location, root + (uri - locationRoute)
+// Returns path to look for resource in location (root + uri)
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
 	return (assemblePath(root, _request.uri));
+
 }
 
 // Checks if file is a regular file and there are no problems opening it
-short AResponse::checkFile(const std::string& path) const {
+short AResponse::checkFile(const std::string &path) const {
 	struct stat info;
 
 	if (stat(path.c_str(), &info) != 0)	 // Error in getting file information
 	{
 		if (errno == ENOENT)
-			return 404;	 // file does not exist
+			return NOT_FOUND;
 		else if (errno == EACCES)
-			return 403;	 // permission denied
-		else
-			return 500;	 // TODO: Check if necessary later
-	} else if ((info.st_mode & S_IFMT) != S_IFDIR &&
-			   (info.st_mode & S_IFMT) !=
-				   S_IFREG)	 // Check if it is a directory or a regular file
-							 // (not a link or device)
-		return 403;			 // permission denied
-	return 200;
+			return FORBIDDEN;
+	}
+	bool expectDir = !path.empty() && (path.at(path.size() - 1) == '/'); // check if url ends with '/'
+	if (expectDir && (info.st_mode & S_IFMT) != S_IFDIR) return NOT_FOUND;
+	if ((info.st_mode & S_IFMT) != S_IFREG &&
+		(info.st_mode & S_IFMT) != S_IFDIR)	 // Check if it is not regular file
+											 // (not a link or device)
+		return FORBIDDEN;
+	return OK;
 }
 
 // Checks if file (path) is a directory
-bool AResponse::isDirectory(const std::string& path) const {
+bool AResponse::isDirectory(const std::string &path) const {
 	struct stat info;
 
 	stat(path.c_str(), &info);
@@ -245,6 +226,16 @@ bool AResponse::isDirectory(const std::string& path) const {
 		return true;
 	else
 		return false;
+}
+
+// Checks if the request is calling a CGI script
+bool AResponse::isCGI() const {
+	std::string cgiExt = _server.getCgiExt(_locationRoute);
+	size_t dotPos = _request.uri.find_last_of(".");
+	if (dotPos != std::string::npos && !cgiExt.empty() &&
+		_request.uri.substr(dotPos) == cgiExt)
+		return true;
+	return false;
 }
 
 // Checks if autoindex is on
@@ -256,18 +247,17 @@ bool AResponse::hasAutoindex() const {
 }
 
 // Returns an index file if it exists or NULL (empty string)
-const std::string AResponse::getIndexFile(const std::string& path) const {
+const std::string AResponse::getIndexFile(const std::string &path) const {
 	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
 	std::vector<std::string>::const_iterator it;
 	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
 		std::string filePath = assemblePath(path, *it);
-		if (checkFile(filePath) == 200) return filePath;
+		if (checkFile(filePath) == OK) return filePath;
 	}
 	return "";
 }
 
 // Joins both string and ensures there is a '/' in the middle
-//  TODO: review edge cases (double '/')
 const std::string AResponse::assemblePath(const std::string& l,
 										  const std::string& r) const {
 	if (r.empty()) return l;
@@ -279,7 +269,7 @@ const std::string AResponse::assemblePath(const std::string& l,
 }
 
 // Sets MIME type in Content-Type header based on file extension
-void AResponse::setMimeType(const std::string& path) {
+void AResponse::setMimeType(const std::string &path) {
 	static std::map<std::string, std::string> mimeTypes = initMimeTypes();
 
 	std::size_t dotPos = path.find_last_of('.');
@@ -301,16 +291,18 @@ void AResponse::setMimeType(const std::string& path) {
 // Adds Date, Server and Content-Length headers to _response
 void AResponse::loadCommonHeaders() {
 	_response.headers.insert(
+		std::make_pair(std::string("Connection"), std::string("keep-alive")));
+	if (_response.body.size()) {
+		_response.headers.insert(std::make_pair(
+			std::string("Content-Length"),
+			numberToString<unsigned long>(_response.body.size())));
+	}
+	_response.headers.insert(
 		std::make_pair(std::string("Date"), getHttpDate()));
 	_response.headers.insert(
 		std::make_pair(std::string("Server"), std::string(SERVER)));
-	if (_response.body.size()) {
-		_response.headers.insert(
-			std::make_pair(std::string("Content-Length"),
-					   numberToString<unsigned long>(_response.body.size())));
-	}
 	_response.headers.insert(
-		std::make_pair(std::string("Cache-Control"), std::string("no-store")));
+		std::make_pair(std::string("Cache-Control"), std::string("no-cache")));
 }
 
 // Loads reponse struct with values of return
@@ -323,50 +315,51 @@ void AResponse::loadReturn() {
 		_response.headers.insert(
 			std::make_pair(std::string("Location"), redirect.second));
 	}
+	_response.headers.insert(
+		std::make_pair(std::string("Content-Type"), std::string("application/octet-stream")));
 }
 
 // Checks if there is a return directive
-//  TODO: Review check empty logic
 bool AResponse::hasReturn() const {
 	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
-	if (redirect.second.empty()) return false;
+	if (redirect.first == -1 || redirect.second.empty()) return false;
 	return true;
 }
 
 // Helper function to extract and format the directory name
-static std::string getDirectoryName(const std::string& path) {
+static std::string getDirectoryName(const std::string &path) {
 	std::string dirName;
 	std::string::size_type endPos = path.find_last_not_of("/");
 	if (endPos == std::string::npos) dirName = path;
 	std::string::size_type pos = path.find_last_of("/", endPos);
-	if (pos != std::string::npos) {
+	if (pos != std::string::npos)
 		dirName = path.substr(pos, endPos - pos + 1);
-	}
 	return dirName + "/";
 }
 
-static std::string getLastModificationDate(const std::string& path) {
+// Returns last modified date of file
+std::string AResponse::getLastModificationDate(const std::string& path) const {
 	struct stat fileStat;
-	if (stat(path.c_str(), &fileStat) != 0) {
-		return "";	// Error handling or empty result
-	}
+	if (stat(path.c_str(), &fileStat) != 0)
+		return "";
 	char dateBuffer[20];
-	struct tm* timeinfo = localtime(&fileStat.st_mtime);
+	struct tm *timeinfo = localtime(&fileStat.st_mtime);
 	std::strftime(dateBuffer, sizeof(dateBuffer), "%d-%b-%Y %H:%M", timeinfo);
 	return std::string(dateBuffer);
 }
 
-static std::string getFileSize(const std::string& path) {
+// Returns file's size or '-' if file is a directory
+static std::string getFileSize(const std::string &path) {
 	struct stat fileStat;
-	if (stat(path.c_str(), &fileStat) != 0) {
-		return "";	// Error handling or empty result
-	}
+	if (stat(path.c_str(), &fileStat) != 0)
+		return "";
 	size_t size = fileStat.st_size;
 	std::string sizeBuffer =
 		(S_ISDIR(fileStat.st_mode) ? "-" : numberToString<size_t>(size));
 	return sizeBuffer;
 }
 
+// Returns html line with file information to add to directory listing
 std::string AResponse::addFileEntry(std::string& name,
 									const std::string& path) {
 	std::string fullPath = assemblePath(path, name);
@@ -377,8 +370,7 @@ std::string AResponse::addFileEntry(std::string& name,
 		displayName = name.substr(0, 49) + "..";  // Truncate and add ".."
 	else
 		displayName = name;
-	if (name != "." && name != "..")
-		name = assemblePath(_request.uri, name);
+	if (name != "." && name != "..") name = assemblePath(_request.uri, name);
 	std::string WP1;
 	if (displayName.length() < 51)
 		WP1 = std::string(51 - displayName.length(), ' ');	// Pad with spaces
@@ -390,21 +382,20 @@ std::string AResponse::addFileEntry(std::string& name,
 }
 
 // Loads response with a page containing directory listing for that location
-// TODO: Add file last modified date and size, format
 short AResponse::loadDirectoryListing(const std::string& path) {
 	DIR* dir = opendir(path.c_str());
-	if (dir == NULL) return 403;
+	if (dir == NULL) return FORBIDDEN;
 	std::string dirName = getDirectoryName(path);
 	_response.body = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " +
 					 dirName + "</title>\n</head>\n<body>\n<h1>Index of " +
 					 dirName + "</h1>\n<hr>\n<pre>";
-	struct dirent* entry;
+	struct dirent *entry;
 	std::vector<std::string> entries;
-	while ((entry = readdir(dir)) != NULL) {
+	while ((entry = readdir(dir)) != NULL)
 		entries.push_back(std::string(entry->d_name));
-	}
 	// Sort the vector alphabetically
 	std::sort(entries.begin(), entries.end());
+	entries.erase(entries.begin());	 // Hide "."
 	for (std::vector<std::string>::iterator it = entries.begin();
 		 it != entries.end(); ++it) {
 		std::string entryName = *it;
@@ -415,7 +406,7 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	loadCommonHeaders();
 	_response.headers.insert(
 		std::make_pair(std::string("Content-Type"), std::string("text/html")));
-	return 200;
+	return OK;
 }
 
 // Converts the response struct into a string (loading the status message) and
@@ -425,7 +416,7 @@ const std::string AResponse::getResponseStr() const {
 		STATUS_MESSAGES.find(_response.status);
 	std::string message = (itStatus != STATUS_MESSAGES.end())
 							  ? itStatus->second
-							  : "Unknown status code";
+							  : "";
 	std::string headersStr;
 	std::multimap<std::string, std::string>::const_iterator itHead;
 	for (itHead = _response.headers.begin(); itHead != _response.headers.end();
@@ -438,12 +429,14 @@ const std::string AResponse::getResponseStr() const {
 	return response;
 }
 
+// Returns response as string with default error page body. 
+// Sets status and message
 static std::string loadDefaultErrorPage(short status) {
 	std::map<short, std::string>::const_iterator itStatus =
 		STATUS_MESSAGES.find(status);
 	std::string message = (itStatus != STATUS_MESSAGES.end())
 							  ? itStatus->second
-							  : "Unknown status code";
+							  : "";
 	std::string response =
 		"<!DOCTYPE html>\n"
 		"<html lang=\"en\">\n"
@@ -486,7 +479,7 @@ const std::string AResponse::loadErrorPage(short status) {
 	if (it != error_pages.end()) {
 		std::string path =
 			assemblePath(_server.getRoot(_locationRoute), it->second);
-		if (checkFile(path) == 200) {
+		if (checkFile(path) == OK) {
 			std::ifstream file(path.c_str());
 			_response.body.assign((std::istreambuf_iterator<char>(file)),
 								  (std::istreambuf_iterator<char>()));
@@ -497,41 +490,7 @@ const std::string AResponse::loadErrorPage(short status) {
 	return getResponseStr();
 }
 
+// Returns "HTTP/1.1 100 Continue" string
 const std::string AResponse::loadContinueMessage(void) {
 	return "HTTP/1.1 100 Continue";
 }
-
-// Example implementation (case GET)
-// Order of functions is important
-// std::string AResponse::generateResponse() {
-// 	setMatchLocationRoute();
-// 	short status = checkSize();
-// 	if (status != 200) return loadErrorPage(status);
-// 	status = checkMethod();
-// 	if (status != 200) return loadErrorPage(status);
-// 	if (hasReturn()) {
-// 		loadReturn();
-// 		return getResponseStr();
-// 	}
-// 	std::string path = getPath();
-
-// 	status = checkFile(path);
-// 	if (status != 200) return loadErrorPage(status);
-// 	if (!isDirectory(path)) {
-// 		// status = loadFile(path);  // if GET
-// 		if (status != 200) return loadErrorPage(status);
-// 	} else {  // is a directory
-// 		std::string indexFile = getIndexFile(path);
-// 		if (!indexFile.empty() &&
-// 			!isDirectory(indexFile)) {	// TODO: deal with directory in index?
-// 			// status = loadFile(indexFile);  // if GET
-// 			if (status != 200) return loadErrorPage(status);
-// 		} else if (hasAutoindex()) {
-// 			status = loadDirectoryListing(path);
-// 			if (status != 200) return loadErrorPage(status);
-// 		} else
-// 			loadErrorPage(404);
-// 	}
-
-// 	return getResponseStr();
-// }

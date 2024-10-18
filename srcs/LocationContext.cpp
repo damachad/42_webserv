@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:47:36 by damachad          #+#    #+#             */
-/*   Updated: 2024/09/24 11:11:17 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/16 13:57:40 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 LocationContext::LocationContext() : _autoIndex(UNSET), _clientMaxBodySize(-1) {
 	initializeDirectiveMap();
+	_return = std::make_pair(-1, "");
 }
 
 LocationContext::LocationContext(const LocationContext &src)
@@ -21,22 +22,22 @@ LocationContext::LocationContext(const LocationContext &src)
 	  _index(src.getIndex()),
 	  _autoIndex(src.getAutoIndex()),
 	  _clientMaxBodySize(src.getClientMaxBodySize()),
-	  _tryFiles(src.getTryFiles()),
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
 	  _return(src.getReturn()),
-	  _uploadStore(src.getUpload()) {}
+	  _uploadStore(src.getUpload()),
+	  _cgiExt(src.getCgiExt()) {}
 
 LocationContext &LocationContext::operator=(const LocationContext &src) {
 	_root = src.getRoot();
 	_index = src.getIndex();
 	_autoIndex = src.getAutoIndex();
 	_clientMaxBodySize = src.getClientMaxBodySize();
-	_tryFiles = src.getTryFiles();
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
 	_return = src.getReturn();
 	_uploadStore = src.getUpload();
+	_cgiExt = src.getCgiExt();
 	return (*this);
 }
 
@@ -47,18 +48,18 @@ void LocationContext::initializeDirectiveMap(void) {
 	_directiveMap["root"] = &LocationContext::handleRoot;
 	_directiveMap["index"] = &LocationContext::handleIndex;
 	_directiveMap["limit_except"] = &LocationContext::handleLimitExcept;
-	_directiveMap["try_files"] = &LocationContext::handleTryFiles;
 	_directiveMap["error_page"] = &LocationContext::handleErrorPage;
 	_directiveMap["client_max_body_size"] = &LocationContext::handleCliMaxSize;
 	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
 	_directiveMap["return"] = &LocationContext::handleReturn;
 	_directiveMap["upload_store"] = &LocationContext::handleUpload;
+	_directiveMap["cgi_ext"] = &LocationContext::handleCgiExt;
 }
 
 // Handlers
 
 void LocationContext::handleRoot(std::vector<std::string> &tokens) {
-	if (tokens.size() > 2) throw ConfigError("Invalid root directive.");
+	if (tokens.size() > 2) throw ConfigError("Invalid number of arguments in root directive.");
 	_root = tokens[1];
 }
 
@@ -67,7 +68,6 @@ void LocationContext::handleIndex(std::vector<std::string> &tokens) {
 	_index = tokens;
 }
 
-// TODO: review logic
 void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
 	std::set<Method> methods;
 	std::vector<std::string>::const_iterator it;
@@ -84,13 +84,8 @@ void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
 	_allowedMethods = methods;
 }
 
-void LocationContext::handleTryFiles(std::vector<std::string> &tokens) {
-	tokens.erase(tokens.begin());
-	_tryFiles = tokens;
-}
-
 void LocationContext::handleErrorPage(std::vector<std::string> &tokens) {
-	if (tokens.size() < 3) throw ConfigError("Invalid error_page directive.");
+	if (tokens.size() < 3) throw ConfigError("Invalid number of arguments in error_page directive.");
 	std::string page = tokens.back();
 	for (size_t i = 1; i < tokens.size() - 1; i++) {
 		char *end;
@@ -104,7 +99,7 @@ void LocationContext::handleErrorPage(std::vector<std::string> &tokens) {
 
 void LocationContext::handleCliMaxSize(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
-		throw ConfigError("Invalid client_max_body_size directive.");
+		throw ConfigError("Invalid number of arguments in client_max_body_size directive.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
 	if (!std::isdigit(unit)) maxSize.resize(maxSize.size() - 1);
@@ -113,7 +108,7 @@ void LocationContext::handleCliMaxSize(std::vector<std::string> &tokens) {
 	char *endPtr = NULL;
 	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
 	if (*endPtr != '\0')
-		throw ConfigError("Invalid numeric value for client_max_body_size.");
+		throw ConfigError("Invalid value for client_max_body_size.");
 	_clientMaxBodySize = size;
 	if (!std::isdigit(unit)) {
 		// check for overflow during multiplication
@@ -149,37 +144,42 @@ void LocationContext::handleAutoIndex(std::vector<std::string> &tokens) {
 	else if (tokens[1] == "off")
 		_autoIndex = FALSE;
 	else
-		throw ConfigError("Invalid syntax.");
+		throw ConfigError("Invalid value in autoindex directive.");
 }
 
 void LocationContext::handleReturn(std::vector<std::string> &tokens) {
-	if (tokens.size() != 3) throw ConfigError("Invalid return directive.");
+	if (tokens.size() != 3) throw ConfigError("Invalid number of arguments in return directive.");
 	char *endPtr = NULL;
 	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
 	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
 		errorCode != static_cast<short>(errorCode))	 // accepted NGINX values
 		throw ConfigError("Invalid error code for return directive.");
-	if (_return.first) return;
+	if (_return.first != -1) return;
 	_return.first = static_cast<short>(errorCode);
 	_return.second = tokens[2];
 }
 
 void LocationContext::handleUpload(std::vector<std::string> &tokens) {
-	if (tokens.size() != 2) throw ConfigError("Invalid upload_store directive.");
+	if (tokens.size() != 2) throw ConfigError("Invalid number of arguments in upload_store directive.");
 	_uploadStore = tokens[1];
+}
+
+void LocationContext::handleCgiExt(std::vector<std::string> &tokens) {
+	if (tokens.size() > 2) throw ConfigError("Invalid number of arguments in cgi_ext directive.");
+	_cgiExt = tokens[1];
 }
 
 void LocationContext::processDirective(std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = ConfigParser::tokenizeLine(line);
 	if (tokens.size() < 2)
-		throw ConfigError("No value for directive: " + tokens[0]);
+		throw ConfigError("Invalid number of arguments in \"" + tokens[0] + "\" directive.");
 	std::map<std::string, DirectiveHandler>::const_iterator it;
 	it = _directiveMap.find(tokens[0]);
 	if (it != _directiveMap.end())
 		(this->*(it->second))(tokens);
 	else
-		throw ConfigError("Unkown directive: " + tokens[0]);
+		throw ConfigError("Unkown directive \"" + tokens[0] + "\"");
 }
 
 // Getters
@@ -191,10 +191,6 @@ State LocationContext::getAutoIndex() const { return _autoIndex; }
 
 long LocationContext::getClientMaxBodySize() const {
 	return _clientMaxBodySize;
-}
-
-std::vector<std::string> LocationContext::getTryFiles() const {
-	return _tryFiles;
 }
 
 std::set<Method> LocationContext::getAllowedMethods() const {
@@ -211,6 +207,10 @@ std::pair<short, std::string> LocationContext::getReturn() const {
 
 std::string LocationContext::getUpload() const {
 	return _uploadStore;
+}
+
+std::string LocationContext::getCgiExt() const {
+	return _cgiExt;
 }
 
 std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
@@ -230,13 +230,6 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 	   << "\n";
 
 	os << "  Client Max Body Size: " << context.getClientMaxBodySize() << "\n";
-
-	os << "  Try Files:\n";
-	std::vector<std::string> tryFiles = context.getTryFiles();
-	for (std::vector<std::string>::const_iterator it = tryFiles.begin();
-		 it != tryFiles.end(); ++it) {
-		os << "    " << *it << "\n";
-	}
 
 	os << "  Allowed Methods: ";
 	std::set<Method> methods = context.getAllowedMethods();
@@ -267,10 +260,11 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 
 	os << "  Return:\n";
 	std::pair<short, std::string> returns = context.getReturn();
-	if (returns.first)
+	if (returns.first != -1)
 		os << "    " << returns.first << " : " << returns.second << "\n";
 	
 	os << "  Upload Store: " << context.getUpload() << "\n";
+	os << "  CGI Extension: " << context.getCgiExt() << "\n";
 
 	return os;
 }

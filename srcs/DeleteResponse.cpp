@@ -6,12 +6,11 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/18 14:31:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/17 16:02:55 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "DeleteResponse.hpp"
-
 #include "AResponse.hpp"
 
 DeleteResponse::DeleteResponse(const Server& server,
@@ -27,16 +26,18 @@ DeleteResponse::~DeleteResponse() {}
 short DeleteResponse::deleteFile(const std::string& path) {
 	struct stat fileInfo;
 	if (stat(path.c_str(), &fileInfo) != 0)
-		return 404;  // Not Found
+		return NOT_FOUND;
 	if (!(fileInfo.st_mode & S_IWUSR)) // No write permission
-		return 403;  // Forbidden
-
-	if (std::remove(path.c_str()) == 0)
-		return 200;
+		return FORBIDDEN;
+	size_t fileSize = fileInfo.st_size;
+	if (std::remove(path.c_str()) == 0) {
+		total_used_storage -= fileSize;
+		return OK;
+	}
 	else {
 		if (errno == EACCES)
-			return 403;  // Permission denied
-		return 500;  // server error
+			return FORBIDDEN;
+		return INTERNAL_SERVER_ERROR;
 	}
 }
 
@@ -51,7 +52,7 @@ bool DeleteResponse::isDirectoryEmpty(const std::string& path) {
 		// Skip the "." and ".." entries
 		if (std::string(entry->d_name) != "." && std::string(entry->d_name) != "..") {
 			count++;
-			break;  // Directory is not empty, no need to continue
+			break;
 		}
 	}
 	closedir(dir);
@@ -61,31 +62,32 @@ bool DeleteResponse::isDirectoryEmpty(const std::string& path) {
 // Deletes a directory if it is empty
 short DeleteResponse::deleteDirectory(const std::string& path) {
 	if (rmdir(path.c_str()) == 0)
-		return 200;
+		return OK;
 	else
-		return 403;  // Forbidden
+		return FORBIDDEN;
 }
 
+// Generates Delete response as a string
 // NOTE: No return, index or autoindex logic in Delete
 std::string DeleteResponse::generateResponse() {
 	setMatchLocationRoute();
 	short status;
 	status = checkMethod();
-	if (status != 200) return loadErrorPage(status);
+	if (status != OK) return loadErrorPage(status);
 	std::string path = getPath();
 
 	status = checkFile(path);
-	if (status != 200) return loadErrorPage(status);
+	if (status != OK) return loadErrorPage(status);
 	if (!isDirectory(path)) {
 		status = deleteFile(path);
-		if (status != 200) return loadErrorPage(status);
+		if (status != OK) return loadErrorPage(status);
 	} else {
 		if (isDirectoryEmpty(path)) {
 			status = deleteDirectory(path);
-			if (status != 200) return loadErrorPage(status);
+			if (status != OK) return loadErrorPage(status);
 		} else
-			return loadErrorPage(409);  // Conflict (non-empty directory)
+			return loadErrorPage(CONFLICT); // Non-empty directory
 	}
-	_response.status = 204; // No content (NGINX returns this on a successful Delete)
+	_response.status = NO_CONTENT; // NGINX status on a successful Delete
 	return getResponseStr();
 }

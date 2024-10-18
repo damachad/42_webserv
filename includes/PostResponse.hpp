@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   PostResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:20:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 10:41:55 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/10/18 15:32:04 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,13 +45,11 @@ class PostResponse : public AResponse {
 	void removeFirstChunk();
 	void readChunks();
 	ssize_t readChunkSizeFromSocket();
-	void skipTrailingCRLF();
+	int skipTrailingCRLF();
 	bool requestHasHeader(const std::string& header);
-	bool requestIsCGI();
-	unsigned short checkBody();
-	unsigned short checkFormData();
-	unsigned short extractFile();
-	unsigned short uploadFile();
+	short checkBody();
+	short extractFile();
+	short uploadFile();
 	const std::string getBoundary();
 	const std::vector<std::multimap<std::string, std::string> >
 	getMultipartBody(const std::string& boundary);
