@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:20:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 15:39:38 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 16:34:35 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,10 +47,10 @@ class PostResponse : public AResponse {
 	ssize_t readChunkSizeFromSocket();
 	int skipTrailingCRLF();
 	bool requestHasHeader(const std::string& header);
-	unsigned short checkBody();
-	unsigned short extractFile();
-	unsigned short uploadFile();
-	unsigned short checkFormData();
+	short checkBody();
+	short extractFile();
+	short uploadFile();
+	short checkFormData();
 	const std::string getBoundary();
 	const std::vector<std::multimap<std::string, std::string> >
 	getMultipartBody(const std::string& boundary);

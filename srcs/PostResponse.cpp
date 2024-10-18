@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 15:39:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 16:34:46 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -256,18 +256,22 @@ std::string PostResponse::generateResponse() {
 
 	if ((status = checkClientBodySize()) != OK) return loadErrorPage(status);
 
-	if ((status = checkBody()) != OK) return loadErrorPage(status);
-
-	if ((status = checkFormData()) != OK) return loadErrorPage(status);
-
 	if (!isCGI()) {
+
+		status = checkBody();
+		if (status != OK) return loadErrorPage(status);
+
+		if ((status = checkFormData()) != OK) return loadErrorPage(status);
+		
 		status = extractFile();
 		if (status != OK) return loadErrorPage(status);
 
 		if ((status = uploadFile()) != OK) return loadErrorPage(status);
 	} else {
+
 		// Send to CGI;
 		std::string path = getPath();
+		
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
 		if (_response.status != 200) loadErrorPage(_response.status);
@@ -294,8 +298,9 @@ static bool createDirectory(const std::string &path) {
 		return false;
 }
 
-unsigned short PostResponse::uploadFile() {
-	extractFile();
+short PostResponse::uploadFile() {
+	short status = extractFile();
+	if (status != OK) return status;
 
 	std::string directory = _server.getUpload(_locationRoute);
 	if (directory.empty())
@@ -322,22 +327,21 @@ unsigned short PostResponse::uploadFile() {
 	return OK;
 }
 
-unsigned short PostResponse::checkBody() {
+short PostResponse::checkBody() {
 	if (requestHasHeader("content-type") &&
 		_request.header_fields.find("content-type")
 				->second.find("multipart/") == 0) {
 		_boundary = getBoundary();
 		if (_boundary.empty()) return BAD_REQUEST;
-
 		_multipart_body = getMultipartBody(_boundary);
 		if (_multipart_body.empty()) return BAD_REQUEST;
-	} else
+	} else {
 		return 400;
-
+	}
 	return OK;
 }
 
-unsigned short PostResponse::checkFormData() {
+short PostResponse::checkFormData() {
 	std::map<std::string, std::string>::iterator it =
 		_request.header_fields.find("content-type");
 
@@ -437,24 +441,34 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 	return submap;
 }
 
-// TODO: Protect finds!
-unsigned short PostResponse::extractFile() {
+short PostResponse::extractFile() {
 
-	std::string content_disposition =
-		_multipart_body[0].find("Content-Disposition")->second;
+	if (_multipart_body.empty())
+		return 500;
 
-	_file_to_upload.name = extractFieldValue(content_disposition, "name");
+    std::multimap<std::string, std::string>::iterator content_disposition_it = 
+		_multipart_body[0].find("Content-Disposition");
+    if (content_disposition_it == _multipart_body[0].end())
+        return 500;
+    std::string content_disposition = content_disposition_it->second;
 
-	_file_to_upload.file_name =
+    _file_to_upload.name = extractFieldValue(content_disposition, "name");
+    _file_to_upload.file_name = 
 		extractFieldValue(content_disposition, "filename");
 
-	_file_to_upload.content_type =
-	    _multipart_body[0].find("Content-Type")->second;
+    std::multimap<std::string, std::string>::iterator content_type_it = 
+		_multipart_body[0].find("Content-Type");
+    if (content_type_it == _multipart_body[0].end())
+        return 500;
+    _file_to_upload.content_type = content_type_it->second;
 
-	_file_to_upload.file_contents =
-		_multipart_body[0].find("_File Contents")->second;
+    std::multimap<std::string, std::string>::iterator file_contents_it = 
+		_multipart_body[0].find("_File Contents");
+    if (file_contents_it == _multipart_body[0].end())
+        return 500;
+    _file_to_upload.file_contents = file_contents_it->second;
 
-	return 200;
+    return 200;
 }
 
 // Function to extract the value of a specified key (either "name" or
