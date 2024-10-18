@@ -1,11 +1,19 @@
 #include "CGI.hpp"
+
 #include "AResponse.hpp"
 
 CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
 		 const std::string &path)
-	: _request(httpRequest), _response(httpResponse), _path(path) {}
+	: _request(httpRequest), _response(httpResponse), _path(path), _cgiEnv(NULL) {}
 
-CGI::~CGI() {}
+CGI::~CGI() {
+	if (_cgiEnv) {
+		for (size_t i = 0; _cgiEnv[i] != NULL; ++i) {
+			delete[] _cgiEnv[i];
+		}
+		delete[] _cgiEnv;
+	}
+}
 
 bool CGI::isSingleValueHeader(std::string &key) {
 	if (key == "Accept" || key == "Accept-Encoding" || key == "Cache-Control" ||
@@ -69,53 +77,61 @@ std::string CGI::fetchCookies() {
 	return result;
 }
 
+std::string CGI::intToString(int value) {
+	std::stringstream ss;
+	ss << value;
+	return ss.str();
+}
+
+char **CGI::vectorToCharArray(const std::vector<std::string> &vec) {
+	char **charArray = new char *[vec.size() + 1];
+
+	for (size_t i = 0; i < vec.size(); ++i) {
+		charArray[i] = new char[vec[i].size() + 1];
+		std::strcpy(charArray[i], vec[i].c_str());
+	}
+
+	charArray[vec.size()] = NULL;
+
+	return charArray;
+}
+
+void CGI::setSingleEnv(std::vector<std::string> &env, std::string key,
+					   std::string envToAdd) {
+	env.push_back(key + "=" + envToAdd);
+}
+
 short CGI::setCGIEnv() {
-	if (setenv("REQUEST_METHOD", numberToString<int>(_request.method).c_str(), 1) !=
-		0) {
-		return 500;
-	}
-	std::string contentType = getHeaderEnvValue("content-type");
-	if (_request.method == POST && contentType.empty()) {
-		return 500;
-	}
-	if (setenv("CONTENT_TYPE", contentType.c_str(), 1) != 0) {
-		return 500;
-	}
-	if (setenv("PATH_INFO", _path.c_str(), 1) != 0) {
-		return 500;
-	}
+	if (_request.method == POST && getHeaderEnvValue("content-type").empty())
 
-	std::string contentLength = getHeaderEnvValue("content-length");
-	if (_request.method == POST && contentLength.empty()) {
 		return 500;
-	}
-	if (setenv("CONTENT_LENGTH", contentLength.c_str(), 1) != 0) {
+	if (_request.method == POST && getHeaderEnvValue("content-length").empty())
 		return 500;
-	}
 
-	std::string queryString = getQueryFields();
-	if (setenv("QUERY_STRING", queryString.c_str(), 1) != 0) {
-		return 500;
-	}
+	std::vector<std::string> cgiEnvironments;
 
-	if (setenv("SCRIPT_NAME", _request.uri.c_str(), 1) != 0) {
-		return 500;
-	}
-
-	if (setenv("SERVER_PROTOCOL", _request.protocol_version.c_str(), 1) != 0) {
-		return 500;
-	}
-
+	setSingleEnv(cgiEnvironments, "REQUEST_METHOD",
+				 methodToString(_request.method).c_str());
+	setSingleEnv(cgiEnvironments, "CONTENT_TYPE",
+				 getHeaderEnvValue("content-type").c_str());
+	setSingleEnv(cgiEnvironments, "GATEWAY_INTERFACE", "CGI/1.1");
+	setSingleEnv(cgiEnvironments, "PATH_INFO", _path.c_str());
+	setSingleEnv(cgiEnvironments, "CONTENT_LENGTH",
+				 getHeaderEnvValue("content-length").c_str());
+	setSingleEnv(cgiEnvironments, "QUERY_STRING", getQueryFields().c_str());
+	setSingleEnv(cgiEnvironments, "SCRIPT_NAME", _request.uri.c_str());
+	setSingleEnv(cgiEnvironments, "SERVER_PROTOCOL",
+				 _request.protocol_version.c_str());
 	std::string cookies = fetchCookies();
-	if (!cookies.empty()) {
-		if (setenv("HTTP_COOKIE", cookies.c_str(), 1) != 0) {
-			return 500;
-		}
-	}
+	if (!cookies.empty())
+		setSingleEnv(cgiEnvironments, "HTTP_COOKIE", cookies.c_str());
+
+	_cgiEnv = vectorToCharArray(cgiEnvironments);
+
 	return 200;
 }
 
-std::string readHtmlFile(const std::string &filePath) {
+std::string CGI::readHtmlFile(const std::string &filePath) {
 	std::ifstream file(filePath.c_str());
 	if (!file.is_open()) {
 		std::cerr << "Error: Could not open HTML file." << std::endl;
@@ -123,11 +139,11 @@ std::string readHtmlFile(const std::string &filePath) {
 	}
 
 	std::stringstream buffer;
-	buffer << file.rdbuf();	 // Read the entire file into the buffer
-	return buffer.str();	 // Return the string containing HTML content
+	buffer << file.rdbuf();
+	return buffer.str();
 }
 
-std::string createCgiOutput(pid_t pid, int *pipeOut) {
+std::string CGI::createCgiOutput(pid_t pid, int *pipeOut) {
 	std::string cgiOutput;
 	char buffer[1024];
 	ssize_t bytesRead;
@@ -174,6 +190,7 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 
 	pid_t pid = fork();
 	if (pid == -1) return "500";
+
 	if (pid == 0) {
 		dup2(pipeIn[0], STDIN_FILENO);
 		dup2(pipeOut[1], STDOUT_FILENO);
@@ -184,13 +201,14 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 		setLimits(MEMORYCHILD);
 		std::string dirName =
 			scriptPath.substr(0, scriptPath.find_last_of("/"));
-		if (chdir(dirName.c_str()) < 0) return "500";
+		if (chdir(dirName.c_str()) < 0) exit(1);
+
 		char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
-		if (execve(scriptPath.c_str(), argv, environ) == -1) return "500";
+		if (execve(scriptPath.c_str(), argv, _cgiEnv) == -1) exit(1);
+
 	} else {
 		close(pipeIn[0]);
 		close(pipeOut[1]);
-
 		if (!_request.message_body.empty())
 			write(pipeIn[1], _request.message_body.c_str(),
 				  _request.message_body.size());
@@ -229,7 +247,6 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 
 		if (key == "Content-Type" && value.empty()) {
 			_response.status = 500;
-			;
 		}
 
 		headerEnv.insert(std::make_pair(key, value));
@@ -239,19 +256,33 @@ std::multimap<std::string, std::string> CGI::parseRequestHeaders() {
 
 void CGI::handleCGIResponse() {
 	std::string cgiOutput = executeCGI(_path);
+
+	// Check if the CGI output is an error status
 	if (std::atoi(cgiOutput.c_str()) != 0) {
 		_response.status = std::atoi(cgiOutput.c_str());
 		return;
 	}
+
 	size_t pos = cgiOutput.find("\r\n\r\n");
 	if (pos != std::string::npos) {
 		std::string headers = cgiOutput.substr(0, pos);
 		std::string body = cgiOutput.substr(pos + 4);
 		std::multimap<std::string, std::string> headerEnv =
 			parseCGIHeaders(headers);
-		_response.headers.insert(headerEnv.begin(), headerEnv.end());
+
+		// Preserve existing headers if necessary
+		for (std::multimap<std::string, std::string>::const_iterator it =
+				 headerEnv.begin();
+			 it != headerEnv.end(); ++it) {
+			// Check if the header is already set
+			std::multimap<std::string, std::string>::iterator responseIt =
+				_response.headers.find(it->first);
+			if (responseIt == _response.headers.end()) {
+				// If the header is not already present, insert it
+				_response.headers.insert(*it);
+			}
+		}
 		_response.body = body;
-	} else {
+	} else
 		_response.status = 500;
-	}
 }
