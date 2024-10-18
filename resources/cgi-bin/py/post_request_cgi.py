@@ -8,7 +8,8 @@ import os
 cgitb.enable()  # Enable debugging
 
 # Path to the JSON file
-json_file_path = "../json/data.json"  # Update this path accordingly
+json_dir_path = "../json"  # Directory path
+json_file_path = os.path.join(json_dir_path, "data.json")  # Full file path
 
 # Get form data
 form = cgi.FieldStorage()
@@ -28,6 +29,10 @@ form_data = {
     "email": email,
     "message": message
 }
+
+# Ensure the directory for the JSON file exists
+if not os.path.exists(json_dir_path):
+    os.makedirs(json_dir_path)  # Create the directory if it doesn't exist
 
 # Read the existing JSON file (if it exists)
 if os.path.exists(json_file_path):
