@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:20:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/16 12:05:02 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 16:34:35 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class PostResponse : public AResponse {
 	PostResponse& operator=(const PostResponse& src);
 
 	// Functions to parse the remainder of the body
-	unsigned short parse_HTTP_body();
+	unsigned short parseHTTPBody();
 	bool send100Continue();
 	bool readBody();
 	void readContentLength();
@@ -50,6 +50,7 @@ class PostResponse : public AResponse {
 	short checkBody();
 	short extractFile();
 	short uploadFile();
+	short checkFormData();
 	const std::string getBoundary();
 	const std::vector<std::multimap<std::string, std::string> >
 	getMultipartBody(const std::string& boundary);
