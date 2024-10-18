@@ -200,10 +200,10 @@ std::string CGI::executeCGI(const std::string &scriptPath) {
 		setLimits(MEMORYCHILD);
 		std::string dirName =
 			scriptPath.substr(0, scriptPath.find_last_of("/"));
-		if (chdir(dirName.c_str()) < 0) return "500";
+		if (chdir(dirName.c_str()) < 0) exit(1);
 
 		char *argv[] = {const_cast<char *>(scriptPath.c_str()), NULL};
-		if (execve(scriptPath.c_str(), argv, _cgiEnv) == -1) return "500";
+		if (execve(scriptPath.c_str(), argv, _cgiEnv) == -1) exit(1);
 
 	} else {
 		close(pipeIn[0]);
