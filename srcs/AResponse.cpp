@@ -6,12 +6,13 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/16 13:42:56 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/17 15:35:11 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "AResponse.hpp"
 
+// Initializes a map with status codes and returns it
 static std::map<short, std::string> initStatusMessages() {
 	std::map<short, std::string> m;
 	m.insert(std::make_pair(100, "Continue"));
@@ -130,7 +131,6 @@ static std::map<std::string, std::string> initMimeTypes() {
 
 AResponse::~AResponse() {}
 
-
 AResponse::AResponse(const Server& server, const HTTP_Request& request)
 	: _request(request), _server(server) {
 	_response.status = 200;
@@ -142,42 +142,14 @@ AResponse::AResponse(const AResponse &src)
 	  _server(src._server),
 	  _locationRoute(src._locationRoute) {}
 
-// Checks if Content-Lenght is present once and if request body size matches
-// this value and value of client_max_body_size
-short AResponse::checkSize() const {
-	if (_request.header_fields.count("content-length") ==
-		0)			 // mandatory Content-Length header ?
-		return 411;	 // Length Required
-	if (_request.message_body.size() >
-		static_cast<size_t>(_server.getClientMaxBodySize(_locationRoute)))
-		return 413;	 // Request Entity Too Large
-	// How to handle multiple Content-Length values ?
-	if (_request.header_fields.count("content-length") > 1)
-		return 400;	 // Bad Request
-	std::multimap<std::string, std::string>::const_iterator it =
-		_request.header_fields.find("content-length");
-	size_t size = -1;
-	if (it != _request.header_fields.end()) {
-		char *endPtr = NULL;
-		size = std::strtol(it->second.c_str(), &endPtr, 10);
-		if (*endPtr != '\0') return 400;
-		if (size != _request.message_body.size()) return 400;
-	}
-	return 200;
-}
-
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
-	// Store the allowed methods in a local variable
 	const std::set<Method> allowedMethods =
 		_server.getAllowedMethods(_locationRoute);
-	// Find the request method in the allowed methods
 	std::set<Method>::const_iterator it = allowedMethods.find(_request.method);
-	// Check if the method is not allowed
-	if (it == allowedMethods.end()) {
-		return 405;	 // Method Not Allowed
-	}
-	return 200;	 // OK
+	if (it == allowedMethods.end())
+		return METHOD_NOT_ALLOWED;
+	return OK;
 }
 
 // Check if message body size is, at most, the maximum allowed body size
@@ -218,7 +190,7 @@ void AResponse::setMatchLocationRoute() {
 	_locationRoute = bestMatchRoute;
 }
 
-// Returns path to look for resource in location, root + (uri - locationRoute)
+// Returns path to look for resource in location (root + uri)
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
 	return (assemblePath(root, _request.uri));
@@ -232,17 +204,17 @@ short AResponse::checkFile(const std::string &path) const {
 	if (stat(path.c_str(), &info) != 0)	 // Error in getting file information
 	{
 		if (errno == ENOENT)
-			return 404;	 // file does not exist
+			return NOT_FOUND;
 		else if (errno == EACCES)
-			return 403;	 // permission denied
+			return FORBIDDEN;
 	}
 	bool expectDir = !path.empty() && (path.at(path.size() - 1) == '/'); // check if url ends with '/'
-	if (expectDir && (info.st_mode & S_IFMT) != S_IFDIR) return 404;
+	if (expectDir && (info.st_mode & S_IFMT) != S_IFDIR) return NOT_FOUND;
 	if ((info.st_mode & S_IFMT) != S_IFREG &&
 		(info.st_mode & S_IFMT) != S_IFDIR)	 // Check if it is not regular file
 											 // (not a link or device)
-		return 403;							 // permission denied
-	return 200;
+		return FORBIDDEN;
+	return OK;
 }
 
 // Checks if file (path) is a directory
@@ -280,7 +252,7 @@ const std::string AResponse::getIndexFile(const std::string &path) const {
 	std::vector<std::string>::const_iterator it;
 	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
 		std::string filePath = assemblePath(path, *it);
-		if (checkFile(filePath) == 200) return filePath;
+		if (checkFile(filePath) == OK) return filePath;
 	}
 	return "";
 }
@@ -360,35 +332,34 @@ static std::string getDirectoryName(const std::string &path) {
 	std::string::size_type endPos = path.find_last_not_of("/");
 	if (endPos == std::string::npos) dirName = path;
 	std::string::size_type pos = path.find_last_of("/", endPos);
-	if (pos != std::string::npos) {
+	if (pos != std::string::npos)
 		dirName = path.substr(pos, endPos - pos + 1);
-	}
 	return dirName + "/";
 }
 
+// Returns last modified date of file
 std::string AResponse::getLastModificationDate(const std::string& path) const {
 	struct stat fileStat;
-	if (stat(path.c_str(), &fileStat) != 0) {
-		return "";	// Error handling or empty result
-	}
+	if (stat(path.c_str(), &fileStat) != 0)
+		return "";
 	char dateBuffer[20];
 	struct tm *timeinfo = localtime(&fileStat.st_mtime);
 	std::strftime(dateBuffer, sizeof(dateBuffer), "%d-%b-%Y %H:%M", timeinfo);
 	return std::string(dateBuffer);
 }
 
+// Returns file's size or '-' if file is a directory
 static std::string getFileSize(const std::string &path) {
 	struct stat fileStat;
-	if (stat(path.c_str(), &fileStat) != 0) {
-		return "";	// Error handling or empty result
-	}
+	if (stat(path.c_str(), &fileStat) != 0)
+		return "";
 	size_t size = fileStat.st_size;
 	std::string sizeBuffer =
 		(S_ISDIR(fileStat.st_mode) ? "-" : numberToString<size_t>(size));
 	return sizeBuffer;
 }
 
-
+// Returns html line with file information to add to directory listing
 std::string AResponse::addFileEntry(std::string& name,
 									const std::string& path) {
 	std::string fullPath = assemblePath(path, name);
@@ -413,16 +384,15 @@ std::string AResponse::addFileEntry(std::string& name,
 // Loads response with a page containing directory listing for that location
 short AResponse::loadDirectoryListing(const std::string& path) {
 	DIR* dir = opendir(path.c_str());
-	if (dir == NULL) return 403;
+	if (dir == NULL) return FORBIDDEN;
 	std::string dirName = getDirectoryName(path);
 	_response.body = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " +
 					 dirName + "</title>\n</head>\n<body>\n<h1>Index of " +
 					 dirName + "</h1>\n<hr>\n<pre>";
 	struct dirent *entry;
 	std::vector<std::string> entries;
-	while ((entry = readdir(dir)) != NULL) {
+	while ((entry = readdir(dir)) != NULL)
 		entries.push_back(std::string(entry->d_name));
-	}
 	// Sort the vector alphabetically
 	std::sort(entries.begin(), entries.end());
 	entries.erase(entries.begin());	 // Hide "."
@@ -436,7 +406,7 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	loadCommonHeaders();
 	_response.headers.insert(
 		std::make_pair(std::string("Content-Type"), std::string("text/html")));
-	return 200;
+	return OK;
 }
 
 // Converts the response struct into a string (loading the status message) and
@@ -459,6 +429,8 @@ const std::string AResponse::getResponseStr() const {
 	return response;
 }
 
+// Returns response as string with default error page body. 
+// Sets status and message
 static std::string loadDefaultErrorPage(short status) {
 	std::map<short, std::string>::const_iterator itStatus =
 		STATUS_MESSAGES.find(status);
@@ -507,7 +479,7 @@ const std::string AResponse::loadErrorPage(short status) {
 	if (it != error_pages.end()) {
 		std::string path =
 			assemblePath(_server.getRoot(_locationRoute), it->second);
-		if (checkFile(path) == 200) {
+		if (checkFile(path) == OK) {
 			std::ifstream file(path.c_str());
 			_response.body.assign((std::istreambuf_iterator<char>(file)),
 								  (std::istreambuf_iterator<char>()));
@@ -518,6 +490,7 @@ const std::string AResponse::loadErrorPage(short status) {
 	return getResponseStr();
 }
 
+// Returns "HTTP/1.1 100 Continue" string
 const std::string AResponse::loadContinueMessage(void) {
 	return "HTTP/1.1 100 Continue";
 }

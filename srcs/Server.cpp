@@ -57,7 +57,7 @@ Server &Server::operator=(const Server &src) {
 
 Server::~Server() {}
 
-// Function to initialize the map
+// Function to initialize directive map
 void Server::initializeDirectiveMap(void) {
 	_directiveMap["listen"] = &Server::handleListen;
 	_directiveMap["server_name"] = &Server::handleServerName;
@@ -71,6 +71,7 @@ void Server::initializeDirectiveMap(void) {
   _directiveMap["cgi_ext"] = &Server::handleCgiExt;
 }
 
+// Checks if a port is valid
 static bool isValidPort(const std::string &port) {
   for (std::string::size_type i = 0; i < port.size(); ++i) {
     if (!std::isdigit(port[i]))
@@ -80,6 +81,7 @@ static bool isValidPort(const std::string &port) {
   return (portNumber >= 0 && portNumber <= 65535);
 }
 
+// Checks if an IP is valid
 static bool isValidIp(const std::string &ip) {
   if (ip.empty() || ip == "localhost")
     return true;
@@ -102,12 +104,13 @@ static bool isValidIp(const std::string &ip) {
 }
 
 // Handlers
+
+// Checks and loads listen information into Server
 void Server::handleListen(std::vector<std::string> &tokens) {
   if (tokens.size() > 2)
     throw ConfigError("Invalid number of arguments in listen directive.");
   std::vector<std::string>::const_iterator
-      it; // check if accept just one token (if not implementing
-          // default_server)
+      it;
   for (it = tokens.begin() + 1; it != tokens.end(); it++) {
     Listen listening;
     std::string value = (*it);
@@ -133,22 +136,26 @@ void Server::handleListen(std::vector<std::string> &tokens) {
   }
 }
 
+// Loads server_name into Server
 void Server::handleServerName(std::vector<std::string> &tokens) {
   tokens.erase(tokens.begin());
   _serverName = tokens;
 }
 
+// Checks and loads root into Server
 void Server::handleRoot(std::vector<std::string> &tokens) {
   if (tokens.size() > 2)
     throw ConfigError("Invalid number of arguments in root directive.");
   _root = tokens[1];
 }
 
+// Loads index into Server
 void Server::handleIndex(std::vector<std::string> &tokens) {
   tokens.erase(tokens.begin());
   _index = tokens;
 }
 
+// Checks and loads error_page into Server
 void Server::handleErrorPage(std::vector<std::string> &tokens) {
   if (tokens.size() < 3)
     throw ConfigError("Invalid number of arguments in error_page directive.");
@@ -163,6 +170,7 @@ void Server::handleErrorPage(std::vector<std::string> &tokens) {
   }
 }
 
+// Checks and loads client_max_body_size into Server
 void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
   if (tokens.size() != 2)
     throw ConfigError("Invalid number of arguments in client_max_body_size directive.");
@@ -205,6 +213,7 @@ void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
   }
 }
 
+// Checks and loads autoindex into Server
 void Server::handleAutoIndex(std::vector<std::string> &tokens) {
   if (tokens[1] == "on")
     _autoIndex = TRUE;
@@ -214,6 +223,7 @@ void Server::handleAutoIndex(std::vector<std::string> &tokens) {
     throw ConfigError("Invalid value in autoindex directive.");
 }
 
+// Checks and loads return into Server
 void Server::handleReturn(std::vector<std::string> &tokens) {
 	if (tokens.size() != 3) throw ConfigError("Invalid number of arguments in return directive.");
 	// check if there is overflow
@@ -227,18 +237,21 @@ void Server::handleReturn(std::vector<std::string> &tokens) {
 	_return.second = tokens[2];
 }
 
+// Checks and loads upload into Server
 void Server::handleUpload(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
 		throw ConfigError("Invalid number of arguments in upload_store directive.");
 	_uploadStore = tokens[1];
 }
 
+// Checks and loads cgi_ext into Server
 void Server::handleCgiExt(std::vector<std::string> &tokens) {
   if (tokens.size() > 2)
     throw ConfigError("Invalid number of arguments in cgi_ext directive.");
   _cgiExt = tokens[1];
 }
 
+// Checks directive map and calls corresponding function, if it exists
 void Server::processDirective(std::string &line) {
   std::vector<std::string> tokens;
   tokens = ConfigParser::tokenizeLine(line);
@@ -417,6 +430,7 @@ std::vector<int> Server::getListeningSockets(void) const {
   return _listening_sockets;
 }
 
+// Sets up sockets based on servers
 void Server::setup_server(void) {
   const std::vector<Listen> network_addresses = getNetworkAddress();
 
@@ -472,6 +486,7 @@ void Server::setup_server(void) {
   }
 }
 
+// Sends Server information into ostream
 std::ostream &operator<<(std::ostream &os, const Server &context) {
   os << "Network Addresses:\n";
   std::vector<Listen> networkAddress = context.getNetworkAddress();
