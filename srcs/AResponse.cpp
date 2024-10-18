@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/17 15:35:11 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/18 14:32:35 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -342,9 +342,9 @@ std::string AResponse::getLastModificationDate(const std::string& path) const {
 	struct stat fileStat;
 	if (stat(path.c_str(), &fileStat) != 0)
 		return "";
-	char dateBuffer[20];
+	char dateBuffer[30];
 	struct tm *timeinfo = localtime(&fileStat.st_mtime);
-	std::strftime(dateBuffer, sizeof(dateBuffer), "%d-%b-%Y %H:%M", timeinfo);
+	std::strftime(dateBuffer, sizeof(dateBuffer), "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
 	return std::string(dateBuffer);
 }
 
