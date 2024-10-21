@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/18 14:32:35 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/21 10:43:21 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,8 +105,6 @@ static std::map<std::string, std::string> initMimeTypes() {
 	mimeTypes["gz"] = "application/gzip";
 	mimeTypes["exe"] = "application/octet-stream";
 	mimeTypes["bin"] = "application/octet-stream";
-	mimeTypes["py"] = "text/plain";
-	mimeTypes["php"] = "text/plain";
 
 	// Microsoft formats
 	mimeTypes["doc"] = "application/msword";
