@@ -80,12 +80,6 @@ std::string CGI::fetchCookies() {
 	return result;
 }
 
-std::string CGI::intToString(int value) {
-	std::stringstream ss;
-	ss << value;
-	return ss.str();
-}
-
 char **CGI::vectorToCharArray(const std::vector<std::string> &vec) {
 	char **charArray = new char *[vec.size() + 1];
 
@@ -168,18 +162,6 @@ short CGI::setCGIEnv() {
 	_cgiEnv = vectorToCharArray(cgiEnvironments);
 
 	return 200;
-}
-
-std::string CGI::readHtmlFile(const std::string &filePath) {
-	std::ifstream file(filePath.c_str());
-	if (!file.is_open()) {
-		std::cerr << "Error: Could not open HTML file." << std::endl;
-		return "";
-	}
-
-	std::stringstream buffer;
-	buffer << file.rdbuf();
-	return buffer.str();
 }
 
 std::string CGI::createCgiOutput(pid_t pid, int *pipeOut) {

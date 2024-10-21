@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 11:33:16 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/21 10:38:14 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ PostResponse::PostResponse(const PostResponse &src) : AResponse(src) {}
 
 PostResponse::~PostResponse() {}
 
-unsigned short PostResponse::parse_HTTP_body() {
+unsigned short PostResponse::parseHTTPBody() {
 	// If there's an expect header, check validity and ready body
 	// before continuing
 	if (requestHasHeader("expect")) {
@@ -44,6 +44,7 @@ unsigned short PostResponse::parse_HTTP_body() {
 	// NOTE: In our server, chunked is only useful for CGI!?
 	else if (requestHasHeader("transfer-encoding") && isCGI())
 		readChunks();
+
 	// If there's no content-length nor chunked, return error
 	// No need to test for both existing at the same time: already tested on
 	// HTTP header parser
@@ -247,35 +248,54 @@ int PostResponse::skipTrailingCRLF() {
 	return 0;
 }
 
+static std::string generateDefaultUploadResponse() {
+	return "<!DOCTYPE html>\n"
+			"<html lang=\"en\">\n"
+			"<head>\n"
+			"\t<meta charset=\"UTF-8\">\n"
+			"\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+			"\t<link rel=\"icon\" href=\"assets/favicon.ico\" type=\"image/x-icon\">\n"
+    		"\t<link rel=\"stylesheet\" href=\"assets/css/style.css\">\n"
+			"\t<title>Upload Successful</title>\n"
+			"</head>\n"
+			"<body>\n"
+			"\t<h1>File Uploaded Successfully!</h1>\n"
+			"\t<p>Your file has been uploaded.</p>\n"
+			"\t<a href=\"index.html\">Back to Index</a>\n"
+			"</body>\n"
+			"</html>\n";
+}
+
 std::string PostResponse::generateResponse() {
 	unsigned short status = OK;
 	setMatchLocationRoute();
 
-	parse_HTTP_body();
+	parseHTTPBody();
 
-	status = checkClientBodySize();
-	if (status != OK) return loadErrorPage(status);
+	if ((status = checkClientBodySize()) != OK) return loadErrorPage(status);
 
 	if (!isCGI()) {
 
 		status = checkBody();
 		if (status != OK) return loadErrorPage(status);
 
+		if ((status = checkFormData()) != OK) return loadErrorPage(status);
+		
 		status = extractFile();
 		if (status != OK) return loadErrorPage(status);
 
-		status = uploadFile();
-		if (status != OK) return loadErrorPage(status);
+		if ((status = uploadFile()) != OK) return loadErrorPage(status);
+		_response.body = generateDefaultUploadResponse();
 	} else {
-
 		// Send to CGI;
 		std::string path = getPath();
 		
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
 		if (_response.status != 200) loadErrorPage(_response.status);
-		loadCommonHeaders();
 	}
+	loadCommonHeaders();
+	_response.status = CREATED;
 
 	return getResponseStr();
 }
@@ -327,8 +347,6 @@ short PostResponse::uploadFile() {
 }
 
 short PostResponse::checkBody() {
-	
-	// NOTE: mudei esta parte porque para um post form request, ele nao cai neste caso
 	if (requestHasHeader("content-type") &&
 		_request.header_fields.find("content-type")
 				->second.find("multipart/") == 0) {
@@ -339,6 +357,18 @@ short PostResponse::checkBody() {
 	} else {
 		return 400;
 	}
+	return OK;
+}
+
+short PostResponse::checkFormData() {
+	std::map<std::string, std::string>::iterator it =
+		_request.header_fields.find("content-type");
+
+	if (it == _request.header_fields.end()) return BAD_REQUEST;
+
+	if (it->second.find("multipart/form-data") == std::string::npos)
+		return NOT_IMPLEMENTED;
+
 	return OK;
 }
 
@@ -429,7 +459,6 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 
 	return submap;
 }
-
 
 short PostResponse::extractFile() {
 
