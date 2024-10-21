@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 16:34:46 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/21 10:38:14 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -248,6 +248,24 @@ int PostResponse::skipTrailingCRLF() {
 	return 0;
 }
 
+static std::string generateDefaultUploadResponse() {
+	return "<!DOCTYPE html>\n"
+			"<html lang=\"en\">\n"
+			"<head>\n"
+			"\t<meta charset=\"UTF-8\">\n"
+			"\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+			"\t<link rel=\"icon\" href=\"assets/favicon.ico\" type=\"image/x-icon\">\n"
+    		"\t<link rel=\"stylesheet\" href=\"assets/css/style.css\">\n"
+			"\t<title>Upload Successful</title>\n"
+			"</head>\n"
+			"<body>\n"
+			"\t<h1>File Uploaded Successfully!</h1>\n"
+			"\t<p>Your file has been uploaded.</p>\n"
+			"\t<a href=\"index.html\">Back to Index</a>\n"
+			"</body>\n"
+			"</html>\n";
+}
+
 std::string PostResponse::generateResponse() {
 	unsigned short status = OK;
 	setMatchLocationRoute();
@@ -267,16 +285,17 @@ std::string PostResponse::generateResponse() {
 		if (status != OK) return loadErrorPage(status);
 
 		if ((status = uploadFile()) != OK) return loadErrorPage(status);
+		_response.body = generateDefaultUploadResponse();
 	} else {
-
 		// Send to CGI;
 		std::string path = getPath();
 		
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
 		if (_response.status != 200) loadErrorPage(_response.status);
-		loadCommonHeaders();
 	}
+	loadCommonHeaders();
+	_response.status = CREATED;
 
 	return getResponseStr();
 }
