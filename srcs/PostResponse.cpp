@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/21 10:38:14 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/21 18:29:00 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -270,8 +270,8 @@ std::string PostResponse::generateResponse() {
 	unsigned short status = OK;
 	setMatchLocationRoute();
 
-	parseHTTPBody();
-
+	if ((status = parseHTTPBody()) != OK) return loadErrorPage(status);
+	
 	if ((status = checkClientBodySize()) != OK) return loadErrorPage(status);
 
 	if (!isCGI()) {
