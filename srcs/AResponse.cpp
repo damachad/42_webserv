@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/21 15:04:20 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/21 15:22:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -496,6 +496,8 @@ const std::string AResponse::loadContinueMessage(void) {
 std::ostream& operator<<(std::ostream& outstream, const HTTP_Response& response) {
 	outstream << "HTTP Request: \n";
 
+	outstream << "Status: " << response.status << " ";
+	outstream << STATUS_MESSAGES.find(response.status)->second << "\n";
 	outstream << "Header fields: \n";
 	for (std::multimap<std::string, std::string>::const_iterator it =
 			 response.headers.begin();
