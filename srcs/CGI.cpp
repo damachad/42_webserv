@@ -70,7 +70,7 @@ std::string CGI::fetchCookies() {
 	for (std::multimap<std::string, std::string>::const_iterator it =
 			 _request.header_fields.begin();
 		 it != _request.header_fields.end(); ++it) {
-		if (it->first == "Cookie") {
+		if (it->first == "cookie") {
 			if (!result.empty()) {
 				result += "; ";
 			}
