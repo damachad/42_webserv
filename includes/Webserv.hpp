@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 13:54:55 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/21 18:18:57 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ enum State { FALSE, TRUE, UNSET };
 // TODO: Decide what global definitions we want
 // Magic numbers and strings
 #define MAX_CONNECTIONS 100
-#define MAX_STORAGE_SIZE 100000
+#define MAX_STORAGE_SIZE 5368709120
 #define REG_FILE 0
 #define DIRECTORY 1
 #define URL_MAX_SIZE 8094
