@@ -13,9 +13,9 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-class LocationContext;
+class Location;
 
-#include "LocationContext.hpp"
+#include "Location.hpp"
 #include "Webserv.hpp"
 
 struct Listen {
@@ -33,11 +33,11 @@ struct Listen {
 	}
 
 	// Default Constructor
-	Listen() {};
+	Listen(){};
 
 	// Constructor with IP and Port
 	Listen(const std::string &ip, const std::string &port_number)
-		: IP(ip), port(port_number) {};
+		: IP(ip), port(port_number){};
 };
 
 class Server {
@@ -51,7 +51,7 @@ class Server {
 	long _clientMaxBodySize;
 	std::set<Method> _allowedMethods;
 	std::map<short, std::string> _errorPages;
-	std::map<std::string, LocationContext> _locations;
+	std::map<std::string, Location> _locations;
 	std::pair<short, std::string> _return;
 	std::string _uploadStore;
 	std::string _cgiExt;
@@ -79,7 +79,7 @@ class Server {
 	long getClientMaxBodySize() const;
 	std::set<Method> getAllowedMethods() const;
 	std::map<short, std::string> getErrorPages() const;
-	std::map<std::string, LocationContext> getLocations() const;
+	std::map<std::string, Location> getLocations() const;
 	std::pair<short, std::string> getReturn() const;
 	std::string getUpload() const;
 	std::string getCgiExt() const;

@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   LocationContext.hpp                                :+:      :+:    :+:   */
+/*   Location.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,14 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef LOCATIONCONTEXT_HPP
-#define LOCATIONCONTEXT_HPP
+#ifndef LOCATION_HPP
+#define LOCATION_HPP
 
 #include "ConfigParser.hpp"
 #include "Exceptions.hpp"
 #include "Webserv.hpp"
 
-class LocationContext {
+class Location {
    private:
 	std::string _root;
 	std::vector<std::string> _index;
@@ -28,17 +28,16 @@ class LocationContext {
 	std::pair<short, std::string> _return;
 	std::string _uploadStore;
 	std::string _cgiExt;
-	
-	typedef void (LocationContext::*DirectiveHandler)(
-		std::vector<std::string> &);
+
+	typedef void (Location::*DirectiveHandler)(std::vector<std::string> &);
 	std::map<std::string, DirectiveHandler> _directiveMap;
 
    public:
-	LocationContext();
-	LocationContext(const LocationContext &src);
-	~LocationContext();
+	Location();
+	Location(const Location &src);
+	~Location();
 
-	LocationContext &operator=(const LocationContext &src);
+	Location &operator=(const Location &src);
 
 	// Getters
 	std::string getRoot() const;
@@ -66,6 +65,6 @@ class LocationContext {
 	void processDirective(std::string &line);
 };
 
-std::ostream &operator<<(std::ostream &os, const LocationContext &context);
+std::ostream &operator<<(std::ostream &os, const Location &context);
 
 #endif

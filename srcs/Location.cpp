@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   LocationContext.cpp                                :+:      :+:    :+:   */
+/*   Location.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,14 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "LocationContext.hpp"
+#include "Location.hpp"
 
-LocationContext::LocationContext() : _autoIndex(UNSET), _clientMaxBodySize(-1) {
+Location::Location() : _autoIndex(UNSET), _clientMaxBodySize(-1) {
 	initializeDirectiveMap();
 	_return = std::make_pair(-1, "");
 }
 
-LocationContext::LocationContext(const LocationContext &src)
+Location::Location(const Location &src)
 	: _root(src.getRoot()),
 	  _index(src.getIndex()),
 	  _autoIndex(src.getAutoIndex()),
@@ -28,7 +28,7 @@ LocationContext::LocationContext(const LocationContext &src)
 	  _uploadStore(src.getUpload()),
 	  _cgiExt(src.getCgiExt()) {}
 
-LocationContext &LocationContext::operator=(const LocationContext &src) {
+Location &Location::operator=(const Location &src) {
 	_root = src.getRoot();
 	_index = src.getIndex();
 	_autoIndex = src.getAutoIndex();
@@ -41,34 +41,35 @@ LocationContext &LocationContext::operator=(const LocationContext &src) {
 	return (*this);
 }
 
-LocationContext::~LocationContext() {}
+Location::~Location() {}
 
 // Function to initialize the map
-void LocationContext::initializeDirectiveMap(void) {
-	_directiveMap["root"] = &LocationContext::handleRoot;
-	_directiveMap["index"] = &LocationContext::handleIndex;
-	_directiveMap["limit_except"] = &LocationContext::handleLimitExcept;
-	_directiveMap["error_page"] = &LocationContext::handleErrorPage;
-	_directiveMap["client_max_body_size"] = &LocationContext::handleCliMaxSize;
-	_directiveMap["autoindex"] = &LocationContext::handleAutoIndex;
-	_directiveMap["return"] = &LocationContext::handleReturn;
-	_directiveMap["upload_store"] = &LocationContext::handleUpload;
-	_directiveMap["cgi_ext"] = &LocationContext::handleCgiExt;
+void Location::initializeDirectiveMap(void) {
+	_directiveMap["root"] = &Location::handleRoot;
+	_directiveMap["index"] = &Location::handleIndex;
+	_directiveMap["limit_except"] = &Location::handleLimitExcept;
+	_directiveMap["error_page"] = &Location::handleErrorPage;
+	_directiveMap["client_max_body_size"] = &Location::handleCliMaxSize;
+	_directiveMap["autoindex"] = &Location::handleAutoIndex;
+	_directiveMap["return"] = &Location::handleReturn;
+	_directiveMap["upload_store"] = &Location::handleUpload;
+	_directiveMap["cgi_ext"] = &Location::handleCgiExt;
 }
 
 // Handlers
 
-void LocationContext::handleRoot(std::vector<std::string> &tokens) {
-	if (tokens.size() > 2) throw ConfigError("Invalid number of arguments in root directive.");
+void Location::handleRoot(std::vector<std::string> &tokens) {
+	if (tokens.size() > 2)
+		throw ConfigError("Invalid number of arguments in root directive.");
 	_root = tokens[1];
 }
 
-void LocationContext::handleIndex(std::vector<std::string> &tokens) {
+void Location::handleIndex(std::vector<std::string> &tokens) {
 	tokens.erase(tokens.begin());
 	_index = tokens;
 }
 
-void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
+void Location::handleLimitExcept(std::vector<std::string> &tokens) {
 	std::set<Method> methods;
 	std::vector<std::string>::const_iterator it;
 	for (it = tokens.begin() + 1; it != tokens.end(); it++) {
@@ -84,8 +85,10 @@ void LocationContext::handleLimitExcept(std::vector<std::string> &tokens) {
 	_allowedMethods = methods;
 }
 
-void LocationContext::handleErrorPage(std::vector<std::string> &tokens) {
-	if (tokens.size() < 3) throw ConfigError("Invalid number of arguments in error_page directive.");
+void Location::handleErrorPage(std::vector<std::string> &tokens) {
+	if (tokens.size() < 3)
+		throw ConfigError(
+			"Invalid number of arguments in error_page directive.");
 	std::string page = tokens.back();
 	for (size_t i = 1; i < tokens.size() - 1; i++) {
 		char *end;
@@ -97,9 +100,10 @@ void LocationContext::handleErrorPage(std::vector<std::string> &tokens) {
 	}
 }
 
-void LocationContext::handleCliMaxSize(std::vector<std::string> &tokens) {
+void Location::handleCliMaxSize(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
-		throw ConfigError("Invalid number of arguments in client_max_body_size directive.");
+		throw ConfigError(
+			"Invalid number of arguments in client_max_body_size directive.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
 	if (!std::isdigit(unit)) maxSize.resize(maxSize.size() - 1);
@@ -138,7 +142,7 @@ void LocationContext::handleCliMaxSize(std::vector<std::string> &tokens) {
 	}
 }
 
-void LocationContext::handleAutoIndex(std::vector<std::string> &tokens) {
+void Location::handleAutoIndex(std::vector<std::string> &tokens) {
 	if (tokens[1] == "on")
 		_autoIndex = TRUE;
 	else if (tokens[1] == "off")
@@ -147,8 +151,9 @@ void LocationContext::handleAutoIndex(std::vector<std::string> &tokens) {
 		throw ConfigError("Invalid value in autoindex directive.");
 }
 
-void LocationContext::handleReturn(std::vector<std::string> &tokens) {
-	if (tokens.size() != 3) throw ConfigError("Invalid number of arguments in return directive.");
+void Location::handleReturn(std::vector<std::string> &tokens) {
+	if (tokens.size() != 3)
+		throw ConfigError("Invalid number of arguments in return directive.");
 	char *endPtr = NULL;
 	long errorCode = std::strtol(tokens[1].c_str(), &endPtr, 10);
 	if (*endPtr != '\0' || errorCode < 0 || errorCode > 999 ||
@@ -159,21 +164,25 @@ void LocationContext::handleReturn(std::vector<std::string> &tokens) {
 	_return.second = tokens[2];
 }
 
-void LocationContext::handleUpload(std::vector<std::string> &tokens) {
-	if (tokens.size() != 2) throw ConfigError("Invalid number of arguments in upload_store directive.");
+void Location::handleUpload(std::vector<std::string> &tokens) {
+	if (tokens.size() != 2)
+		throw ConfigError(
+			"Invalid number of arguments in upload_store directive.");
 	_uploadStore = tokens[1];
 }
 
-void LocationContext::handleCgiExt(std::vector<std::string> &tokens) {
-	if (tokens.size() > 2) throw ConfigError("Invalid number of arguments in cgi_ext directive.");
+void Location::handleCgiExt(std::vector<std::string> &tokens) {
+	if (tokens.size() > 2)
+		throw ConfigError("Invalid number of arguments in cgi_ext directive.");
 	_cgiExt = tokens[1];
 }
 
-void LocationContext::processDirective(std::string &line) {
+void Location::processDirective(std::string &line) {
 	std::vector<std::string> tokens;
 	tokens = ConfigParser::tokenizeLine(line);
 	if (tokens.size() < 2)
-		throw ConfigError("Invalid number of arguments in \"" + tokens[0] + "\" directive.");
+		throw ConfigError("Invalid number of arguments in \"" + tokens[0] +
+						  "\" directive.");
 	std::map<std::string, DirectiveHandler>::const_iterator it;
 	it = _directiveMap.find(tokens[0]);
 	if (it != _directiveMap.end())
@@ -183,37 +192,27 @@ void LocationContext::processDirective(std::string &line) {
 }
 
 // Getters
-std::string LocationContext::getRoot() const { return _root; }
+std::string Location::getRoot() const { return _root; }
 
-std::vector<std::string> LocationContext::getIndex() const { return _index; }
+std::vector<std::string> Location::getIndex() const { return _index; }
 
-State LocationContext::getAutoIndex() const { return _autoIndex; }
+State Location::getAutoIndex() const { return _autoIndex; }
 
-long LocationContext::getClientMaxBodySize() const {
-	return _clientMaxBodySize;
-}
+long Location::getClientMaxBodySize() const { return _clientMaxBodySize; }
 
-std::set<Method> LocationContext::getAllowedMethods() const {
-	return _allowedMethods;
-}
+std::set<Method> Location::getAllowedMethods() const { return _allowedMethods; }
 
-std::map<short, std::string> LocationContext::getErrorPages() const {
+std::map<short, std::string> Location::getErrorPages() const {
 	return _errorPages;
 }
 
-std::pair<short, std::string> LocationContext::getReturn() const {
-	return _return;
-}
+std::pair<short, std::string> Location::getReturn() const { return _return; }
 
-std::string LocationContext::getUpload() const {
-	return _uploadStore;
-}
+std::string Location::getUpload() const { return _uploadStore; }
 
-std::string LocationContext::getCgiExt() const {
-	return _cgiExt;
-}
+std::string Location::getCgiExt() const { return _cgiExt; }
 
-std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
+std::ostream &operator<<(std::ostream &os, const Location &context) {
 	os << "  Root: " << context.getRoot() << "\n";
 
 	os << "  Index Files:\n";
@@ -262,7 +261,7 @@ std::ostream &operator<<(std::ostream &os, const LocationContext &context) {
 	std::pair<short, std::string> returns = context.getReturn();
 	if (returns.first != -1)
 		os << "    " << returns.first << " : " << returns.second << "\n";
-	
+
 	os << "  Upload Store: " << context.getUpload() << "\n";
 	os << "  CGI Extension: " << context.getCgiExt() << "\n";
 

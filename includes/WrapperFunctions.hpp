@@ -1,5 +1,5 @@
-#ifndef WRAPPER_FUNCTIONS_HPP
-#define WRAPPER_FUNCTIONS_HPP
+#ifndef WRAPPERFUNCTIONS_HPP
+#define WRAPPERFUNCTIONS_HPP
 
 #include <netdb.h>
 #include <sys/epoll.h>

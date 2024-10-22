@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 16:32:41 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/22 10:07:35 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@
 #include "Helpers.hpp"
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
-#include "wrapper_functions.hpp"
+#include "WrapperFunctions.hpp"
 
 unsigned int total_used_storage = 0;
 // NOTE: Keeps track of how many bytes have been uploaded/deleted to server
