@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/21 18:29:00 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/22 09:58:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -367,7 +367,7 @@ short PostResponse::checkFormData() {
 	if (it == _request.header_fields.end()) return BAD_REQUEST;
 
 	if (it->second.find("multipart/form-data") == std::string::npos)
-		return NOT_IMPLEMENTED;
+		return UNSUPPORTED_MEDIA_TYPE;
 
 	return OK;
 }
