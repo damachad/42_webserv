@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 16:32:50 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/23 14:48:57 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -335,7 +335,7 @@ bool HTTP_Request_Parser::protocolVersionIsValid(
 
 std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {
 	outstream << "HTTP Request: \n"
-			  << "Method: " << request.method << "\n"
+			  << "Method: " << methodToString(request.method) << "\n"
 			  << "URI: " << request.uri << "\n"
 			  << "Protocol: " << request.protocol_version << "\n";
 
