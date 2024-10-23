@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/22 09:58:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/23 14:55:36 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,10 +276,10 @@ std::string PostResponse::generateResponse() {
 
 	if (!isCGI()) {
 
+		if ((status = checkFormData()) != OK) return loadErrorPage(status);
+
 		status = checkBody();
 		if (status != OK) return loadErrorPage(status);
-
-		if ((status = checkFormData()) != OK) return loadErrorPage(status);
 		
 		status = extractFile();
 		if (status != OK) return loadErrorPage(status);
