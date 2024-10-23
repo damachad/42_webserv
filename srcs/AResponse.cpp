@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/21 15:22:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/23 10:57:29 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,7 @@ AResponse::AResponse(const Server& server, const HTTP_Request& request)
 	_response.status = 200;
 }
 
-AResponse::AResponse(const AResponse &src)
+AResponse::AResponse(const AResponse& src)
 	: _request(src._request),
 	  _response(src._response),
 	  _server(src._server),
@@ -145,8 +145,7 @@ short AResponse::checkMethod() const {
 	const std::set<Method> allowedMethods =
 		_server.getAllowedMethods(_locationRoute);
 	std::set<Method>::const_iterator it = allowedMethods.find(_request.method);
-	if (it == allowedMethods.end())
-		return METHOD_NOT_ALLOWED;
+	if (it == allowedMethods.end()) return METHOD_NOT_ALLOWED;
 	return OK;
 }
 
@@ -192,11 +191,10 @@ void AResponse::setMatchLocationRoute() {
 const std::string AResponse::getPath() const {
 	std::string root = _server.getRoot(_locationRoute);
 	return (assemblePath(root, _request.uri));
-
 }
 
 // Checks if file is a regular file and there are no problems opening it
-short AResponse::checkFile(const std::string &path) const {
+short AResponse::checkFile(const std::string& path) const {
 	struct stat info;
 
 	if (stat(path.c_str(), &info) != 0)	 // Error in getting file information
@@ -206,7 +204,8 @@ short AResponse::checkFile(const std::string &path) const {
 		else if (errno == EACCES)
 			return FORBIDDEN;
 	}
-	bool expectDir = !path.empty() && (path.at(path.size() - 1) == '/'); // check if url ends with '/'
+	bool expectDir = !path.empty() && (path.at(path.size() - 1) ==
+									   '/');  // check if url ends with '/'
 	if (expectDir && (info.st_mode & S_IFMT) != S_IFDIR) return NOT_FOUND;
 	if ((info.st_mode & S_IFMT) != S_IFREG &&
 		(info.st_mode & S_IFMT) != S_IFDIR)	 // Check if it is not regular file
@@ -216,7 +215,7 @@ short AResponse::checkFile(const std::string &path) const {
 }
 
 // Checks if file (path) is a directory
-bool AResponse::isDirectory(const std::string &path) const {
+bool AResponse::isDirectory(const std::string& path) const {
 	struct stat info;
 
 	stat(path.c_str(), &info);
@@ -245,7 +244,7 @@ bool AResponse::hasAutoindex() const {
 }
 
 // Returns an index file if it exists or NULL (empty string)
-const std::string AResponse::getIndexFile(const std::string &path) const {
+const std::string AResponse::getIndexFile(const std::string& path) const {
 	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
 	std::vector<std::string>::const_iterator it;
 	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
@@ -267,7 +266,7 @@ const std::string AResponse::assemblePath(const std::string& l,
 }
 
 // Sets MIME type in Content-Type header based on file extension
-void AResponse::setMimeType(const std::string &path) {
+void AResponse::setMimeType(const std::string& path) {
 	static std::map<std::string, std::string> mimeTypes = initMimeTypes();
 
 	std::size_t dotPos = path.find_last_of('.');
@@ -313,8 +312,8 @@ void AResponse::loadReturn() {
 		_response.headers.insert(
 			std::make_pair(std::string("Location"), redirect.second));
 	}
-	_response.headers.insert(
-		std::make_pair(std::string("Content-Type"), std::string("application/octet-stream")));
+	_response.headers.insert(std::make_pair(
+		std::string("Content-Type"), std::string("application/octet-stream")));
 }
 
 // Checks if there is a return directive
@@ -325,32 +324,29 @@ bool AResponse::hasReturn() const {
 }
 
 // Helper function to extract and format the directory name
-static std::string getDirectoryName(const std::string &path) {
+static std::string getDirectoryName(const std::string& path) {
 	std::string dirName;
 	std::string::size_type endPos = path.find_last_not_of("/");
 	if (endPos == std::string::npos) dirName = path;
 	std::string::size_type pos = path.find_last_of("/", endPos);
-	if (pos != std::string::npos)
-		dirName = path.substr(pos, endPos - pos + 1);
+	if (pos != std::string::npos) dirName = path.substr(pos, endPos - pos + 1);
 	return dirName + "/";
 }
 
 // Returns last modified date of file
 std::string AResponse::getLastModificationDate(const std::string& path) const {
 	struct stat fileStat;
-	if (stat(path.c_str(), &fileStat) != 0)
-		return "";
+	if (stat(path.c_str(), &fileStat) != 0) return "";
 	char dateBuffer[30];
-	struct tm *timeinfo = localtime(&fileStat.st_mtime);
-	std::strftime(dateBuffer, sizeof(dateBuffer), "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
+	struct tm* timeinfo = gmtime(&fileStat.st_mtime);
+	std::strftime(dateBuffer, sizeof(dateBuffer), "%d-%b-%Y %H:%M", timeinfo);
 	return std::string(dateBuffer);
 }
 
 // Returns file's size or '-' if file is a directory
-static std::string getFileSize(const std::string &path) {
+static std::string getFileSize(const std::string& path) {
 	struct stat fileStat;
-	if (stat(path.c_str(), &fileStat) != 0)
-		return "";
+	if (stat(path.c_str(), &fileStat) != 0) return "";
 	size_t size = fileStat.st_size;
 	std::string sizeBuffer =
 		(S_ISDIR(fileStat.st_mode) ? "-" : numberToString<size_t>(size));
@@ -364,18 +360,21 @@ std::string AResponse::addFileEntry(std::string& name,
 	std::string date = getLastModificationDate(fullPath);
 	std::string size = getFileSize(fullPath);
 	std::string displayName;
-	if (name.length() > 51)
-		displayName = name.substr(0, 49) + "..";  // Truncate and add ".."
-	else
-		displayName = name;
-	if (name != "." && name != "..") name = assemblePath(_request.uri, name);
+	displayName = name;
+	if (isDirectory(path)) displayName += '/';
+	if (displayName.length() > 51)
+		displayName = name.substr(0, 48) + "..>";  // Truncate and add ".."
+	if (name != "./" && name != "../") name = assemblePath(_request.uri, name);
 	std::string WP1;
 	if (displayName.length() < 51)
 		WP1 = std::string(51 - displayName.length(), ' ');	// Pad with spaces
 	std::stringstream fileEntry;
 	std::string WS2 = "                   ";
-	fileEntry << "<a href=\"" + name + "\">" + displayName + "</a>" + WP1 +
-					 date + WS2 + size + "\n";
+	if (displayName == "../")
+		fileEntry << "<a href=\"" + name + "\">" + displayName + "</a> \n";
+	else
+		fileEntry << "<a href=\"" + name + "\">" + displayName + "</a> " + WP1 +
+						 date + WS2 + size + "\n";
 	return fileEntry.str();
 }
 
@@ -387,15 +386,26 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 	_response.body = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " +
 					 dirName + "</title>\n</head>\n<body>\n<h1>Index of " +
 					 dirName + "</h1>\n<hr>\n<pre>";
-	struct dirent *entry;
-	std::vector<std::string> entries;
-	while ((entry = readdir(dir)) != NULL)
-		entries.push_back(std::string(entry->d_name));
-	// Sort the vector alphabetically
-	std::sort(entries.begin(), entries.end());
-	entries.erase(entries.begin());	 // Hide "."
-	for (std::vector<std::string>::iterator it = entries.begin();
-		 it != entries.end(); ++it) {
+	struct dirent* entry;
+	std::vector<std::string> directories;
+	std::vector<std::string> files;
+	while ((entry = readdir(dir)) != NULL) {
+		if (isDirectory(assemblePath(path, entry->d_name)))
+			directories.push_back(std::string(entry->d_name));
+		else
+			files.push_back(std::string(entry->d_name));
+	}
+	// Sort the vectors alphabetically
+	std::sort(directories.begin(), directories.end());
+	std::sort(files.begin(), files.end());
+	directories.erase(directories.begin());	 // Hide "."
+	for (std::vector<std::string>::iterator it = directories.begin();
+		 it != directories.end(); ++it) {
+		std::string entryName = *it;
+		_response.body += addFileEntry(entryName, path);
+	}
+	for (std::vector<std::string>::iterator it = files.begin();
+		 it != files.end(); ++it) {
 		std::string entryName = *it;
 		_response.body += addFileEntry(entryName, path);
 	}
@@ -412,9 +422,8 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 const std::string AResponse::getResponseStr() const {
 	std::map<short, std::string>::const_iterator itStatus =
 		STATUS_MESSAGES.find(_response.status);
-	std::string message = (itStatus != STATUS_MESSAGES.end())
-							  ? itStatus->second
-							  : "";
+	std::string message =
+		(itStatus != STATUS_MESSAGES.end()) ? itStatus->second : "";
 	std::string headersStr;
 	std::multimap<std::string, std::string>::const_iterator itHead;
 	for (itHead = _response.headers.begin(); itHead != _response.headers.end();
@@ -427,14 +436,13 @@ const std::string AResponse::getResponseStr() const {
 	return response;
 }
 
-// Returns response as string with default error page body. 
+// Returns response as string with default error page body.
 // Sets status and message
 static std::string loadDefaultErrorPage(short status) {
 	std::map<short, std::string>::const_iterator itStatus =
 		STATUS_MESSAGES.find(status);
-	std::string message = (itStatus != STATUS_MESSAGES.end())
-							  ? itStatus->second
-							  : "";
+	std::string message =
+		(itStatus != STATUS_MESSAGES.end()) ? itStatus->second : "";
 	std::string response =
 		"<!DOCTYPE html>\n"
 		"<html lang=\"en\">\n"
@@ -493,7 +501,8 @@ const std::string AResponse::loadContinueMessage(void) {
 	return "HTTP/1.1 100 Continue";
 }
 
-std::ostream& operator<<(std::ostream& outstream, const HTTP_Response& response) {
+std::ostream& operator<<(std::ostream& outstream,
+						 const HTTP_Response& response) {
 	outstream << "HTTP Request: \n";
 
 	outstream << "Status: " << response.status << " ";
