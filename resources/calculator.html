@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <title>CGI Calculator</title>
+</head>
+<body>
+    <h2>Simple CGI Calculator</h2>
+	<p>This calculator will add both numbers you enter below:</p>
+    <form action="/cgi-bin/py/calc.py" method="post">
+        <label for="num1">First Number:</label>
+        <input type="text" id="num1" name="num1"><br><br>
+        <label for="num2">Second Number:</label>
+        <input type="text" id="num2" name="num2"><br><br>
+        <input type="submit" value="Calculate">
+    </form>
+	<br>
+    <a href="index.html">Back to Index</a>
+</body>
+</html>
