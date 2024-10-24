@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/15 13:04:53 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/16 15:27:38 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/22 10:05:47 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,7 @@ private:
   std::string createCgiOutput(pid_t pid, int *pipeOut);
 
   // Utils
-  std::string intToString(int value);
   char **vectorToCharArray(const std::vector<std::string> &vec);
-  std::string readHtmlFile(const std::string &filePath);
   std::string getServerName();
   std::string getServerPort();
 

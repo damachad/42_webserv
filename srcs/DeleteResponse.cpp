@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/17 16:02:55 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/22 10:08:21 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@ DeleteResponse::DeleteResponse(const DeleteResponse& src) : AResponse(src) {}
 DeleteResponse::~DeleteResponse() {}
 
 // Attempts to delete file
-// TODO: remove repeated parts with checkFile() or not call checkFile()
 short DeleteResponse::deleteFile(const std::string& path) {
 	struct stat fileInfo;
 	if (stat(path.c_str(), &fileInfo) != 0)

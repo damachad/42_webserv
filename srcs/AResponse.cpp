@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/23 10:57:29 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/24 14:22:29 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,10 +163,9 @@ short AResponse::checkClientBodySize() const {
 //  NOTE: If REGEX is not considered, NGINX does prefix match for the location
 // routes, which means route must match the start of the URI
 void AResponse::setMatchLocationRoute() {
-	std::map<std::string, LocationContext> serverLocations =
-		_server.getLocations();
+	std::map<std::string, Location> serverLocations = _server.getLocations();
 
-	std::map<std::string, LocationContext>::iterator it;
+	std::map<std::string, Location>::iterator it;
 	it = serverLocations.find(_request.uri);
 	if (it != serverLocations.end()) {
 		_locationRoute = it->first;
