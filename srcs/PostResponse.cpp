@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/23 14:55:36 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/24 14:22:51 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,6 +286,7 @@ std::string PostResponse::generateResponse() {
 
 		if ((status = uploadFile()) != OK) return loadErrorPage(status);
 		_response.body = generateDefaultUploadResponse();
+		_response.status = CREATED;
 	} else {
 		// Send to CGI;
 		std::string path = getPath();
@@ -295,7 +296,6 @@ std::string PostResponse::generateResponse() {
 		if (_response.status != 200) loadErrorPage(_response.status);
 	}
 	loadCommonHeaders();
-	_response.status = CREATED;
 
 	return getResponseStr();
 }

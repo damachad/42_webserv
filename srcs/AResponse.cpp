@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/03 13:52:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/22 10:02:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/24 14:22:29 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -337,9 +337,8 @@ std::string AResponse::getLastModificationDate(const std::string& path) const {
 	struct stat fileStat;
 	if (stat(path.c_str(), &fileStat) != 0) return "";
 	char dateBuffer[30];
-	struct tm* timeinfo = localtime(&fileStat.st_mtime);
-	std::strftime(dateBuffer, sizeof(dateBuffer), "%a, %d %b %Y %H:%M:%S GMT",
-				  timeinfo);
+	struct tm* timeinfo = gmtime(&fileStat.st_mtime);
+	std::strftime(dateBuffer, sizeof(dateBuffer), "%d-%b-%Y %H:%M", timeinfo);
 	return std::string(dateBuffer);
 }
 
@@ -360,18 +359,21 @@ std::string AResponse::addFileEntry(std::string& name,
 	std::string date = getLastModificationDate(fullPath);
 	std::string size = getFileSize(fullPath);
 	std::string displayName;
-	if (name.length() > 51)
-		displayName = name.substr(0, 49) + "..";  // Truncate and add ".."
-	else
-		displayName = name;
-	if (name != "." && name != "..") name = assemblePath(_request.uri, name);
+	displayName = name;
+	if (isDirectory(path)) displayName += '/';
+	if (displayName.length() > 51)
+		displayName = name.substr(0, 48) + "..>";  // Truncate and add ".."
+	if (name != "./" && name != "../") name = assemblePath(_request.uri, name);
 	std::string WP1;
 	if (displayName.length() < 51)
 		WP1 = std::string(51 - displayName.length(), ' ');	// Pad with spaces
 	std::stringstream fileEntry;
 	std::string WS2 = "                   ";
-	fileEntry << "<a href=\"" + name + "\">" + displayName + "</a>" + WP1 +
-					 date + WS2 + size + "\n";
+	if (displayName == "../")
+		fileEntry << "<a href=\"" + name + "\">" + displayName + "</a> \n";
+	else
+		fileEntry << "<a href=\"" + name + "\">" + displayName + "</a> " + WP1 +
+						 date + WS2 + size + "\n";
 	return fileEntry.str();
 }
 
@@ -384,14 +386,25 @@ short AResponse::loadDirectoryListing(const std::string& path) {
 					 dirName + "</title>\n</head>\n<body>\n<h1>Index of " +
 					 dirName + "</h1>\n<hr>\n<pre>";
 	struct dirent* entry;
-	std::vector<std::string> entries;
-	while ((entry = readdir(dir)) != NULL)
-		entries.push_back(std::string(entry->d_name));
-	// Sort the vector alphabetically
-	std::sort(entries.begin(), entries.end());
-	entries.erase(entries.begin());	 // Hide "."
-	for (std::vector<std::string>::iterator it = entries.begin();
-		 it != entries.end(); ++it) {
+	std::vector<std::string> directories;
+	std::vector<std::string> files;
+	while ((entry = readdir(dir)) != NULL) {
+		if (isDirectory(assemblePath(path, entry->d_name)))
+			directories.push_back(std::string(entry->d_name));
+		else
+			files.push_back(std::string(entry->d_name));
+	}
+	// Sort the vectors alphabetically
+	std::sort(directories.begin(), directories.end());
+	std::sort(files.begin(), files.end());
+	directories.erase(directories.begin());	 // Hide "."
+	for (std::vector<std::string>::iterator it = directories.begin();
+		 it != directories.end(); ++it) {
+		std::string entryName = *it;
+		_response.body += addFileEntry(entryName, path);
+	}
+	for (std::vector<std::string>::iterator it = files.begin();
+		 it != files.end(); ++it) {
 		std::string entryName = *it;
 		_response.body += addFileEntry(entryName, path);
 	}
