@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/24 14:22:51 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/24 18:47:39 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,6 +143,7 @@ void PostResponse::readContentLength() {
 		ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
 
 		if (bytes_read < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
 			response_status = INTERNAL_SERVER_ERROR;
 			return;	 // Exit the loop on error
 		}
