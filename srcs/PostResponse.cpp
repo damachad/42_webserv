@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/24 14:22:51 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/25 11:36:25 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,6 +143,7 @@ void PostResponse::readContentLength() {
 		ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
 
 		if (bytes_read < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
 			response_status = INTERNAL_SERVER_ERROR;
 			return;	 // Exit the loop on error
 		}
@@ -317,6 +318,15 @@ static bool createDirectory(const std::string &path) {
 		return false;
 }
 
+// Checks if a file with that name exists and returns its size
+static long fileExistsSize(std::string &target) {
+	struct stat fileInfo;
+	
+	if (stat(target.c_str(), &fileInfo) == 0)
+		return fileInfo.st_size;
+	return 0;
+}
+
 short PostResponse::uploadFile() {
 	short status = extractFile();
 	if (status != OK) return status;
@@ -328,7 +338,8 @@ short PostResponse::uploadFile() {
 	if (directory.at(directory.length() - 1) != '/') directory += "/";
 	if (!createDirectory(directory)) return FORBIDDEN;
 	std::string target = directory + _file_to_upload.file_name;
-
+	long existingFileSize = fileExistsSize(target);
+	
 	int file_fd =
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (file_fd == -1) return FORBIDDEN;
@@ -341,8 +352,8 @@ short PostResponse::uploadFile() {
 
 	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
 
-	total_used_storage += _request.message_body.size();
-
+	total_used_storage += fileExistsSize(target) - existingFileSize;
+	
 	return OK;
 }
 
