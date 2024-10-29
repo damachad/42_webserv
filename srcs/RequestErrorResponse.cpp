@@ -13,7 +13,7 @@
 #include "RequestErrorResponse.hpp"
 
 RequestErrorResponse::RequestErrorResponse(const Server& server,
-										   const HTTP_Request& request,
+										   const HttpRequest& request,
 										   short error_status)
 	: AResponse(server, request), _error_status(error_status) {}
 

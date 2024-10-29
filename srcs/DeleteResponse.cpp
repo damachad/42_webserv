@@ -11,10 +11,10 @@
 /* ************************************************************************** */
 
 #include "DeleteResponse.hpp"
+
 #include "AResponse.hpp"
 
-DeleteResponse::DeleteResponse(const Server& server,
-							   const HTTP_Request& request)
+DeleteResponse::DeleteResponse(const Server& server, const HttpRequest& request)
 	: AResponse(server, request) {}
 
 DeleteResponse::DeleteResponse(const DeleteResponse& src) : AResponse(src) {}
@@ -24,18 +24,15 @@ DeleteResponse::~DeleteResponse() {}
 // Attempts to delete file
 short DeleteResponse::deleteFile(const std::string& path) {
 	struct stat fileInfo;
-	if (stat(path.c_str(), &fileInfo) != 0)
-		return NOT_FOUND;
-	if (!(fileInfo.st_mode & S_IWUSR)) // No write permission
+	if (stat(path.c_str(), &fileInfo) != 0) return NOT_FOUND;
+	if (!(fileInfo.st_mode & S_IWUSR))	// No write permission
 		return FORBIDDEN;
 	size_t fileSize = fileInfo.st_size;
 	if (std::remove(path.c_str()) == 0) {
 		total_used_storage -= fileSize;
 		return OK;
-	}
-	else {
-		if (errno == EACCES)
-			return FORBIDDEN;
+	} else {
+		if (errno == EACCES) return FORBIDDEN;
 		return INTERNAL_SERVER_ERROR;
 	}
 }
@@ -43,13 +40,13 @@ short DeleteResponse::deleteFile(const std::string& path) {
 // Checks if a directory is empty
 bool DeleteResponse::isDirectoryEmpty(const std::string& path) {
 	DIR* dir = opendir(path.c_str());
-	if (dir == NULL)
-		return false;
+	if (dir == NULL) return false;
 	struct dirent* entry;
 	int count = 0;
 	while ((entry = readdir(dir)) != NULL) {
 		// Skip the "." and ".." entries
-		if (std::string(entry->d_name) != "." && std::string(entry->d_name) != "..") {
+		if (std::string(entry->d_name) != "." &&
+			std::string(entry->d_name) != "..") {
 			count++;
 			break;
 		}
@@ -85,8 +82,8 @@ std::string DeleteResponse::generateResponse() {
 			status = deleteDirectory(path);
 			if (status != OK) return loadErrorPage(status);
 		} else
-			return loadErrorPage(CONFLICT); // Non-empty directory
+			return loadErrorPage(CONFLICT);	 // Non-empty directory
 	}
-	_response.status = NO_CONTENT; // NGINX status on a successful Delete
+	_response.status = NO_CONTENT;	// NGINX status on a successful Delete
 	return getResponseStr();
 }

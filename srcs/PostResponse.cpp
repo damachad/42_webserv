@@ -22,7 +22,7 @@
 
 static unsigned short response_status = OK;
 
-PostResponse::PostResponse(const Server &server, HTTP_Request &request,
+PostResponse::PostResponse(const Server &server, HttpRequest &request,
 						   int client_fd, int epoll_fd)
 	: AResponse(server, request), _client_fd(client_fd), _epoll_fd(epoll_fd) {}
 
@@ -251,20 +251,22 @@ int PostResponse::skipTrailingCRLF() {
 
 static std::string generateDefaultUploadResponse() {
 	return "<!DOCTYPE html>\n"
-			"<html lang=\"en\">\n"
-			"<head>\n"
-			"\t<meta charset=\"UTF-8\">\n"
-			"\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-			"\t<link rel=\"icon\" href=\"assets/favicon.ico\" type=\"image/x-icon\">\n"
-    		"\t<link rel=\"stylesheet\" href=\"assets/css/style.css\">\n"
-			"\t<title>Upload Successful</title>\n"
-			"</head>\n"
-			"<body>\n"
-			"\t<h1>File Uploaded Successfully!</h1>\n"
-			"\t<p>Your file has been uploaded.</p>\n"
-			"\t<a href=\"index.html\">Back to Index</a>\n"
-			"</body>\n"
-			"</html>\n";
+		   "<html lang=\"en\">\n"
+		   "<head>\n"
+		   "\t<meta charset=\"UTF-8\">\n"
+		   "\t<meta name=\"viewport\" content=\"width=device-width, "
+		   "initial-scale=1.0\">\n"
+		   "\t<link rel=\"icon\" href=\"assets/favicon.ico\" "
+		   "type=\"image/x-icon\">\n"
+		   "\t<link rel=\"stylesheet\" href=\"assets/css/style.css\">\n"
+		   "\t<title>Upload Successful</title>\n"
+		   "</head>\n"
+		   "<body>\n"
+		   "\t<h1>File Uploaded Successfully!</h1>\n"
+		   "\t<p>Your file has been uploaded.</p>\n"
+		   "\t<a href=\"index.html\">Back to Index</a>\n"
+		   "</body>\n"
+		   "</html>\n";
 }
 
 std::string PostResponse::generateResponse() {
@@ -272,16 +274,15 @@ std::string PostResponse::generateResponse() {
 	setMatchLocationRoute();
 
 	if ((status = parseHTTPBody()) != OK) return loadErrorPage(status);
-	
+
 	if ((status = checkClientBodySize()) != OK) return loadErrorPage(status);
 
 	if (!isCGI()) {
-
 		if ((status = checkFormData()) != OK) return loadErrorPage(status);
 
 		status = checkBody();
 		if (status != OK) return loadErrorPage(status);
-		
+
 		status = extractFile();
 		if (status != OK) return loadErrorPage(status);
 
@@ -291,7 +292,7 @@ std::string PostResponse::generateResponse() {
 	} else {
 		// Send to CGI;
 		std::string path = getPath();
-		
+
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
 		if (_response.status != 200) loadErrorPage(_response.status);
@@ -321,9 +322,8 @@ static bool createDirectory(const std::string &path) {
 // Checks if a file with that name exists and returns its size
 static long fileExistsSize(std::string &target) {
 	struct stat fileInfo;
-	
-	if (stat(target.c_str(), &fileInfo) == 0)
-		return fileInfo.st_size;
+
+	if (stat(target.c_str(), &fileInfo) == 0) return fileInfo.st_size;
 	return 0;
 }
 
@@ -331,15 +331,15 @@ short PostResponse::uploadFile() {
 	short status = extractFile();
 	if (status != OK) return status;
 
-	std::string directory = _server.getUpload(_locationRoute);
+	std::string directory = _server.getUpload(_location_route);
 	if (directory.empty())
-		directory = assemblePath(_server.getRoot(_locationRoute),
+		directory = assemblePath(_server.getRoot(_location_route),
 								 "default_upload_directory");
 	if (directory.at(directory.length() - 1) != '/') directory += "/";
 	if (!createDirectory(directory)) return FORBIDDEN;
 	std::string target = directory + _file_to_upload.file_name;
 	long existingFileSize = fileExistsSize(target);
-	
+
 	int file_fd =
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (file_fd == -1) return FORBIDDEN;
@@ -353,7 +353,7 @@ short PostResponse::uploadFile() {
 	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
 
 	total_used_storage += fileExistsSize(target) - existingFileSize;
-	
+
 	return OK;
 }
 
@@ -472,33 +472,28 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 }
 
 short PostResponse::extractFile() {
+	if (_multipart_body.empty()) return 500;
 
-	if (_multipart_body.empty())
-		return 500;
-
-    std::multimap<std::string, std::string>::iterator content_disposition_it = 
+	std::multimap<std::string, std::string>::iterator content_disposition_it =
 		_multipart_body[0].find("Content-Disposition");
-    if (content_disposition_it == _multipart_body[0].end())
-        return 500;
-    std::string content_disposition = content_disposition_it->second;
+	if (content_disposition_it == _multipart_body[0].end()) return 500;
+	std::string content_disposition = content_disposition_it->second;
 
-    _file_to_upload.name = extractFieldValue(content_disposition, "name");
-    _file_to_upload.file_name = 
+	_file_to_upload.name = extractFieldValue(content_disposition, "name");
+	_file_to_upload.file_name =
 		extractFieldValue(content_disposition, "filename");
 
-    std::multimap<std::string, std::string>::iterator content_type_it = 
+	std::multimap<std::string, std::string>::iterator content_type_it =
 		_multipart_body[0].find("Content-Type");
-    if (content_type_it == _multipart_body[0].end())
-        return 500;
-    _file_to_upload.content_type = content_type_it->second;
+	if (content_type_it == _multipart_body[0].end()) return 500;
+	_file_to_upload.content_type = content_type_it->second;
 
-    std::multimap<std::string, std::string>::iterator file_contents_it = 
+	std::multimap<std::string, std::string>::iterator file_contents_it =
 		_multipart_body[0].find("_File Contents");
-    if (file_contents_it == _multipart_body[0].end())
-        return 500;
-    _file_to_upload.file_contents = file_contents_it->second;
+	if (file_contents_it == _multipart_body[0].end()) return 500;
+	_file_to_upload.file_contents = file_contents_it->second;
 
-    return 200;
+	return 200;
 }
 
 // Function to extract the value of a specified key (either "name" or

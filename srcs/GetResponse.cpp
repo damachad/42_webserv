@@ -18,7 +18,7 @@ GetResponse::~GetResponse() {}
 
 GetResponse::GetResponse(const GetResponse &src) : AResponse(src) {}
 
-GetResponse::GetResponse(const Server &server, const HTTP_Request &request)
+GetResponse::GetResponse(const Server &server, const HttpRequest &request)
 	: AResponse(server, request) {}
 
 // Loads response with contents of file and sets MIME type

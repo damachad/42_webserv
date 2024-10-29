@@ -20,7 +20,7 @@ class Server;
 
 class ConfigParser {
    private:
-	std::string _configFile;
+	std::string _config_file;
 	std::vector<Server> _servers;
 
    public:

@@ -33,31 +33,31 @@ struct Listen {
 	}
 
 	// Default Constructor
-	Listen(){};
+	Listen() {};
 
 	// Constructor with IP and Port
 	Listen(const std::string &ip, const std::string &port_number)
-		: IP(ip), port(port_number){};
+		: IP(ip), port(port_number) {};
 };
 
 class Server {
    private:
 	// Server Context Data
 	std::vector<Listen> _network_address;
-	std::vector<std::string> _serverName;
+	std::vector<std::string> _server_name;
 	std::string _root;
 	std::vector<std::string> _index;
-	State _autoIndex;
-	long _clientMaxBodySize;
-	std::set<Method> _allowedMethods;
-	std::map<short, std::string> _errorPages;
+	State _auto_index;
+	long _client_max_body_size;
+	std::set<Method> _allowed_methods;
+	std::map<short, std::string> _error_pages;
 	std::map<std::string, Location> _locations;
 	std::pair<short, std::string> _return;
-	std::string _uploadStore;
-	std::string _cgiExt;
+	std::string _upload_store;
+	std::string _cgi_ext;
 
 	typedef void (Server::*DirectiveHandler)(std::vector<std::string> &);
-	std::map<std::string, DirectiveHandler> _directiveMap;
+	std::map<std::string, DirectiveHandler> _directive_map;
 
 	// Connection data
 	std::vector<int> _listening_sockets;
@@ -113,7 +113,7 @@ class Server {
 	void processLocation(std::string block, size_t start, size_t end);
 
 	// Server setup function
-	void setup_server(void);
+	void setupServer(void);
 };
 
 std::ostream &operator<<(std::ostream &os, const Server &context);

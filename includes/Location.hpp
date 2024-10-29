@@ -21,16 +21,16 @@ class Location {
    private:
 	std::string _root;
 	std::vector<std::string> _index;
-	State _autoIndex;
-	long _clientMaxBodySize;
-	std::set<Method> _allowedMethods;
-	std::map<short, std::string> _errorPages;
+	State _auto_index;
+	long _client_max_body_size;
+	std::set<Method> _allowed_methods;
+	std::map<short, std::string> _error_pages;
 	std::pair<short, std::string> _return;
-	std::string _uploadStore;
-	std::string _cgiExt;
+	std::string _upload_store;
+	std::string _cgi_ext;
 
 	typedef void (Location::*DirectiveHandler)(std::vector<std::string> &);
-	std::map<std::string, DirectiveHandler> _directiveMap;
+	std::map<std::string, DirectiveHandler> _directive_map;
 
    public:
 	Location();

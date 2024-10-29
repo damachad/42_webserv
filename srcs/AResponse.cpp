@@ -129,7 +129,7 @@ static std::map<std::string, std::string> initMimeTypes() {
 
 AResponse::~AResponse() {}
 
-AResponse::AResponse(const Server& server, const HTTP_Request& request)
+AResponse::AResponse(const Server& server, const HttpRequest& request)
 	: _request(request), _server(server) {
 	_response.status = 200;
 }
@@ -138,12 +138,12 @@ AResponse::AResponse(const AResponse& src)
 	: _request(src._request),
 	  _response(src._response),
 	  _server(src._server),
-	  _locationRoute(src._locationRoute) {}
+	  _location_route(src._location_route) {}
 
 // Checks if method is allowed in that location
 short AResponse::checkMethod() const {
 	const std::set<Method> allowedMethods =
-		_server.getAllowedMethods(_locationRoute);
+		_server.getAllowedMethods(_location_route);
 	std::set<Method>::const_iterator it = allowedMethods.find(_request.method);
 	if (it == allowedMethods.end()) return METHOD_NOT_ALLOWED;
 	return OK;
@@ -168,7 +168,7 @@ void AResponse::setMatchLocationRoute() {
 	std::map<std::string, Location>::iterator it;
 	it = serverLocations.find(_request.uri);
 	if (it != serverLocations.end()) {
-		_locationRoute = it->first;
+		_location_route = it->first;
 		return;
 	}
 
@@ -183,12 +183,12 @@ void AResponse::setMatchLocationRoute() {
 			}
 		}
 	}
-	_locationRoute = bestMatchRoute;
+	_location_route = bestMatchRoute;
 }
 
 // Returns path to look for resource in location (root + uri)
 const std::string AResponse::getPath() const {
-	std::string root = _server.getRoot(_locationRoute);
+	std::string root = _server.getRoot(_location_route);
 	return (assemblePath(root, _request.uri));
 }
 
@@ -226,7 +226,7 @@ bool AResponse::isDirectory(const std::string& path) const {
 
 // Checks if the request is calling a CGI script
 bool AResponse::isCGI() const {
-	std::string cgiExt = _server.getCgiExt(_locationRoute);
+	std::string cgiExt = _server.getCgiExt(_location_route);
 	size_t dotPos = _request.uri.find_last_of(".");
 	if (dotPos != std::string::npos && !cgiExt.empty() &&
 		_request.uri.substr(dotPos) == cgiExt)
@@ -236,7 +236,7 @@ bool AResponse::isCGI() const {
 
 // Checks if autoindex is on
 bool AResponse::hasAutoindex() const {
-	if (_server.getAutoIndex(_locationRoute) == TRUE)
+	if (_server.getAutoIndex(_location_route) == TRUE)
 		return true;
 	else
 		return false;
@@ -244,7 +244,7 @@ bool AResponse::hasAutoindex() const {
 
 // Returns an index file if it exists or NULL (empty string)
 const std::string AResponse::getIndexFile(const std::string& path) const {
-	std::vector<std::string> indexFiles = _server.getIndex(_locationRoute);
+	std::vector<std::string> indexFiles = _server.getIndex(_location_route);
 	std::vector<std::string>::const_iterator it;
 	for (it = indexFiles.begin(); it != indexFiles.end(); it++) {
 		std::string filePath = assemblePath(path, *it);
@@ -303,7 +303,7 @@ void AResponse::loadCommonHeaders() {
 
 // Loads reponse struct with values of return
 void AResponse::loadReturn() {
-	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
+	std::pair<short, std::string> redirect = _server.getReturn(_location_route);
 	_response.body = redirect.second;
 	_response.status = redirect.first;
 	loadCommonHeaders();
@@ -317,7 +317,7 @@ void AResponse::loadReturn() {
 
 // Checks if there is a return directive
 bool AResponse::hasReturn() const {
-	std::pair<short, std::string> redirect = _server.getReturn(_locationRoute);
+	std::pair<short, std::string> redirect = _server.getReturn(_location_route);
 	if (redirect.first == -1 || redirect.second.empty()) return false;
 	return true;
 }
@@ -478,12 +478,12 @@ static std::string loadDefaultErrorPage(short status) {
 // returning it
 const std::string AResponse::loadErrorPage(short status) {
 	static std::map<short, std::string> error_pages =
-		_server.getErrorPages(_locationRoute);
+		_server.getErrorPages(_location_route);
 	_response.status = status;
 	std::map<short, std::string>::const_iterator it = error_pages.find(status);
 	if (it != error_pages.end()) {
 		std::string path =
-			assemblePath(_server.getRoot(_locationRoute), it->second);
+			assemblePath(_server.getRoot(_location_route), it->second);
 		if (checkFile(path) == OK) {
 			std::ifstream file(path.c_str());
 			_response.body.assign((std::istreambuf_iterator<char>(file)),

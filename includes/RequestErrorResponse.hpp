@@ -18,14 +18,15 @@
 
 class RequestErrorResponse : public AResponse {
    public:
-	RequestErrorResponse(const Server& server, const HTTP_Request& request, short error_status);
+	RequestErrorResponse(const Server& server, const HttpRequest& request,
+						 short error_status);
 	RequestErrorResponse(const RequestErrorResponse& src);
 	~RequestErrorResponse();
 
 	std::string generateResponse();
 
    private:
-    short _error_status;
+	short _error_status;
 	RequestErrorResponse();
 	RequestErrorResponse& operator=(const RequestErrorResponse& src);
 };

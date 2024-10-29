@@ -17,8 +17,8 @@
 
 static int response_status = OK;
 
-unsigned short HTTP_Request_Parser::parseHTTPHeaders(
-	const std::string& buffer_request, HTTP_Request& HTTP) {
+unsigned short HttpRequestParser::parseHTTPHeaders(
+	const std::string& buffer_request, HttpRequest& HTTP) {
 	response_status = OK;
 	if (buffer_request.empty() ||
 		buffer_request.find_first_not_of(" \r\n\t") == std::string::npos) {
@@ -59,8 +59,8 @@ unsigned short HTTP_Request_Parser::parseHTTPHeaders(
 	return response_status;
 }
 
-bool HTTP_Request_Parser::addRequestLine(HTTP_Request& HTTP,
-										 const std::string& first_line) {
+bool HttpRequestParser::addRequestLine(HttpRequest& HTTP,
+									   const std::string& first_line) {
 	if (std::isspace(first_line[0])) return false;
 
 	std::stringstream line_stream(first_line);
@@ -69,8 +69,7 @@ bool HTTP_Request_Parser::addRequestLine(HTTP_Request& HTTP,
 	line_stream >> method;
 	if (method.size() == 0 || !methodIsValid(method)) {
 		response_status = METHOD_NOT_ALLOWED;
-		if (methodExists(method))
-			response_status = NOT_IMPLEMENTED;
+		if (methodExists(method)) response_status = NOT_IMPLEMENTED;
 		return false;
 	}
 
@@ -104,8 +103,8 @@ bool HTTP_Request_Parser::addRequestLine(HTTP_Request& HTTP,
 	return true;
 }
 
-bool HTTP_Request_Parser::addHeaderFields(HTTP_Request& HTTP,
-										  const std::string& line) {
+bool HttpRequestParser::addHeaderFields(HttpRequest& HTTP,
+										const std::string& line) {
 	size_t colon_pos = line.find(':');
 
 	// Validate the presence of colon
@@ -115,7 +114,7 @@ bool HTTP_Request_Parser::addHeaderFields(HTTP_Request& HTTP,
 	}
 
 	// Extract key and value
-	std::string key = line.substr(0, colon_pos);	
+	std::string key = line.substr(0, colon_pos);
 	std::string comma_separated_values = line.substr(colon_pos + 1);
 
 	// Trim whitespace from key and value
@@ -135,10 +134,10 @@ bool HTTP_Request_Parser::addHeaderFields(HTTP_Request& HTTP,
 	// Add comma_separated_values into a set
 	std::stringstream ss(comma_separated_values);
 	std::string value;
-	
+
 	if (key == "date" || key == "if-modified-since" || key == "last-modified") {
 		HTTP.header_fields.insert(
-				std::pair<std::string, std::string>(key, comma_separated_values));
+			std::pair<std::string, std::string>(key, comma_separated_values));
 		return true;
 	}
 	while (std::getline(ss, value, ',')) {
@@ -154,8 +153,8 @@ bool HTTP_Request_Parser::addHeaderFields(HTTP_Request& HTTP,
 }
 
 // Fields without validation
-void HTTP_Request_Parser::addMessageBody(HTTP_Request& HTTP,
-										 const std::string& line) {
+void HttpRequestParser::addMessageBody(HttpRequest& HTTP,
+									   const std::string& line) {
 	if (!line.empty()) {
 		HTTP.message_body += line;
 		HTTP.message_body += "\r\n";
@@ -163,7 +162,7 @@ void HTTP_Request_Parser::addMessageBody(HTTP_Request& HTTP,
 }
 
 // Checks validity of HTTP header fields
-bool HTTP_Request_Parser::checkValidityOfHeaderFields(HTTP_Request& HTTP) {
+bool HttpRequestParser::checkValidityOfHeaderFields(HttpRequest& HTTP) {
 	// NOTE: User-Agent is not a strictly mandatory field, but helps for
 	// evaluation
 	if (HTTP.header_fields.count("user-agent") != 1) {
@@ -225,7 +224,7 @@ bool HTTP_Request_Parser::checkValidityOfHeaderFields(HTTP_Request& HTTP) {
 	return true;
 }
 
-void HTTP_Request_Parser::extractQueries(HTTP_Request& HTTP) {
+void HttpRequestParser::extractQueries(HttpRequest& HTTP) {
 	size_t delimiter_pos = HTTP.uri.find('?');
 
 	if (delimiter_pos == std::string::npos) return;	 // Returns if no ? found
@@ -257,7 +256,7 @@ void HTTP_Request_Parser::extractQueries(HTTP_Request& HTTP) {
 	return;
 }
 
-std::string HTTP_Request_Parser::trim(const std::string& str) {
+std::string HttpRequestParser::trim(const std::string& str) {
 	size_t start = str.find_first_not_of(" \n\r\t");
 	if (start == std::string::npos) return "";
 
@@ -266,7 +265,7 @@ std::string HTTP_Request_Parser::trim(const std::string& str) {
 }
 
 // Function to trim null characters ('\0') from a string
-void HTTP_Request_Parser::trimNulls(std::string& s) {
+void HttpRequestParser::trimNulls(std::string& s) {
 	size_t pos = s.find_last_not_of('\0');
 
 	if (pos == std::string::npos) {
@@ -276,7 +275,7 @@ void HTTP_Request_Parser::trimNulls(std::string& s) {
 	}
 }
 
-std::string HTTP_Request_Parser::decode(const std::string& encoded) {
+std::string HttpRequestParser::decode(const std::string& encoded) {
 	std::ostringstream decoded;
 	for (size_t i = 0; i < encoded.length(); ++i) {
 		if (encoded[i] == '%' && i + 2 < encoded.length() &&
@@ -293,18 +292,19 @@ std::string HTTP_Request_Parser::decode(const std::string& encoded) {
 	return decoded.str();
 }
 
-bool HTTP_Request_Parser::methodIsValid(const std::string& method) {
+bool HttpRequestParser::methodIsValid(const std::string& method) {
 	if (method == "GET" || method == "POST" || method == "DELETE") return true;
 	return false;
 }
 
-bool HTTP_Request_Parser::methodExists(const std::string& method) {
-	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "PATCH") 
+bool HttpRequestParser::methodExists(const std::string& method) {
+	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" ||
+		method == "PATCH")
 		return true;
 	return false;
 }
 
-bool HTTP_Request_Parser::urlIsValid(const std::string& url) {
+bool HttpRequestParser::urlIsValid(const std::string& url) {
 	// Target should always start with a /
 	if (url[0] != '/') return false;
 
@@ -321,11 +321,10 @@ bool HTTP_Request_Parser::urlIsValid(const std::string& url) {
 		 std::count(url.begin(), url.end(), '&') + 1))
 		return false;
 
-
 	return true;
 }
 
-bool HTTP_Request_Parser::protocolVersionIsValid(
+bool HttpRequestParser::protocolVersionIsValid(
 	const std::string& protocol_version) {
 	if (protocol_version == "HTTP/1.1" || protocol_version == "HTTP/1.0" ||
 		protocol_version == "HTTP/0.9")
@@ -333,7 +332,7 @@ bool HTTP_Request_Parser::protocolVersionIsValid(
 	return false;
 }
 
-std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {
+std::ostream& operator<<(std::ostream& outstream, const HttpRequest& request) {
 	outstream << "HTTP Request: \n"
 			  << "Method: " << methodToString(request.method) << "\n"
 			  << "URI: " << request.uri << "\n"

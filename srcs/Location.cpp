@@ -12,7 +12,7 @@
 
 #include "Location.hpp"
 
-Location::Location() : _autoIndex(UNSET), _clientMaxBodySize(-1) {
+Location::Location() : _auto_index(UNSET), _client_max_body_size(-1) {
 	initializeDirectiveMap();
 	_return = std::make_pair(-1, "");
 }
@@ -20,24 +20,24 @@ Location::Location() : _autoIndex(UNSET), _clientMaxBodySize(-1) {
 Location::Location(const Location &src)
 	: _root(src.getRoot()),
 	  _index(src.getIndex()),
-	  _autoIndex(src.getAutoIndex()),
-	  _clientMaxBodySize(src.getClientMaxBodySize()),
-	  _allowedMethods(src.getAllowedMethods()),
-	  _errorPages(src.getErrorPages()),
+	  _auto_index(src.getAutoIndex()),
+	  _client_max_body_size(src.getClientMaxBodySize()),
+	  _allowed_methods(src.getAllowedMethods()),
+	  _error_pages(src.getErrorPages()),
 	  _return(src.getReturn()),
-	  _uploadStore(src.getUpload()),
-	  _cgiExt(src.getCgiExt()) {}
+	  _upload_store(src.getUpload()),
+	  _cgi_ext(src.getCgiExt()) {}
 
 Location &Location::operator=(const Location &src) {
 	_root = src.getRoot();
 	_index = src.getIndex();
-	_autoIndex = src.getAutoIndex();
-	_clientMaxBodySize = src.getClientMaxBodySize();
-	_allowedMethods = src.getAllowedMethods();
-	_errorPages = src.getErrorPages();
+	_auto_index = src.getAutoIndex();
+	_client_max_body_size = src.getClientMaxBodySize();
+	_allowed_methods = src.getAllowedMethods();
+	_error_pages = src.getErrorPages();
 	_return = src.getReturn();
-	_uploadStore = src.getUpload();
-	_cgiExt = src.getCgiExt();
+	_upload_store = src.getUpload();
+	_cgi_ext = src.getCgiExt();
 	return (*this);
 }
 
@@ -45,15 +45,15 @@ Location::~Location() {}
 
 // Function to initialize the map
 void Location::initializeDirectiveMap(void) {
-	_directiveMap["root"] = &Location::handleRoot;
-	_directiveMap["index"] = &Location::handleIndex;
-	_directiveMap["limit_except"] = &Location::handleLimitExcept;
-	_directiveMap["error_page"] = &Location::handleErrorPage;
-	_directiveMap["client_max_body_size"] = &Location::handleCliMaxSize;
-	_directiveMap["autoindex"] = &Location::handleAutoIndex;
-	_directiveMap["return"] = &Location::handleReturn;
-	_directiveMap["upload_store"] = &Location::handleUpload;
-	_directiveMap["cgi_ext"] = &Location::handleCgiExt;
+	_directive_map["root"] = &Location::handleRoot;
+	_directive_map["index"] = &Location::handleIndex;
+	_directive_map["limit_except"] = &Location::handleLimitExcept;
+	_directive_map["error_page"] = &Location::handleErrorPage;
+	_directive_map["client_max_body_size"] = &Location::handleCliMaxSize;
+	_directive_map["autoindex"] = &Location::handleAutoIndex;
+	_directive_map["return"] = &Location::handleReturn;
+	_directive_map["upload_store"] = &Location::handleUpload;
+	_directive_map["cgi_ext"] = &Location::handleCgiExt;
 }
 
 // Handlers
@@ -82,7 +82,7 @@ void Location::handleLimitExcept(std::vector<std::string> &tokens) {
 		else
 			throw ConfigError("Unsupported method detected.");
 	}
-	_allowedMethods = methods;
+	_allowed_methods = methods;
 }
 
 void Location::handleErrorPage(std::vector<std::string> &tokens) {
@@ -96,7 +96,7 @@ void Location::handleErrorPage(std::vector<std::string> &tokens) {
 		if (*end != '\0' || statusCodeLong < 300 || statusCodeLong > 599 ||
 			statusCodeLong != static_cast<short>(statusCodeLong))
 			throw ConfigError("Invalid status code in error_page directive.");
-		_errorPages[static_cast<short>(statusCodeLong)] = page;
+		_error_pages[static_cast<short>(statusCodeLong)] = page;
 	}
 }
 
@@ -113,7 +113,7 @@ void Location::handleCliMaxSize(std::vector<std::string> &tokens) {
 	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
 	if (*endPtr != '\0')
 		throw ConfigError("Invalid value for client_max_body_size.");
-	_clientMaxBodySize = size;
+	_client_max_body_size = size;
 	if (!std::isdigit(unit)) {
 		// check for overflow during multiplication
 		const long maxLimit = LONG_MAX;
@@ -122,19 +122,19 @@ void Location::handleCliMaxSize(std::vector<std::string> &tokens) {
 			case 'K':
 				if (size > maxLimit / 1024)
 					throw ConfigError("client_max_body_size value overflow.");
-				_clientMaxBodySize = size * 1024;
+				_client_max_body_size = size * 1024;
 				break;
 			case 'm':
 			case 'M':
 				if (size > maxLimit / 1048576)
 					throw ConfigError("client_max_body_size value overflow.");
-				_clientMaxBodySize = size * 1048576;
+				_client_max_body_size = size * 1048576;
 				break;
 			case 'g':
 			case 'G':
 				if (size > maxLimit / 1073741824)
 					throw ConfigError("client_max_body_size value overflow.");
-				_clientMaxBodySize = size * 1073741824;
+				_client_max_body_size = size * 1073741824;
 				break;
 			default:
 				throw ConfigError("Invalid unit for client_max_body_size.");
@@ -144,9 +144,9 @@ void Location::handleCliMaxSize(std::vector<std::string> &tokens) {
 
 void Location::handleAutoIndex(std::vector<std::string> &tokens) {
 	if (tokens[1] == "on")
-		_autoIndex = TRUE;
+		_auto_index = TRUE;
 	else if (tokens[1] == "off")
-		_autoIndex = FALSE;
+		_auto_index = FALSE;
 	else
 		throw ConfigError("Invalid value in autoindex directive.");
 }
@@ -168,13 +168,13 @@ void Location::handleUpload(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
 		throw ConfigError(
 			"Invalid number of arguments in upload_store directive.");
-	_uploadStore = tokens[1];
+	_upload_store = tokens[1];
 }
 
 void Location::handleCgiExt(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in cgi_ext directive.");
-	_cgiExt = tokens[1];
+	_cgi_ext = tokens[1];
 }
 
 void Location::processDirective(std::string &line) {
@@ -184,8 +184,8 @@ void Location::processDirective(std::string &line) {
 		throw ConfigError("Invalid number of arguments in \"" + tokens[0] +
 						  "\" directive.");
 	std::map<std::string, DirectiveHandler>::const_iterator it;
-	it = _directiveMap.find(tokens[0]);
-	if (it != _directiveMap.end())
+	it = _directive_map.find(tokens[0]);
+	if (it != _directive_map.end())
 		(this->*(it->second))(tokens);
 	else
 		throw ConfigError("Unkown directive \"" + tokens[0] + "\"");
@@ -196,21 +196,23 @@ std::string Location::getRoot() const { return _root; }
 
 std::vector<std::string> Location::getIndex() const { return _index; }
 
-State Location::getAutoIndex() const { return _autoIndex; }
+State Location::getAutoIndex() const { return _auto_index; }
 
-long Location::getClientMaxBodySize() const { return _clientMaxBodySize; }
+long Location::getClientMaxBodySize() const { return _client_max_body_size; }
 
-std::set<Method> Location::getAllowedMethods() const { return _allowedMethods; }
+std::set<Method> Location::getAllowedMethods() const {
+	return _allowed_methods;
+}
 
 std::map<short, std::string> Location::getErrorPages() const {
-	return _errorPages;
+	return _error_pages;
 }
 
 std::pair<short, std::string> Location::getReturn() const { return _return; }
 
-std::string Location::getUpload() const { return _uploadStore; }
+std::string Location::getUpload() const { return _upload_store; }
 
-std::string Location::getCgiExt() const { return _cgiExt; }
+std::string Location::getCgiExt() const { return _cgi_ext; }
 
 std::ostream &operator<<(std::ostream &os, const Location &context) {
 	os << "  Root: " << context.getRoot() << "\n";

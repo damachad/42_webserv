@@ -11,19 +11,20 @@
 /* ************************************************************************** */
 
 #include "ConfigParser.hpp"
+
 #include "Exceptions.hpp"
 
 ConfigParser::ConfigParser(void) {}
 
 ConfigParser::ConfigParser(const ConfigParser &src) { *this = src; }
 
-ConfigParser::ConfigParser(const std::string &file) : _configFile(file) {}
+ConfigParser::ConfigParser(const std::string &file) : _config_file(file) {}
 
 ConfigParser::~ConfigParser(void) {}
 
 ConfigParser &ConfigParser::operator=(const ConfigParser &src) {
 	if (this != &src) {
-		this->_configFile = src._configFile;
+		this->_config_file = src._config_file;
 		this->_servers = src._servers;
 	}
 	return (*this);
@@ -38,7 +39,7 @@ void ConfigParser::trimOuterSpaces(std::string &s) {
 	while (std::isspace(s[s.length() - 1])) s.erase(s.end() - 1);
 }
 
-// Removes comments 
+// Removes comments
 void ConfigParser::trimComments(std::string &s) {
 	if (s.empty()) return;
 	size_t comment = s.find('#');
@@ -115,8 +116,7 @@ static bool areListenEqual(const Listen &a, const Listen &b) {
 static bool hasDuplicates(const std::vector<Listen> &vec) {
 	for (size_t i = 0; i < vec.size(); ++i) {
 		for (size_t j = i + 1; j < vec.size(); ++j) {
-			if (areListenEqual(vec[i], vec[j]))
-				return true;
+			if (areListenEqual(vec[i], vec[j])) return true;
 		}
 	}
 	return false;
@@ -149,8 +149,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 		}
 		if (hasDuplicates(server.getNetworkAddress()))
 			throw ConfigError("Duplicate network addresses found.");
-		if (server.getRoot()
-				.empty())
+		if (server.getRoot().empty())
 			throw ConfigError("No root directive present in server.");
 		_servers.push_back(server);
 	}
@@ -165,9 +164,9 @@ static bool hasQuotes(std::string text) {
 
 // Loads information from configuration file into classes Server and Location
 void ConfigParser::loadConfigs() {
-	std::ifstream file(_configFile.c_str());
+	std::ifstream file(_config_file.c_str());
 	if (!file.is_open())
-		throw ConfigError("Unable to read from: " + _configFile);
+		throw ConfigError("Unable to read from: " + _config_file);
 	std::string fileContents;
 	// Read file contents into the string
 	fileContents.assign((std::istreambuf_iterator<char>(file)),
@@ -234,6 +233,8 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 		_servers[serverNum].getReturn(route);
 	if (returns.first) std::cout << returns.first << " : " << returns.second;
 	std::cout << std::endl;
-	std::cout << "Upload Store: " << _servers[serverNum].getUpload(route) << '\n';
-	std::cout << "CGI Extension: " << _servers[serverNum].getCgiExt(route) << '\n';
+	std::cout << "Upload Store: " << _servers[serverNum].getUpload(route)
+			  << '\n';
+	std::cout << "CGI Extension: " << _servers[serverNum].getCgiExt(route)
+			  << '\n';
 }

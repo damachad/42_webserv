@@ -31,7 +31,7 @@ struct HTTP_Response {
 
 class AResponse {
    public:
-	AResponse(const Server& server, const HTTP_Request& request);
+	AResponse(const Server& server, const HttpRequest& request);
 	AResponse(const AResponse& src);
 	const AResponse& operator=(const AResponse& src);
 	virtual ~AResponse();
@@ -40,10 +40,10 @@ class AResponse {
 	virtual std::string generateResponse() = 0;
 
    protected:
-	HTTP_Request _request;
+	HttpRequest _request;
 	HTTP_Response _response;
 	const Server& _server;
-	std::string _locationRoute;
+	std::string _location_route;
 
 	// Validators
 	short checkClientBodySize() const;

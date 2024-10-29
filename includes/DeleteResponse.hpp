@@ -18,7 +18,7 @@
 
 class DeleteResponse : public AResponse {
    public:
-	DeleteResponse(const Server& server, const HTTP_Request& request);
+	DeleteResponse(const Server& server, const HttpRequest& request);
 	DeleteResponse(const DeleteResponse& src);
 	~DeleteResponse();
 

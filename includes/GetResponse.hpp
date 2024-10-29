@@ -16,18 +16,17 @@
 #include "AResponse.hpp"
 
 class GetResponse : public AResponse {
-public:
-  GetResponse(const Server &server, const HTTP_Request &request);
-  GetResponse(const GetResponse &src);
-  ~GetResponse();
-
+   public:
+	GetResponse(const Server &server, const HttpRequest &request);
+	GetResponse(const GetResponse &src);
+	~GetResponse();
 
 	std::string generateResponse();
-	short loadFile(std::string& path);
+	short loadFile(std::string &path);
 
-private:
-  GetResponse();
-  GetResponse &operator=(const GetResponse &src);
+   private:
+	GetResponse();
+	GetResponse &operator=(const GetResponse &src);
 };
 
 #endif

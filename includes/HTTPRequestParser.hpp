@@ -17,7 +17,7 @@
 #include "Helpers.hpp"
 #include "Webserv.hpp"
 
-struct HTTP_Request {
+struct HttpRequest {
 	// Request Line
 	enum Method method;
 	std::string uri;
@@ -36,24 +36,24 @@ struct HTTP_Request {
 	std::string message_body;
 
 	// NOTE: Default constructor to initialize the members
-	HTTP_Request() : method(UNKNOWN) {};
+	HttpRequest() : method(UNKNOWN) {};
 };
 
-class HTTP_Request_Parser {
+class HttpRequestParser {
    public:
 	// Main function, parses request
 	static unsigned short parseHTTPHeaders(const std::string& buffer_request,
-										   HTTP_Request& HTTP);
+										   HttpRequest& HTTP);
 
    private:
-	// Gets data HTTP_Request structure
-	static bool addRequestLine(HTTP_Request& HTTP,
+	// Gets data HttpRequest structure
+	static bool addRequestLine(HttpRequest& HTTP,
 							   const std::string& first_line);
-	static bool addHeaderFields(HTTP_Request& HTTP, const std::string& line);
-	static void addMessageBody(HTTP_Request& HTTP, const std::string& line);
-	static bool checkValidityOfHeaderFields(HTTP_Request& HTTP);
-	static unsigned short check_expect_validity(HTTP_Request& HTTP);
-	static void extractQueries(HTTP_Request& HTTP);
+	static bool addHeaderFields(HttpRequest& HTTP, const std::string& line);
+	static void addMessageBody(HttpRequest& HTTP, const std::string& line);
+	static bool checkValidityOfHeaderFields(HttpRequest& HTTP);
+	static unsigned short check_expect_validity(HttpRequest& HTTP);
+	static void extractQueries(HttpRequest& HTTP);
 
 	// Auxiliary functions for above functions
 	static std::string trim(const std::string& str);
@@ -63,15 +63,15 @@ class HTTP_Request_Parser {
 	static bool urlIsValid(const std::string& url);
 	static bool methodExists(const std::string& method);
 	static bool protocolVersionIsValid(const ::std::string& protocol_version);
-	static bool send100Continue(int client_fd, const HTTP_Request& HTTP);
-	static bool readBody(int client_fd, int epoll_fd, HTTP_Request& HTTP);
+	static bool send100Continue(int client_fd, const HttpRequest& HTTP);
+	static bool readBody(int client_fd, int epoll_fd, HttpRequest& HTTP);
 
 	// Private constructor and destructor: class is not instanciable
-	HTTP_Request_Parser();
-	~HTTP_Request_Parser();
+	HttpRequestParser();
+	~HttpRequestParser();
 };
 
-std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request);
+std::ostream& operator<<(std::ostream& outstream, const HttpRequest& request);
 
 #endif
 

@@ -26,7 +26,7 @@ struct file {
 
 class PostResponse : public AResponse {
    public:
-	PostResponse(const Server& server, HTTP_Request& request, int client_fd,
+	PostResponse(const Server& server, HttpRequest& request, int client_fd,
 				 int epoll_fd);
 	PostResponse(const PostResponse& src);
 	~PostResponse();

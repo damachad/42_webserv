@@ -2,7 +2,7 @@
 
 #include "AResponse.hpp"
 
-CGI::CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
+CGI::CGI(HttpRequest &httpRequest, HTTP_Response &httpResponse,
 		 const std::string &path)
 	: _request(httpRequest),
 	  _response(httpResponse),

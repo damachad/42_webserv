@@ -18,7 +18,7 @@
 #define BUFFER_SIZE 8096
 
 class Server;
-struct HTTP_Request;
+struct HttpRequest;
 
 struct VirtualServer {
 	std::string IP;
@@ -93,15 +93,15 @@ class Cluster {
 	static void closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd);
 
 	//// Gets response from server
-	const std::string getResponse(HTTP_Request& request,
+	const std::string getResponse(HttpRequest& request,
 								  unsigned short& error_status, int client_fd);
 	// Gets correct context from client_fd
-	const Server* getContext(int client_fd, const HTTP_Request& request);
+	const Server* getContext(int client_fd, const HttpRequest& request);
 
 	// Gets address from client_fd
 	const Listen getListenFromClient(int client_fd);
 
-	const std::string getHostNameFromRequest(const HTTP_Request& request);
+	const std::string getHostNameFromRequest(const HttpRequest& request);
 
 	// Vector of available servers
 	std::vector<const Server*> _servers;

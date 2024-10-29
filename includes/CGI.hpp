@@ -18,7 +18,7 @@
 
 class CGI {
 private:
-  const HTTP_Request &_request;
+  const HttpRequest &_request;
   HTTP_Response &_response;
   const std::string &_path;
   char **_cgiEnv;
@@ -50,7 +50,7 @@ private:
   std::string getServerPort();
 
 public:
-  CGI(HTTP_Request &httpRequest, HTTP_Response &httpResponse,
+  CGI(HttpRequest &httpRequest, HTTP_Response &httpResponse,
       const std::string &path);
   ~CGI();
 
