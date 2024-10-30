@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cluster.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:25 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 09:57:07 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/10/30 12:16:03 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,9 @@ class Cluster {
 	// _epoll_fd for epoll()
 	int _epoll_fd;
 
+	// Request buffers
+	std::map<int, std::string> _request_buffer;
+	
 	// Constructors not to be used
 	Cluster();
 	Cluster(const Cluster& copy);

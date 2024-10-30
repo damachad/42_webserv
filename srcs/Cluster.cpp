@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/22 10:07:35 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/30 12:20:00 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,34 +281,53 @@ void Cluster::handleNewConnection(int listening_fd) {
 
 // Handles a client request
 void Cluster::handleClientRequest(int connection_fd) {
-	char buffer_request[BUFFER_SIZE] = {};
-	std::string request;
+	char buffer_request[1] = {};
 
-	while (request.find("\r\n\r\n") ==
-		   std::string::npos) {	 // NOTE: While all the headers haven't been
-								 // received
-		memset(buffer_request, 0, sizeof(buffer_request));
+	// while (request.find("\r\n\r\n") ==
+	// 	   std::string::npos) {	 // NOTE: While all the headers haven't been
+	// 							 // received
+	// 	memset(buffer_request, 0, sizeof(buffer_request));
 
-		ssize_t bytesRead =
-			recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
+	// 	ssize_t bytesRead =
+	// 		recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
 
-		if (bytesRead < 0) {
+	// 	if (bytesRead < 0) {
 
-			if (errno == EAGAIN || errno == EWOULDBLOCK) return;
+	// 		if (errno == EAGAIN || errno == EWOULDBLOCK) return;
 
-			if (errno != EAGAIN) {
-				closeAndRemoveSocket(connection_fd, _epoll_fd);
-				throw ClusterRunError("read failed");
-			}
-		} else if (bytesRead == 0) {
-			// Connection closed
-			closeAndRemoveSocket(connection_fd, _epoll_fd);
-			return;
-		} else
-			// Bytes have been read. Append them to request.
-			request.append(buffer_request, bytesRead);
+	// 		if (errno != EAGAIN) {
+	// 			closeAndRemoveSocket(connection_fd, _epoll_fd);
+	// 			throw ClusterRunError("read failed");
+	// 		}
+	// 	} else if (bytesRead == 0) {
+	// 		// Connection closed
+	// 		closeAndRemoveSocket(connection_fd, _epoll_fd);
+	// 		return;
+	// 	} else
+	// 		// Bytes have been read. Append them to request.
+	// 		request.append(buffer_request, bytesRead);
+	// }
+	ssize_t bytesRead = recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
+
+	if (bytesRead < 0) {
+		//closeAndRemoveSocket(connection_fd, _epoll_fd);
+		//throw ClusterRunError("read failed");
+		return ;
 	}
-	processRequest(connection_fd, request);
+	else if (bytesRead == 0) {
+		// Connection closed
+		closeAndRemoveSocket(connection_fd, _epoll_fd);
+		return;
+	}
+	_request_buffer[connection_fd].append(buffer_request);
+	if (_request_buffer[connection_fd].find("\r\n\r\n") != std::string::npos)
+	{
+		//closeAndRemoveSocket(connection_fd, _epoll_fd);
+		//throw ClusterRunError("invalid request");
+		processRequest(connection_fd, _request_buffer[connection_fd]);
+		_request_buffer.erase(connection_fd);
+
+	}
 }
 
 // Handles a client request
