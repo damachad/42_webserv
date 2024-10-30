@@ -28,7 +28,6 @@ private:
 
   // Env getters
   std::string getQueryFields();
-  std::string getEnvVar(const char *key);
   std::string fetchCookies();
 
   // Env setter
@@ -39,9 +38,9 @@ private:
   // Parsers
   std::multimap<std::string, std::string>
   parseCGIHeaders(const std::string &headers);
-  std::multimap<std::string, std::string> parseRequestHeaders();
 
   // Output related
+  void runScript(int *pipeIn, int *pipeOut, const std::string &scriptPath);
   std::string createCgiOutput(pid_t pid, int *pipeOut);
 
   // Utils

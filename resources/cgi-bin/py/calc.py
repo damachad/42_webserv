@@ -27,7 +27,7 @@ def generate_html(result=None, error=None):
             <input type="submit" value="Calculate">
         </form>
         <br>
-    	<a href="index.html">Back to Index</a>
+    	<a href="../../index.html">Back to Index</a>
     """
     
     if error:
