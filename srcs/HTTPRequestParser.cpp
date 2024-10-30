@@ -333,6 +333,8 @@ bool HTTP_Request_Parser::protocolVersionIsValid(
 	return false;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+
 std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {
 	outstream << "HTTP Request: \n"
 			  << "Method: " << methodToString(request.method) << "\n"

@@ -131,31 +131,24 @@ void PostResponse::readContentLength() {
 		return;
 	}
 
-	ssize_t bytes_to_read = content_length - _request.message_body.size() - 1;
-	ssize_t total_bytes_read = 0;
+	std::string buffer(content_length, '\0'); 
 
-	while (total_bytes_read < bytes_to_read) {
-		char read_buffer[8096] = {};
+	ssize_t bytes_read = recv(_client_fd, &buffer[0], buffer.size(), 0);
 
-		ssize_t buffer_size = std::min(bytes_to_read - total_bytes_read,
-									   (ssize_t)sizeof(read_buffer));
+	if (bytes_read < 0) {
+		response_status = INTERNAL_SERVER_ERROR;
+		return;	 // Exit the loop on error
+	}
 
-		ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
+	if (bytes_read == 0)
+		return;	// Exit the loop if the connection is closed
+	
+	_file_buffer[_client_fd].append(buffer, 0, bytes_read);
 
-		if (bytes_read < 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
-			response_status = INTERNAL_SERVER_ERROR;
-			return;	 // Exit the loop on error
-		}
-
-		if (bytes_read == 0) {
-			// Client closed the connection
-			break;	// Exit the loop if the connection is closed
-		}
-
-		_request.message_body.append(read_buffer, bytes_read);
-
-		total_bytes_read += bytes_read;
+	if (_file_buffer[_client_fd].size() >= content_length)
+	{
+		_request.message_body.append(_file_buffer[_client_fd]);
+		_file_buffer.erase(_client_fd);
 	}
 }
 

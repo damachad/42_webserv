@@ -60,6 +60,7 @@ class PostResponse : public AResponse {
 								  const std::string& field);
 
 	std::vector<std::multimap<std::string, std::string> > _multipart_body;
+	std::map<int, std::string> _file_buffer;
 	std::string _boundary;
 	struct file _file_to_upload;
 

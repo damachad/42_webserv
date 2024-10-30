@@ -86,9 +86,10 @@ class Cluster {
 	static void setSocketToNonBlocking(int socket_fd);
 	//// Handles a client request
 	void handleClientRequest(int connection_fd);
+	//// Check if request is complete
+	bool isRequestComplete(const std::string& request);
 	//// Processes the request
-	void processRequest(int connection_fd, const std::string& buffer_request);
-
+	void processRequest(const std::string& buffer_request, int client_fd);
 	//// Closes socket and removes it from epoll
 	static void closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd);
 
@@ -117,6 +118,11 @@ class Cluster {
 
 	// Request buffers
 	std::map<int, std::string> _request_buffer;
+
+	// HTTP Request structs
+	//std::map<int, HTTP_Request> _requests;
+	//std::map<int, bool> _headerParseFlag;
+	//std::map <int, unsigned short> _error_status;
 	
 	// Constructors not to be used
 	Cluster();
