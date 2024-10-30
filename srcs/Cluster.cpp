@@ -243,10 +243,14 @@ void Cluster::run(void) {
 
 			for (int i = 0; i < n; ++i) {
 				int fd = events[i].data.fd;
-
+				if (events[i].events & EPOLLERR)
+				{
+					closeAndRemoveSocket(fd, _epoll_fd);
+					continue;
+				}
 				if (isListeningSocket(fd))
 					handleNewConnection(fd);
-				else
+				else if (events[i].events & EPOLLIN)
 					handleClientRequest(fd);
 			}
 		} catch (const std::exception& e) {
@@ -281,7 +285,7 @@ void Cluster::handleNewConnection(int listening_fd) {
 
 // Handles a client request
 void Cluster::handleClientRequest(int connection_fd) {
-	char buffer_request[1] = {};
+	char buffer_request[10] = {};
 
 	// while (request.find("\r\n\r\n") ==
 	// 	   std::string::npos) {	 // NOTE: While all the headers haven't been
@@ -319,7 +323,7 @@ void Cluster::handleClientRequest(int connection_fd) {
 		closeAndRemoveSocket(connection_fd, _epoll_fd);
 		return;
 	}
-	_request_buffer[connection_fd].append(buffer_request);
+	_request_buffer[connection_fd].append(buffer_request, bytesRead);
 	if (_request_buffer[connection_fd].find("\r\n\r\n") != std::string::npos)
 	{
 		//closeAndRemoveSocket(connection_fd, _epoll_fd);
@@ -327,6 +331,16 @@ void Cluster::handleClientRequest(int connection_fd) {
 		processRequest(connection_fd, _request_buffer[connection_fd]);
 		_request_buffer.erase(connection_fd);
 
+	}
+	else {
+        // If we haven't received a complete request, we should rearm the socket
+        struct epoll_event ev;
+        ev.events = EPOLLIN | EPOLLERR | EPOLLHUP;
+        ev.data.fd = connection_fd;
+
+        // Re-enable monitoring on this socket
+        if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, connection_fd, &ev) == -1)
+            closeAndRemoveSocket(connection_fd, _epoll_fd);
 	}
 }
 
