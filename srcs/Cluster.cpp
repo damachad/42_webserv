@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/30 12:20:00 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/31 11:02:35 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,7 +285,7 @@ void Cluster::handleNewConnection(int listening_fd) {
 
 // Handles a client request
 void Cluster::handleClientRequest(int connection_fd) {
-	char buffer_request[50] = {};
+	char buffer_request[BUFFER_SIZE] = {};
 
 	ssize_t bytesRead = recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
 
