@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/30 20:54:37 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/31 11:29:49 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -340,9 +340,15 @@ short PostResponse::uploadFile() {
 
 	size_t bytes_to_write = _file_to_upload.file_contents.size();
 
-	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
-		-1)
+	if (total_used_storage + bytes_to_write > MAX_STORAGE_SIZE) {
+		close(file_fd);
+		return INTERNAL_SERVER_ERROR;
+	}
+
+	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) == -1) {
+		close(file_fd);
 		return FORBIDDEN;
+	}
 
 	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
 
