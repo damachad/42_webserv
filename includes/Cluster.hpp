@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cluster.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mde-sa-- <mde-sa--@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:25 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/14 09:57:07 by mde-sa--         ###   ########.fr       */
+/*   Updated: 2024/10/30 12:16:03 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,9 +86,10 @@ class Cluster {
 	static void setSocketToNonBlocking(int socket_fd);
 	//// Handles a client request
 	void handleClientRequest(int connection_fd);
+	//// Check if request is complete
+	bool isRequestComplete(const std::string& request);
 	//// Processes the request
-	void processRequest(int connection_fd, const std::string& buffer_request);
-
+	void processRequest(const std::string& buffer_request, int client_fd);
 	//// Closes socket and removes it from epoll
 	static void closeAndRemoveSocket(int connecting_socket_fd, int epoll_fd);
 
@@ -115,6 +116,14 @@ class Cluster {
 	// _epoll_fd for epoll()
 	int _epoll_fd;
 
+	// Request buffers
+	std::map<int, std::string> _request_buffer;
+
+	// HTTP Request structs
+	//std::map<int, HTTP_Request> _requests;
+	//std::map<int, bool> _headerParseFlag;
+	//std::map <int, unsigned short> _error_status;
+	
 	// Constructors not to be used
 	Cluster();
 	Cluster(const Cluster& copy);

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/25 11:36:25 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/31 13:29:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,19 +36,10 @@ unsigned short PostResponse::parseHTTPBody() {
 	if (requestHasHeader("expect")) {
 		if (!send100Continue()) return response_status;
 	}
-
-	// If there's content-length, read it
-	if (requestHasHeader("content-length")) readContentLength();
-
-	// If it's chunked, get all the chunk
-	// NOTE: In our server, chunked is only useful for CGI!?
-	else if (requestHasHeader("transfer-encoding") && isCGI())
-		readChunks();
-
-	// If there's no content-length nor chunked, return error
-	// No need to test for both existing at the same time: already tested on
+	
 	// HTTP header parser
-	else
+	if (!requestHasHeader("content-length") ||
+		(requestHasHeader("transfer-encoding") && !isCGI()))
 		response_status = BAD_REQUEST;
 
 	return response_status;
@@ -84,187 +75,24 @@ bool PostResponse::send100Continue() {
 	return true;
 }
 
-// NOTE: Remove??? Function not used?
-//
-/* bool PostResponse::readBody() {
-	struct epoll_event events[1];
-	int nfds = epoll_wait(_epoll_fd, events, 1,
-						  -1);	// Wait indefinitely for new data
-	if (nfds < 0) {
-		response_status = INTERNAL_SERVER_ERROR;
-		return false;
-	}
-
-	if (events[0].events & EPOLLIN) {
-		while (true) {
-			char newbuffer[8094] = {};
-
-			ssize_t bytesRead =
-				recv(_client_fd, newbuffer, sizeof(newbuffer), 0);
-
-			if (bytesRead < 0) {
-				if (errno == EAGAIN || errno == EWOULDBLOCK)
-					// Non-blocking mode, no data available; exit the loop
-					return true;
-				else {
-					response_status = INTERNAL_SERVER_ERROR;
-					return false;
-				}
-			} else if (bytesRead == 0)
-				return true;
-
-			_request.message_body.append(newbuffer, bytesRead);
-		}
-	}
-
-	response_status = INTERNAL_SERVER_ERROR;
-
-	return false;
-} */
-
-void PostResponse::readContentLength() {
-	unsigned long content_length = stringToNumber<unsigned long>(
-		_request.header_fields.find("content-length")->second);
-
-	if (content_length + total_used_storage > MAX_STORAGE_SIZE) {
-		response_status = INTERNAL_SERVER_ERROR;
-		return;
-	}
-
-	ssize_t bytes_to_read = content_length - _request.message_body.size() - 1;
-	ssize_t total_bytes_read = 0;
-
-	while (total_bytes_read < bytes_to_read) {
-		char read_buffer[8096] = {};
-
-		ssize_t buffer_size = std::min(bytes_to_read - total_bytes_read,
-									   (ssize_t)sizeof(read_buffer));
-
-		ssize_t bytes_read = recv(_client_fd, read_buffer, buffer_size, 0);
-
-		if (bytes_read < 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
-			response_status = INTERNAL_SERVER_ERROR;
-			return;	 // Exit the loop on error
-		}
-
-		if (bytes_read == 0) {
-			// Client closed the connection
-			break;	// Exit the loop if the connection is closed
-		}
-
-		_request.message_body.append(read_buffer, bytes_read);
-
-		total_bytes_read += bytes_read;
-	}
-}
-
-void PostResponse::readChunks() {
-	removeFirstChunk();
-
-	while (true) {
-		ssize_t chunk_size = readChunkSizeFromSocket();
-
-		if (chunk_size == -1) {
-			response_status = BAD_REQUEST;
-			return;
-		}
-
-		if (chunk_size == 0) break;
-
-		ssize_t total_bytes_read = 0;
-		char read_buffer[8096] = {};
-
-		while (total_bytes_read < chunk_size) {
-			if (total_used_storage + _request.message_body.size() >
-				MAX_STORAGE_SIZE) {
-				response_status = INTERNAL_SERVER_ERROR;
-				return;
-			}
-
-			ssize_t read_size = std::min(chunk_size - total_bytes_read,
-										 (ssize_t)sizeof(read_buffer));
-
-			ssize_t bytes_read = recv(_client_fd, read_buffer, read_size, 0);
-			if (bytes_read < 0) {
-				// Handle error case (e.g., log the error, close the connection,
-				// etc.)
-				response_status = INTERNAL_SERVER_ERROR;
-				break;	// Exit the loop on error
-			}
-			// Handle the case where the connection was closed prematurely
-			if (bytes_read == 0) {
-				// Client closed the connection
-				return;	 // Exit the loop if the connection is closed
-			}
-			_request.message_body.append(read_buffer, bytes_read);
-			total_bytes_read += bytes_read;
-		}
-
-		if (skipTrailingCRLF() == -1) {
-			response_status = BAD_REQUEST;
-			return;
-		}
-	}
-}
-
-// TODO: Remove first bit of chunk from message body in case it got read on
-// run()
-// NOTE: (from future Miguel) Why???
-void PostResponse::removeFirstChunk() { ; }
-
-ssize_t PostResponse::readChunkSizeFromSocket() {
-	std::string chunk_size_str;
-	char buffer;
-
-	// Read byte by byte until we reach "\r\n" (end of chunk size line)
-	while (true) {
-		ssize_t bytes_read = recv(_client_fd, &buffer, 1, 0);
-		if (bytes_read < 0) return -1;
-		if (bytes_read == 0) return 0;
-
-		chunk_size_str += buffer;
-
-		if (chunk_size_str.length() >= 2 &&
-			chunk_size_str[chunk_size_str.length() - 1] == '\n' &&
-			chunk_size_str[chunk_size_str.length() - 2] == '\r') {
-			chunk_size_str.resize(chunk_size_str.length() - 2);
-			break;
-		}
-	}
-
-	// Convert the chunk size from hex string to decimal
-	ssize_t chunk_size = 0;
-	chunk_size = std::strtol(chunk_size_str.c_str(), NULL, 16);
-
-	return chunk_size;
-}
-
-int PostResponse::skipTrailingCRLF() {
-	char crlf[2];
-	ssize_t bytes_read = recv(_client_fd, crlf, 2, 0);
-
-	if (bytes_read != 2 || crlf[0] != '\r' || crlf[1] != '\n') return -1;
-
-	return 0;
-}
-
 static std::string generateDefaultUploadResponse() {
 	return "<!DOCTYPE html>\n"
-			"<html lang=\"en\">\n"
-			"<head>\n"
-			"\t<meta charset=\"UTF-8\">\n"
-			"\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-			"\t<link rel=\"icon\" href=\"assets/favicon.ico\" type=\"image/x-icon\">\n"
-    		"\t<link rel=\"stylesheet\" href=\"assets/css/style.css\">\n"
-			"\t<title>Upload Successful</title>\n"
-			"</head>\n"
-			"<body>\n"
-			"\t<h1>File Uploaded Successfully!</h1>\n"
-			"\t<p>Your file has been uploaded.</p>\n"
-			"\t<a href=\"index.html\">Back to Index</a>\n"
-			"</body>\n"
-			"</html>\n";
+		   "<html lang=\"en\">\n"
+		   "<head>\n"
+		   "\t<meta charset=\"UTF-8\">\n"
+		   "\t<meta name=\"viewport\" content=\"width=device-width, "
+		   "initial-scale=1.0\">\n"
+		   "\t<link rel=\"icon\" href=\"assets/favicon.ico\" "
+		   "type=\"image/x-icon\">\n"
+		   "\t<link rel=\"stylesheet\" href=\"assets/css/style.css\">\n"
+		   "\t<title>Upload Successful</title>\n"
+		   "</head>\n"
+		   "<body>\n"
+		   "\t<h1>File Uploaded Successfully!</h1>\n"
+		   "\t<p>Your file has been uploaded.</p>\n"
+		   "\t<a href=\"index.html\">Back to Index</a>\n"
+		   "</body>\n"
+		   "</html>\n";
 }
 
 std::string PostResponse::generateResponse() {
@@ -272,16 +100,15 @@ std::string PostResponse::generateResponse() {
 	setMatchLocationRoute();
 
 	if ((status = parseHTTPBody()) != OK) return loadErrorPage(status);
-	
+
 	if ((status = checkClientBodySize()) != OK) return loadErrorPage(status);
 
 	if (!isCGI()) {
-
 		if ((status = checkFormData()) != OK) return loadErrorPage(status);
 
 		status = checkBody();
 		if (status != OK) return loadErrorPage(status);
-		
+
 		status = extractFile();
 		if (status != OK) return loadErrorPage(status);
 
@@ -291,7 +118,7 @@ std::string PostResponse::generateResponse() {
 	} else {
 		// Send to CGI;
 		std::string path = getPath();
-		
+
 		CGI cgi(_request, _response, path);
 		cgi.handleCGIResponse();
 		if (_response.status != 200) loadErrorPage(_response.status);
@@ -321,9 +148,8 @@ static bool createDirectory(const std::string &path) {
 // Checks if a file with that name exists and returns its size
 static long fileExistsSize(std::string &target) {
 	struct stat fileInfo;
-	
-	if (stat(target.c_str(), &fileInfo) == 0)
-		return fileInfo.st_size;
+
+	if (stat(target.c_str(), &fileInfo) == 0) return fileInfo.st_size;
 	return 0;
 }
 
@@ -339,21 +165,27 @@ short PostResponse::uploadFile() {
 	if (!createDirectory(directory)) return FORBIDDEN;
 	std::string target = directory + _file_to_upload.file_name;
 	long existingFileSize = fileExistsSize(target);
-	
+
 	int file_fd =
 		open(target.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (file_fd == -1) return FORBIDDEN;
 
 	size_t bytes_to_write = _file_to_upload.file_contents.size();
 
-	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
-		-1)
+	if (total_used_storage + bytes_to_write > MAX_STORAGE_SIZE) {
+		close(file_fd);
+		return INTERNAL_SERVER_ERROR;
+	}
+
+	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) == -1) {
+		close(file_fd);
 		return FORBIDDEN;
+	}
 
 	if (close(file_fd) == -1) return INTERNAL_SERVER_ERROR;
 
 	total_used_storage += fileExistsSize(target) - existingFileSize;
-	
+
 	return OK;
 }
 
@@ -472,33 +304,28 @@ const std::multimap<std::string, std::string> PostResponse::extractFields(
 }
 
 short PostResponse::extractFile() {
+	if (_multipart_body.empty()) return 500;
 
-	if (_multipart_body.empty())
-		return 500;
-
-    std::multimap<std::string, std::string>::iterator content_disposition_it = 
+	std::multimap<std::string, std::string>::iterator content_disposition_it =
 		_multipart_body[0].find("Content-Disposition");
-    if (content_disposition_it == _multipart_body[0].end())
-        return 500;
-    std::string content_disposition = content_disposition_it->second;
+	if (content_disposition_it == _multipart_body[0].end()) return 500;
+	std::string content_disposition = content_disposition_it->second;
 
-    _file_to_upload.name = extractFieldValue(content_disposition, "name");
-    _file_to_upload.file_name = 
+	_file_to_upload.name = extractFieldValue(content_disposition, "name");
+	_file_to_upload.file_name =
 		extractFieldValue(content_disposition, "filename");
 
-    std::multimap<std::string, std::string>::iterator content_type_it = 
+	std::multimap<std::string, std::string>::iterator content_type_it =
 		_multipart_body[0].find("Content-Type");
-    if (content_type_it == _multipart_body[0].end())
-        return 500;
-    _file_to_upload.content_type = content_type_it->second;
+	if (content_type_it == _multipart_body[0].end()) return 500;
+	_file_to_upload.content_type = content_type_it->second;
 
-    std::multimap<std::string, std::string>::iterator file_contents_it = 
+	std::multimap<std::string, std::string>::iterator file_contents_it =
 		_multipart_body[0].find("_File Contents");
-    if (file_contents_it == _multipart_body[0].end())
-        return 500;
-    _file_to_upload.file_contents = file_contents_it->second;
+	if (file_contents_it == _multipart_body[0].end()) return 500;
+	_file_to_upload.file_contents = file_contents_it->second;
 
-    return 200;
+	return 200;
 }
 
 // Function to extract the value of a specified key (either "name" or

@@ -48,6 +48,7 @@ class Server {
 	std::string _root;
 	std::vector<std::string> _index;
 	State _autoIndex;
+	bool _hasAutoIndex;
 	long _clientMaxBodySize;
 	std::set<Method> _allowedMethods;
 	std::map<short, std::string> _errorPages;

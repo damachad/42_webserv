@@ -12,7 +12,7 @@
 
 #include "Server.hpp"
 
-Server::Server() : _autoIndex(FALSE), _clientMaxBodySize(1048576) {
+Server::Server() : _autoIndex(FALSE), _hasAutoIndex(false), _clientMaxBodySize(1048576) {
 	// NGINX defaults
 	_index.push_back("index.html");
 	_index.push_back("index.htm");
@@ -31,6 +31,7 @@ Server::Server(const Server &src)
 	  _root(src.getRoot()),
 	  _index(src.getIndex()),
 	  _autoIndex(src.getAutoIndex()),
+	  _hasAutoIndex(src._hasAutoIndex),
 	  _clientMaxBodySize(src.getClientMaxBodySize()),
 	  _allowedMethods(src.getAllowedMethods()),
 	  _errorPages(src.getErrorPages()),
@@ -45,6 +46,7 @@ Server &Server::operator=(const Server &src) {
 	_root = src.getRoot();
 	_index = src.getIndex();
 	_autoIndex = src.getAutoIndex();
+	_hasAutoIndex = src._hasAutoIndex;
 	_clientMaxBodySize = src.getClientMaxBodySize();
 	_allowedMethods = src.getAllowedMethods();
 	_errorPages = src.getErrorPages();
@@ -131,20 +133,26 @@ void Server::handleListen(std::vector<std::string> &tokens) {
 // Loads server_name into Server
 void Server::handleServerName(std::vector<std::string> &tokens) {
 	tokens.erase(tokens.begin());
-	_serverName = tokens;
+	std::vector<std::string>::const_iterator it;
+	for (it = tokens.begin(); it != tokens.end(); it++)
+		_serverName.push_back(*it);
 }
 
 // Checks and loads root into Server
 void Server::handleRoot(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in root directive.");
+	if (!_root.empty())
+		throw ConfigError("root directive is duplicate.");
 	_root = tokens[1];
 }
 
 // Loads index into Server
 void Server::handleIndex(std::vector<std::string> &tokens) {
 	tokens.erase(tokens.begin());
-	_index = tokens;
+	std::vector<std::string>::const_iterator it;
+	for (it = tokens.begin(); it != tokens.end(); it++)
+		_index.push_back(*it);
 }
 
 // Checks and loads error_page into Server
@@ -168,6 +176,9 @@ void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
 		throw ConfigError(
 			"Invalid number of arguments in client_max_body_size directive.");
+	if (_clientMaxBodySize != 1048576)
+		throw ConfigError(
+			"client_max_body_size directive is duplicate.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
 	if (!std::isdigit(unit)) maxSize.resize(maxSize.size() - 1);
@@ -175,7 +186,7 @@ void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
 	// check if there is overflow
 	char *endPtr = NULL;
 	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
-	if (*endPtr != '\0')
+	if (*endPtr != '\0' || size < 0)
 		throw ConfigError("Invalid value for client_max_body_size.");
 	_clientMaxBodySize = size;
 	if (!std::isdigit(unit)) {
@@ -208,12 +219,15 @@ void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
 
 // Checks and loads autoindex into Server
 void Server::handleAutoIndex(std::vector<std::string> &tokens) {
+	if (_hasAutoIndex)
+		throw ConfigError("autoindex directive is duplicate.");
 	if (tokens[1] == "on")
 		_autoIndex = TRUE;
 	else if (tokens[1] == "off")
 		_autoIndex = FALSE;
 	else
 		throw ConfigError("Invalid value in autoindex directive.");
+	_hasAutoIndex = true;
 }
 
 // Checks and loads return into Server
@@ -236,6 +250,8 @@ void Server::handleUpload(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
 		throw ConfigError(
 			"Invalid number of arguments in upload_store directive.");
+	if (!_uploadStore.empty())
+		throw ConfigError("upload_store directive is duplicate.");
 	_uploadStore = tokens[1];
 }
 
@@ -243,6 +259,8 @@ void Server::handleUpload(std::vector<std::string> &tokens) {
 void Server::handleCgiExt(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in cgi_ext directive.");
+	if (!_cgiExt.empty())
+		throw ConfigError("cgi_ext directive is duplicate.");
 	_cgiExt = tokens[1];
 }
 

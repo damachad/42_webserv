@@ -61,15 +61,21 @@ void Location::initializeDirectiveMap(void) {
 void Location::handleRoot(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in root directive.");
+	if (!_root.empty())
+		throw ConfigError("root directive is duplicate.");
 	_root = tokens[1];
 }
 
 void Location::handleIndex(std::vector<std::string> &tokens) {
 	tokens.erase(tokens.begin());
-	_index = tokens;
+	std::vector<std::string>::const_iterator it;
+	for (it = tokens.begin(); it != tokens.end(); it++)
+		_index.push_back(*it);
 }
 
 void Location::handleLimitExcept(std::vector<std::string> &tokens) {
+	if (!_allowedMethods.empty())
+		throw ConfigError("limit_except directive is duplicate.");
 	std::set<Method> methods;
 	std::vector<std::string>::const_iterator it;
 	for (it = tokens.begin() + 1; it != tokens.end(); it++) {
@@ -104,6 +110,9 @@ void Location::handleCliMaxSize(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
 		throw ConfigError(
 			"Invalid number of arguments in client_max_body_size directive.");
+	if (_clientMaxBodySize != -1)
+		throw ConfigError(
+			"client_max_body_size directive is duplicate.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
 	if (!std::isdigit(unit)) maxSize.resize(maxSize.size() - 1);
@@ -111,7 +120,7 @@ void Location::handleCliMaxSize(std::vector<std::string> &tokens) {
 	// check if there is overflow
 	char *endPtr = NULL;
 	long size = std::strtol(maxSize.c_str(), &endPtr, 10);
-	if (*endPtr != '\0')
+	if (*endPtr != '\0' || size < 0)
 		throw ConfigError("Invalid value for client_max_body_size.");
 	_clientMaxBodySize = size;
 	if (!std::isdigit(unit)) {
@@ -143,6 +152,8 @@ void Location::handleCliMaxSize(std::vector<std::string> &tokens) {
 }
 
 void Location::handleAutoIndex(std::vector<std::string> &tokens) {
+	if (_autoIndex != UNSET)
+		throw ConfigError("autoindex directive is duplicate.");
 	if (tokens[1] == "on")
 		_autoIndex = TRUE;
 	else if (tokens[1] == "off")
@@ -168,12 +179,16 @@ void Location::handleUpload(std::vector<std::string> &tokens) {
 	if (tokens.size() != 2)
 		throw ConfigError(
 			"Invalid number of arguments in upload_store directive.");
+	if (!_uploadStore.empty())
+		throw ConfigError("upload_store directive is duplicate.");
 	_uploadStore = tokens[1];
 }
 
 void Location::handleCgiExt(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in cgi_ext directive.");
+	if (!_cgiExt.empty())
+		throw ConfigError("cgi_ext directive is duplicate.");
 	_cgiExt = tokens[1];
 }
 

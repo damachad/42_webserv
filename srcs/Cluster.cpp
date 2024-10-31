@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/22 10:07:35 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/31 12:01:58 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,6 +169,7 @@ void Cluster::startListening(int sock_fd) {
 // Adds sockets to epoll so they can be monitored
 void Cluster::addSocketsToEpoll(int sock_fd) {
 	epoll_event event;
+	bzero(&event, sizeof(event));
 	event.events = EPOLLIN;
 	event.data.fd = sock_fd;
 
@@ -243,10 +244,14 @@ void Cluster::run(void) {
 
 			for (int i = 0; i < n; ++i) {
 				int fd = events[i].data.fd;
-
+				if (events[i].events & EPOLLERR)
+				{
+					closeAndRemoveSocket(fd, _epoll_fd);
+					continue;
+				}
 				if (isListeningSocket(fd))
 					handleNewConnection(fd);
-				else
+				else if (events[i].events & EPOLLIN)
 					handleClientRequest(fd);
 			}
 		} catch (const std::exception& e) {
@@ -272,6 +277,7 @@ void Cluster::handleNewConnection(int listening_fd) {
 	setSocketToNonBlocking(client_fd);
 
   struct epoll_event client_event;
+  bzero(&client_event, sizeof(client_event));
   client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
   client_event.data.fd = client_fd;
 
@@ -282,41 +288,77 @@ void Cluster::handleNewConnection(int listening_fd) {
 // Handles a client request
 void Cluster::handleClientRequest(int connection_fd) {
 	char buffer_request[BUFFER_SIZE] = {};
-	std::string request;
 
-	while (request.find("\r\n\r\n") ==
-		   std::string::npos) {	 // NOTE: While all the headers haven't been
-								 // received
-		memset(buffer_request, 0, sizeof(buffer_request));
+	ssize_t bytesRead = recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
 
-		ssize_t bytesRead =
-			recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
-
-		if (bytesRead < 0) {
-
-			if (errno == EAGAIN || errno == EWOULDBLOCK) return;
-
-			if (errno != EAGAIN) {
-				closeAndRemoveSocket(connection_fd, _epoll_fd);
-				throw ClusterRunError("read failed");
-			}
-		} else if (bytesRead == 0) {
-			// Connection closed
-			closeAndRemoveSocket(connection_fd, _epoll_fd);
-			return;
-		} else
-			// Bytes have been read. Append them to request.
-			request.append(buffer_request, bytesRead);
+	if (bytesRead < 0) {
+		closeAndRemoveSocket(connection_fd, _epoll_fd);
+		throw ClusterRunError("read failed");
 	}
-	processRequest(connection_fd, request);
+	else if (bytesRead == 0) {
+		if (!_request_buffer[connection_fd].empty())
+			processRequest(_request_buffer[connection_fd], connection_fd);
+		closeAndRemoveSocket(connection_fd, _epoll_fd);
+		return;
+	}
+	else {
+		_request_buffer[connection_fd].append(buffer_request, bytesRead);
+	
+		if (isRequestComplete(_request_buffer[connection_fd])) {
+	            processRequest(_request_buffer[connection_fd], connection_fd);
+	            _request_buffer.erase(connection_fd); // Clear the buffer for this connection
+		} 
+		else {
+	        // If we haven't received a complete request, we should rearm the socket
+	        struct epoll_event ev;
+			bzero(&ev, sizeof(ev));
+	        ev.events = EPOLLIN | EPOLLERR | EPOLLHUP;
+	        ev.data.fd = connection_fd;
+	
+	        // Re-enable monitoring on this socket
+	        if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, connection_fd, &ev) == -1)
+	            closeAndRemoveSocket(connection_fd, _epoll_fd);
+		}
+	}
+}
+
+bool Cluster::isRequestComplete(const std::string& request)
+{    // Check for the end of the headers
+    size_t header_end = request.find("\r\n\r\n");
+    if (header_end == std::string::npos) {
+        return false; // Headers not yet complete
+    }
+
+    // Extract headers
+    std::string headers = request.substr(0, header_end);
+    
+    // Check for Content-Length
+    size_t content_length_pos = headers.find("Content-Length:");
+    if (content_length_pos != std::string::npos) {
+        size_t length_start = content_length_pos + std::string("Content-Length:").length();
+        size_t length_end = headers.find("\r\n", length_start);
+        if (length_end != std::string::npos) {
+            std::string length_str = headers.substr(length_start, length_end - length_start);
+            unsigned long content_length = stringToNumber<unsigned long>(length_str);
+            return (request.size() >= header_end + 4 + content_length); // +4 for the "\r\n\r\n"
+        }
+    }
+
+    // Check for Chunked Transfer Encoding
+    if (headers.find("Transfer-Encoding: chunked") != std::string::npos) {
+        // Look for the end of chunked transfer
+        return request.find("0\r\n\r\n") != std::string::npos; // Looking for the final zero-length chunk
+    }
+
+    // If no Content-Length or Chunked Transfer Encoding, assume request is complete
+    return true; // In practice, may want to implement further checks based on your application logic
 }
 
 // Handles a client request
-void Cluster::processRequest(int client_fd, const std::string& buffer_request) {
+void Cluster::processRequest(const std::string &buffer_request, int client_fd) {
 	HTTP_Request request;
 	unsigned short error_status =
 		HTTP_Request_Parser::parseHTTPHeaders(buffer_request, request);
-
 	std::string buffer_response = getResponse(request, error_status, client_fd);
 	ssize_t sent =
 		send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
