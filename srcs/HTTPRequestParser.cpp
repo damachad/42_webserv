@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/23 14:48:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/31 13:32:16 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,8 +332,6 @@ bool HTTP_Request_Parser::protocolVersionIsValid(
 		return true;
 	return false;
 }
-
-/////////////////////////////////////////////////////////////////////////////////
 
 std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request) {
 	outstream << "HTTP Request: \n"
