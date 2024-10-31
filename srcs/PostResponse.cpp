@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/31 11:29:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/31 13:29:33 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,17 +36,7 @@ unsigned short PostResponse::parseHTTPBody() {
 	if (requestHasHeader("expect")) {
 		if (!send100Continue()) return response_status;
 	}
-
-	// If there's content-length, read it
-	// if (requestHasHeader("content-length")) readContentLength();
-
-	// If it's chunked, get all the chunk
-	// NOTE: In our server, chunked is only useful for CGI!?
-	// else if (requestHasHeader("transfer-encoding") && isCGI())
-	// 	readChunks();
-
-	// If there's no content-length nor chunked, return error
-	// No need to test for both existing at the same time: already tested on
+	
 	// HTTP header parser
 	if (!requestHasHeader("content-length") ||
 		(requestHasHeader("transfer-encoding") && !isCGI()))
@@ -84,164 +74,6 @@ bool PostResponse::send100Continue() {
 
 	return true;
 }
-
-// NOTE: Remove??? Function not used?
-//
-/* bool PostResponse::readBody() {
-	struct epoll_event events[1];
-	int nfds = epoll_wait(_epoll_fd, events, 1,
-						  -1);	// Wait indefinitely for new data
-	if (nfds < 0) {
-		response_status = INTERNAL_SERVER_ERROR;
-		return false;
-	}
-
-	if (events[0].events & EPOLLIN) {
-		while (true) {
-			char newbuffer[8094] = {};
-
-			ssize_t bytesRead =
-			//	recv(_client_fd, newbuffer, sizeof(newbuffer), 0);
-
-			if (bytesRead < 0) {
-				if (errno == EAGAIN || errno == EWOULDBLOCK)
-					// Non-blocking mode, no data available; exit the loop
-					return true;
-				else {
-					response_status = INTERNAL_SERVER_ERROR;
-					return false;
-				}
-			} else if (bytesRead == 0)
-				return true;
-
-			_request.message_body.append(newbuffer, bytesRead);
-		}
-	}
-
-	response_status = INTERNAL_SERVER_ERROR;
-
-	return false;
-} */
-
-// void PostResponse::readContentLength() {
-// 	unsigned long content_length = stringToNumber<unsigned long>(
-// 		_request.header_fields.find("content-length")->second);
-
-// 	if (content_length + total_used_storage > MAX_STORAGE_SIZE) {
-// 		response_status = INTERNAL_SERVER_ERROR;
-// 		return;
-// 	}
-
-// 	std::string buffer(content_length, '\0');
-
-// 	ssize_t bytes_read = recv(_client_fd, &buffer[0], buffer.size(), 0);
-
-// 	if (bytes_read < 0) {
-// 		response_status = INTERNAL_SERVER_ERROR;
-// 		return;	 // Exit the loop on error
-// 	}
-
-// 	if (bytes_read == 0)
-// 		return;	// Exit the loop if the connection is closed
-
-// 	_file_buffer[_client_fd].append(buffer, 0, bytes_read);
-
-// 	if (_file_buffer[_client_fd].size() >= content_length)
-// 	{
-// 		_request.message_body.append(_file_buffer[_client_fd]);
-// 		_file_buffer.erase(_client_fd);
-// 	}
-// }
-
-// void PostResponse::readChunks() {
-// 	removeFirstChunk();
-
-// 	while (true) {
-// 		ssize_t chunk_size = readChunkSizeFromSocket();
-
-// 		if (chunk_size == -1) {
-// 			response_status = BAD_REQUEST;
-// 			return;
-// 		}
-
-// 		if (chunk_size == 0) break;
-
-// 		ssize_t total_bytes_read = 0;
-// 		char read_buffer[8096] = {};
-
-// 		while (total_bytes_read < chunk_size) {
-// 			if (total_used_storage + _request.message_body.size() >
-// 				MAX_STORAGE_SIZE) {
-// 				response_status = INTERNAL_SERVER_ERROR;
-// 				return;
-// 			}
-
-// 			ssize_t read_size = std::min(chunk_size - total_bytes_read,
-// 										 (ssize_t)sizeof(read_buffer));
-
-// 			ssize_t bytes_read = recv(_client_fd, read_buffer, read_size, 0);
-// 			if (bytes_read < 0) {
-// 				// Handle error case (e.g., log the error, close the connection,
-// 				// etc.)
-// 				response_status = INTERNAL_SERVER_ERROR;
-// 				break;	// Exit the loop on error
-// 			}
-// 			// Handle the case where the connection was closed prematurely
-// 			if (bytes_read == 0) {
-// 				// Client closed the connection
-// 				return;	 // Exit the loop if the connection is closed
-// 			}
-// 			_request.message_body.append(read_buffer, bytes_read);
-// 			total_bytes_read += bytes_read;
-// 		}
-
-// 		if (skipTrailingCRLF() == -1) {
-// 			response_status = BAD_REQUEST;
-// 			return;
-// 		}
-// 	}
-// }
-
-// TODO: Remove first bit of chunk from message body in case it got read on
-// run()
-// NOTE: (from future Miguel) Why???
-// void PostResponse::removeFirstChunk() { ; }
-
-// ssize_t PostResponse::readChunkSizeFromSocket() {
-// 	std::string chunk_size_str;
-// 	char buffer;
-
-// 	// Read byte by byte until we reach "\r\n" (end of chunk size line)
-// 	while (true) {
-// 		ssize_t bytes_read = recv(_client_fd, &buffer, 1, 0);
-// 		if (bytes_read < 0) return -1;
-// 		if (bytes_read == 0) return 0;
-
-// 		chunk_size_str += buffer;
-
-// 		if (chunk_size_str.length() >= 2 &&
-// 			chunk_size_str[chunk_size_str.length() - 1] == '\n' &&
-// 			chunk_size_str[chunk_size_str.length() - 2] == '\r') {
-// 			chunk_size_str.resize(chunk_size_str.length() - 2);
-// 			break;
-// 		}
-// 	}
-
-// 	// Convert the chunk size from hex string to decimal
-// 	ssize_t chunk_size = 0;
-// 	chunk_size = std::strtol(chunk_size_str.c_str(), NULL, 16);
-
-// 	return chunk_size;
-// }
-
-// int PostResponse::skipTrailingCRLF() {
-// 	char crlf[2];
-// 	ssize_t bytes_read = recv(_client_fd, crlf, 2, 0);
-
-// 	if (bytes_read != 2 || crlf[0] != '\r' || crlf[1] != '\n') return -1;
-
-// 	return 0;
-// }
 
 static std::string generateDefaultUploadResponse() {
 	return "<!DOCTYPE html>\n"
