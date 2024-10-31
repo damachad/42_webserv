@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/31 11:02:35 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/31 12:01:58 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,6 +169,7 @@ void Cluster::startListening(int sock_fd) {
 // Adds sockets to epoll so they can be monitored
 void Cluster::addSocketsToEpoll(int sock_fd) {
 	epoll_event event;
+	bzero(&event, sizeof(event));
 	event.events = EPOLLIN;
 	event.data.fd = sock_fd;
 
@@ -276,6 +277,7 @@ void Cluster::handleNewConnection(int listening_fd) {
 	setSocketToNonBlocking(client_fd);
 
   struct epoll_event client_event;
+  bzero(&client_event, sizeof(client_event));
   client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
   client_event.data.fd = client_fd;
 
@@ -309,6 +311,7 @@ void Cluster::handleClientRequest(int connection_fd) {
 		else {
 	        // If we haven't received a complete request, we should rearm the socket
 	        struct epoll_event ev;
+			bzero(&ev, sizeof(ev));
 	        ev.events = EPOLLIN | EPOLLERR | EPOLLHUP;
 	        ev.data.fd = connection_fd;
 	
