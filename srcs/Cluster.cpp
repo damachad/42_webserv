@@ -83,9 +83,9 @@ Cluster::~Cluster() {
 }
 
 // Accesses ith server of _server array when asking Cluster[i]
-const Server &Cluster::operator[](unsigned int index) const {
-  if (index >= _servers.size())
-    throw OutOfBoundsError(numberToString<int>(index));
+const Server& Cluster::operator[](unsigned int index) const {
+	if (index >= _servers.size())
+		throw OutOfBoundsError(numberToString<int>(index));
 
 	return *_servers[index];
 }
@@ -232,7 +232,7 @@ void Cluster::setupCluster(void) {
 
 // Sets an infinite loop to listen to incoming connections
 void Cluster::run(void) {
-  std::vector<struct epoll_event> events(MAX_CONNECTIONS);
+	std::vector<struct epoll_event> events(MAX_CONNECTIONS);
 
 	while (running) {
 		try {
@@ -244,8 +244,7 @@ void Cluster::run(void) {
 
 			for (int i = 0; i < n; ++i) {
 				int fd = events[i].data.fd;
-				if (events[i].events & EPOLLERR)
-				{
+				if (events[i].events & EPOLLERR) {
 					closeAndRemoveSocket(fd, _epoll_fd);
 					continue;
 				}
@@ -257,105 +256,109 @@ void Cluster::run(void) {
 		} catch (const std::exception& e) {
 			std::cerr << e.what() << std::endl;
 		}
-		
 	}
 }
 
 // Checks if fd corresponds to listening socket
 bool Cluster::isListeningSocket(int fd) {
-  return std::find(_listening_sockets.begin(), _listening_sockets.end(), fd) !=
-         _listening_sockets.end();
+	return std::find(_listening_sockets.begin(), _listening_sockets.end(),
+					 fd) != _listening_sockets.end();
 }
 
 // Handles a new connection
 void Cluster::handleNewConnection(int listening_fd) {
-  int client_fd = accept(listening_fd, NULL, NULL);
-  if (client_fd == -1)
-    throw ClusterSetupError("accept");
-
+	int client_fd = accept(listening_fd, NULL, NULL);
+	if (client_fd == -1) throw ClusterSetupError("accept");
 
 	setSocketToNonBlocking(client_fd);
 
-  struct epoll_event client_event;
-  bzero(&client_event, sizeof(client_event));
-  client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
-  client_event.data.fd = client_fd;
+	struct epoll_event client_event;
+	bzero(&client_event, sizeof(client_event));
+	client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+	client_event.data.fd = client_fd;
 
-  if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1)
-    throw ClusterRunError("epoll_ctl");
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1)
+		throw ClusterRunError("epoll_ctl");
 }
 
 // Handles a client request
 void Cluster::handleClientRequest(int connection_fd) {
 	char buffer_request[BUFFER_SIZE] = {};
 
-	ssize_t bytesRead = recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
+	ssize_t bytesRead =
+		recv(connection_fd, buffer_request, sizeof(buffer_request), 0);
 
 	if (bytesRead < 0) {
 		closeAndRemoveSocket(connection_fd, _epoll_fd);
 		throw ClusterRunError("read failed");
-	}
-	else if (bytesRead == 0) {
+	} else if (bytesRead == 0) {
 		if (!_request_buffer[connection_fd].empty())
 			processRequest(_request_buffer[connection_fd], connection_fd);
 		closeAndRemoveSocket(connection_fd, _epoll_fd);
 		return;
-	}
-	else {
+	} else {
 		_request_buffer[connection_fd].append(buffer_request, bytesRead);
-	
+
 		if (isRequestComplete(_request_buffer[connection_fd])) {
-	            processRequest(_request_buffer[connection_fd], connection_fd);
-	            _request_buffer.erase(connection_fd); // Clear the buffer for this connection
-		} 
-		else {
-	        // If we haven't received a complete request, we should rearm the socket
-	        struct epoll_event ev;
+			processRequest(_request_buffer[connection_fd], connection_fd);
+			_request_buffer.erase(
+				connection_fd);	 // Clear the buffer for this connection
+		} else {
+			// If we haven't received a complete request, we should rearm the
+			// socket
+			struct epoll_event ev;
 			bzero(&ev, sizeof(ev));
-	        ev.events = EPOLLIN | EPOLLERR | EPOLLHUP;
-	        ev.data.fd = connection_fd;
-	
-	        // Re-enable monitoring on this socket
-	        if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, connection_fd, &ev) == -1)
-	            closeAndRemoveSocket(connection_fd, _epoll_fd);
+			ev.events = EPOLLIN | EPOLLERR | EPOLLHUP;
+			ev.data.fd = connection_fd;
+
+			// Re-enable monitoring on this socket
+			if (epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, connection_fd, &ev) == -1)
+				closeAndRemoveSocket(connection_fd, _epoll_fd);
 		}
 	}
 }
 
-bool Cluster::isRequestComplete(const std::string& request)
-{    // Check for the end of the headers
-    size_t header_end = request.find("\r\n\r\n");
-    if (header_end == std::string::npos) {
-        return false; // Headers not yet complete
-    }
+bool Cluster::isRequestComplete(
+	const std::string& request) {  // Check for the end of the headers
+	size_t header_end = request.find("\r\n\r\n");
+	if (header_end == std::string::npos) {
+		return false;  // Headers not yet complete
+	}
 
-    // Extract headers
-    std::string headers = request.substr(0, header_end);
-    
-    // Check for Content-Length
-    size_t content_length_pos = headers.find("Content-Length:");
-    if (content_length_pos != std::string::npos) {
-        size_t length_start = content_length_pos + std::string("Content-Length:").length();
-        size_t length_end = headers.find("\r\n", length_start);
-        if (length_end != std::string::npos) {
-            std::string length_str = headers.substr(length_start, length_end - length_start);
-            unsigned long content_length = stringToNumber<unsigned long>(length_str);
-            return (request.size() >= header_end + 4 + content_length); // +4 for the "\r\n\r\n"
-        }
-    }
+	// Extract headers
+	std::string headers = request.substr(0, header_end);
 
-    // Check for Chunked Transfer Encoding
-    if (headers.find("Transfer-Encoding: chunked") != std::string::npos) {
-        // Look for the end of chunked transfer
-        return request.find("0\r\n\r\n") != std::string::npos; // Looking for the final zero-length chunk
-    }
+	// Check for Content-Length
+	size_t content_length_pos = headers.find("Content-Length:");
+	if (content_length_pos != std::string::npos) {
+		size_t length_start =
+			content_length_pos + std::string("Content-Length:").length();
+		size_t length_end = headers.find("\r\n", length_start);
+		if (length_end != std::string::npos) {
+			std::string length_str =
+				headers.substr(length_start, length_end - length_start);
+			unsigned long content_length =
+				stringToNumber<unsigned long>(length_str);
+			return (request.size() >=
+					header_end + 4 + content_length);  // +4 for the "\r\n\r\n"
+		}
+	}
 
-    // If no Content-Length or Chunked Transfer Encoding, assume request is complete
-    return true; // In practice, may want to implement further checks based on your application logic
+	// Check for Chunked Transfer Encoding
+	if (headers.find("Transfer-Encoding: chunked") != std::string::npos) {
+		// Look for the end of chunked transfer
+		return request.find("0\r\n\r\n") !=
+			   std::string::npos;  // Looking for the final zero-length chunk
+	}
+
+	// If no Content-Length or Chunked Transfer Encoding, assume request is
+	// complete
+	return true;  // In practice, may want to implement further checks based on
+				  // your application logic
 }
 
 // Handles a client request
-void Cluster::processRequest(const std::string &buffer_request, int client_fd) {
+void Cluster::processRequest(const std::string& buffer_request, int client_fd) {
 	HTTP_Request request;
 	unsigned short error_status =
 		HTTP_Request_Parser::parseHTTPHeaders(buffer_request, request);
@@ -363,7 +366,7 @@ void Cluster::processRequest(const std::string &buffer_request, int client_fd) {
 	ssize_t sent =
 		send(client_fd, buffer_response.c_str(), buffer_response.size(), 0);
 
-	if (sent == -1 && errno != EAGAIN) {
+	if (sent == -1) {
 		closeAndRemoveSocket(client_fd, _epoll_fd);
 		throw ClusterRunError("send failed");
 	}
@@ -513,10 +516,10 @@ std::ostream& operator<<(std::ostream& outstream, const Cluster& cluster) {
 	outstream << "The Cluster has an epoll_fd of [" << cluster.getEpollFd()
 			  << "] and " << server_list.size() << " servers:" << std::endl;
 
-  for (size_t i = 0; i < server_list.size(); i++)
-    outstream << cluster[i] << std::endl;
+	for (size_t i = 0; i < server_list.size(); i++)
+		outstream << cluster[i] << std::endl;
 
-  outstream << std::endl;
+	outstream << std::endl;
 
-  return (outstream);
+	return (outstream);
 }

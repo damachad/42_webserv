@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/31 13:29:33 by damachad         ###   ########.fr       */
+/*   Updated: 2024/10/31 14:45:04 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,8 @@ static std::string generateDefaultUploadResponse() {
 std::string PostResponse::generateResponse() {
 	unsigned short status = OK;
 	setMatchLocationRoute();
+
+	if ((status = checkMethod()) != OK) return loadErrorPage(status);
 
 	if ((status = parseHTTPBody()) != OK) return loadErrorPage(status);
 

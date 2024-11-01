@@ -72,14 +72,4 @@ fclean: clean
 
 re: fclean all
 
-test: all
-	@./$(NAME)
-
-client:
-	c++ srcs/client.cpp -o client
-
-reclient:
-	rm client
-	c++ srcs/client.cpp -o client
-
 .PHONY: all clean fclean re
