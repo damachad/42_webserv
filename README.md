@@ -98,4 +98,8 @@ You can find my notes for this project [here](https://spicy-dirigible-2b6.notion
 
 ## Demo
 
-![webserv_demo](webserv_demo.png)
+![webserv_demo.png](webserv_demo.png)
+
+[webserv_demo.webm](https://github.com/user-attachments/assets/a17c65eb-5b1a-4c57-8907-6e4edffd2f83)
+
+
