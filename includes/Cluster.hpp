@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:25 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/11/02 11:07:00 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:26:00 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,11 +57,7 @@ class Cluster {
 
 	// Getters for private member data
 	const std::vector<const Server*>& getServerList() const;
-	const std::vector<VirtualServer> getVirtualServerList() const;
 	const std::vector<int>& getListeningSockets() const;
-	const std::map<int, std::vector<const Server*> >& getListeningFdMap() const;
-	const std::map<int, std::vector<const Server*> >& getConnectionFdMap()
-		const;
 	int getEpollFd() const;
 
    private:

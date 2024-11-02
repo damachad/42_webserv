@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:20:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 16:34:35 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:29:18 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,6 @@ class PostResponse : public AResponse {
 	// Functions to parse the remainder of the body
 	unsigned short parseHTTPBody();
 	bool send100Continue();
-	bool readBody();
-	void readContentLength();
-	void removeFirstChunk();
-	void readChunks();
-	ssize_t readChunkSizeFromSocket();
-	int skipTrailingCRLF();
 	bool requestHasHeader(const std::string& header);
 	short checkBody();
 	short extractFile();
