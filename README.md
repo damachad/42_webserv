@@ -8,7 +8,8 @@
 - **Configurable Server Settings**: Accepts configuration files that define server behavior and directives, allowing flexible setup.
 - **Custom CGI Support**: Enables dynamic content handling using custom CGI scripts.
 - **Efficient I/O Multiplexing**: Built with `epoll` for handling multiple connections concurrently with minimal overhead.
-  
+- **Session Management**: Supports cookies and session handling to maintain user state across requests.
+
 ### 🛠 Supported Configuration Directives
 
 - **Contexts**:
@@ -82,7 +83,7 @@ curl -X POST http://localhost:8080/upload -F "file=@<path/to/file>"
 curl -X DELETE http://localhost:8080/file.txt
 ```
 To test with your browser just type `http://localhost:8080/` on the top search bar.
-Errors and logs will be printed to the console by default.
+Errors and logs will be printed to the console by default.   
 **Note:** Make sure you update the root directive in the configuration file with the path to the resources directory.
 
 ## 👥 Contributors
@@ -98,4 +99,8 @@ You can find my notes for this project [here](https://spicy-dirigible-2b6.notion
 
 ## Demo
 
-![webserv_demo](webserv_demo.png)
+![webserv_demo.png](webserv_demo.png)
+
+[webserv.webm](https://github.com/user-attachments/assets/17edbfd8-4ec9-40cd-9052-f6a6d43e4fce)
+
+
