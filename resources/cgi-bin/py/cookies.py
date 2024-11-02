@@ -72,7 +72,7 @@ if 'session_id' in cookie:
 if session_data is None:
     session_id, session_data = create_new_session()
     # Set a new cookie
-    print(f"Set-Cookie: session_id={session_id}; Path=/; HttpOnly")
+    print(f"Set-Cookie: session_id={session_id}; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600")
 
 # Update session data (e.g., increment visit count)
 session_data['visits'] += 1
