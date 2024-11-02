@@ -6,11 +6,12 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 11:25:49 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/17 16:19:05 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:47:56 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ConfigParser.hpp"
+
 #include "Exceptions.hpp"
 
 ConfigParser::ConfigParser(void) {}
@@ -38,7 +39,7 @@ void ConfigParser::trimOuterSpaces(std::string &s) {
 	while (std::isspace(s[s.length() - 1])) s.erase(s.end() - 1);
 }
 
-// Removes comments 
+// Removes comments
 void ConfigParser::trimComments(std::string &s) {
 	if (s.empty()) return;
 	size_t comment = s.find('#');
@@ -115,8 +116,7 @@ static bool areListenEqual(const Listen &a, const Listen &b) {
 static bool hasDuplicates(const std::vector<Listen> &vec) {
 	for (size_t i = 0; i < vec.size(); ++i) {
 		for (size_t j = i + 1; j < vec.size(); ++j) {
-			if (areListenEqual(vec[i], vec[j]))
-				return true;
+			if (areListenEqual(vec[i], vec[j])) return true;
 		}
 	}
 	return false;
@@ -149,8 +149,7 @@ void ConfigParser::loadIntoContext(std::vector<std::string> &blocks) {
 		}
 		if (hasDuplicates(server.getNetworkAddress()))
 			throw ConfigError("Duplicate network addresses found.");
-		if (server.getRoot()
-				.empty())
+		if (server.getRoot().empty())
 			throw ConfigError("No root directive present in server.");
 		_servers.push_back(server);
 	}
@@ -234,6 +233,8 @@ void ConfigParser::printLocationValues(unsigned int serverNum,
 		_servers[serverNum].getReturn(route);
 	if (returns.first) std::cout << returns.first << " : " << returns.second;
 	std::cout << std::endl;
-	std::cout << "Upload Store: " << _servers[serverNum].getUpload(route) << '\n';
-	std::cout << "CGI Extension: " << _servers[serverNum].getCgiExt(route) << '\n';
+	std::cout << "Upload Store: " << _servers[serverNum].getUpload(route)
+			  << '\n';
+	std::cout << "CGI Extension: " << _servers[serverNum].getCgiExt(route)
+			  << '\n';
 }

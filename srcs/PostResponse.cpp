@@ -6,15 +6,11 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 13:21:15 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/31 14:45:04 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:47:38 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "PostResponse.hpp"
-
-#include <sys/stat.h>
-
-#include <sstream>
 
 #include "CGI.hpp"
 #include "Helpers.hpp"
@@ -36,7 +32,7 @@ unsigned short PostResponse::parseHTTPBody() {
 	if (requestHasHeader("expect")) {
 		if (!send100Continue()) return response_status;
 	}
-	
+
 	// HTTP header parser
 	if (!requestHasHeader("content-length") ||
 		(requestHasHeader("transfer-encoding") && !isCGI()))
@@ -179,7 +175,8 @@ short PostResponse::uploadFile() {
 		return INTERNAL_SERVER_ERROR;
 	}
 
-	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) == -1) {
+	if (write(file_fd, _file_to_upload.file_contents.c_str(), bytes_to_write) ==
+		-1) {
 		close(file_fd);
 		return FORBIDDEN;
 	}

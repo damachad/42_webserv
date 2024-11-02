@@ -6,11 +6,12 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 15:14:52 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/18 14:35:14 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:48:07 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "GetResponse.hpp"
+
 #include "AResponse.hpp"
 #include "CGI.hpp"
 
@@ -31,8 +32,10 @@ short GetResponse::loadFile(std::string &path) {
 		std::ifstream file(path.c_str());
 		if (!file.is_open()) return INTERNAL_SERVER_ERROR;
 		// Check If-Modified-Since header
-		std::multimap<std::string, std::string>headers = _request.header_fields;
-		std::multimap<std::string, std::string>::const_iterator it_modified = headers.find("if-modified-since"); 
+		std::multimap<std::string, std::string> headers =
+			_request.header_fields;
+		std::multimap<std::string, std::string>::const_iterator it_modified =
+			headers.find("if-modified-since");
 
 		if (it_modified != headers.end()) {
 			std::string last_modified = getLastModificationDate(path);
@@ -43,15 +46,16 @@ short GetResponse::loadFile(std::string &path) {
 							  (std::istreambuf_iterator<char>()));
 		file.close();
 		if (_request.uri.find("download") != std::string::npos) {
-		size_t posSlash = _request.uri.find_last_of("/");
-		std::string fileName = _request.uri.substr(posSlash + 1);
-		if (fileName.empty()) fileName = "download";
-		_response.headers.insert(
-			std::make_pair(std::string("Content-Disposition"), std::string("attachment; filename=\"" + fileName + "\"")));
-	}
+			size_t posSlash = _request.uri.find_last_of("/");
+			std::string fileName = _request.uri.substr(posSlash + 1);
+			if (fileName.empty()) fileName = "download";
+			_response.headers.insert(std::make_pair(
+				std::string("Content-Disposition"),
+				std::string("attachment; filename=\"" + fileName + "\"")));
+		}
 		setMimeType(path);
 	}
-	loadCommonHeaders();	
+	loadCommonHeaders();
 	return OK;
 }
 
@@ -73,8 +77,7 @@ std::string GetResponse::generateResponse() {
 		if (status != OK) return loadErrorPage(status);
 	} else {  // is a directory
 		std::string indexFile = getIndexFile(path);
-		if (!indexFile.empty() && 
-			(checkFile(indexFile) == OK)) {
+		if (!indexFile.empty() && (checkFile(indexFile) == OK)) {
 			status = loadFile(indexFile);
 			if (status != OK) return loadErrorPage(status);
 		} else if (hasAutoindex()) {

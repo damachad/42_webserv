@@ -6,18 +6,11 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:19 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/31 12:01:58 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:47:53 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
-
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-
-#include <cerrno>
-#include <utility>
 
 #include "AResponse.hpp"
 #include "CGI.hpp"
@@ -27,7 +20,6 @@
 #include "Helpers.hpp"
 #include "PostResponse.hpp"
 #include "RequestErrorResponse.hpp"
-#include "WrapperFunctions.hpp"
 
 unsigned int total_used_storage = 0;
 // NOTE: Keeps track of how many bytes have been uploaded/deleted to server

@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/11/02 11:06:15 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:47:17 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,19 +20,19 @@
 #include <limits.h>
 #include <netinet/in.h>
 #include <netinet/in.h>	 // For sockaddr_in
+#include <unistd.h>	 // For read
+#include <signal.h>
 #include <sys/epoll.h>	 // For epoll
 #include <sys/socket.h>	 // For socket functions
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>	 // For read
 #include <sys/resource.h>
-#include <signal.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <cctype>	// For islanum
 #include <cstdlib>	// For exit() and EXIT_FAILURE
-#include <cstring>	// For memset (?)
+#include <cstring>	// For memset
 #include <ctime>
 #include <fstream>	 // For file streams
 #include <iomanip>	 // For iomanip for encoding
@@ -40,6 +40,9 @@
 #include <limits>
 #include <sstream>
 #include <typeinfo>	 // For typeid
+#include <netdb.h>
+#include <cerrno>
+#include <utility>
 
 // STL
 #include <algorithm>
