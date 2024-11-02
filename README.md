@@ -8,7 +8,8 @@
 - **Configurable Server Settings**: Accepts configuration files that define server behavior and directives, allowing flexible setup.
 - **Custom CGI Support**: Enables dynamic content handling using custom CGI scripts.
 - **Efficient I/O Multiplexing**: Built with `epoll` for handling multiple connections concurrently with minimal overhead.
-  
+- **Session Management**: Supports cookies and session handling to maintain user state across requests.
+
 ### 🛠 Supported Configuration Directives
 
 - **Contexts**:
