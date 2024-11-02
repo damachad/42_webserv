@@ -6,7 +6,7 @@
 #    By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/01 11:53:48 by damachad          #+#    #+#              #
-#    Updated: 2024/10/22 10:07:01 by damachad         ###   ########.fr        #
+#    Updated: 2024/11/02 11:05:23 by damachad         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -41,7 +41,7 @@ OBJ_DIR		= objs
 
 NAME 		= webserv
 
-FILES 		= main Helpers ConfigParser Exceptions Server Cluster Location HTTPRequestParser AResponse GetResponse PostResponse DeleteResponse RequestErrorResponse CGI WrapperFunctions
+FILES 		= main Helpers ConfigParser Exceptions Server Cluster Location HTTPRequestParser AResponse GetResponse PostResponse DeleteResponse RequestErrorResponse CGI
 
 SRC 		= $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILES)))
 OBJ 		= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILES)))

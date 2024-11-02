@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:44:25 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/30 12:16:03 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:07:00 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,11 +118,6 @@ class Cluster {
 
 	// Request buffers
 	std::map<int, std::string> _request_buffer;
-
-	// HTTP Request structs
-	//std::map<int, HTTP_Request> _requests;
-	//std::map<int, bool> _headerParseFlag;
-	//std::map <int, unsigned short> _error_status;
 	
 	// Constructors not to be used
 	Cluster();

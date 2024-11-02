@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/21 18:18:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:06:15 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,6 @@
 enum Method { GET = 1, POST, DELETE, UNKNOWN };
 enum State { FALSE, TRUE, UNSET };
 
-// TODO: Decide what global definitions we want
 // Magic numbers and strings
 #define MAX_CONNECTIONS 100
 #define MAX_STORAGE_SIZE 5368709120
