@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/15 12:38:09 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:48:24 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 		return (1);
 	}
 	signal(SIGINT, sigIntHandler);
-	ConfigParser parser("conf/default2.conf");
+	ConfigParser parser("conf/default.conf");
 	if (argc == 2) parser = ConfigParser(argv[1]);
 
 	std::vector<Server>
