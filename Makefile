@@ -6,7 +6,7 @@
 #    By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/01 11:53:48 by damachad          #+#    #+#              #
-#    Updated: 2024/10/22 10:07:01 by damachad         ###   ########.fr        #
+#    Updated: 2024/11/02 16:17:59 by damachad         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,7 +29,7 @@ RM = rm -rf
 
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ FLAGS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
-CXXFLAGS 	= -Wall -Werror -Wextra -Wshadow -pedantic -std=c++98 -g #-fsanitize=address
+CXXFLAGS 	= -Wall -Werror -Wextra -Wshadow -Wunused -pedantic -std=c++98 -g #-fsanitize=address
 
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ PATHS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
@@ -41,7 +41,7 @@ OBJ_DIR		= objs
 
 NAME 		= webserv
 
-FILES 		= main Helpers ConfigParser Exceptions Server Cluster Location HTTPRequestParser AResponse GetResponse PostResponse DeleteResponse RequestErrorResponse CGI WrapperFunctions
+FILES 		= main Helpers ConfigParser Exceptions Server Cluster Location HTTPRequestParser AResponse GetResponse PostResponse DeleteResponse RequestErrorResponse CGI
 
 SRC 		= $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILES)))
 OBJ 		= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILES)))
@@ -52,19 +52,21 @@ all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJ)
 	@$(CXX) $(CXXFLAGS) $(SRC) -o $(NAME) -I $(INC)
+	@echo "]"
 	@echo "[$(NAME) created]"
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp 
 	@mkdir -p $(@D)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@ -I $(INC)
+	@echo -n "."
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
-	@echo "[objs directory created]"
+	@echo -n "[Compiling"
 
 clean:
 	@$(RM) $(OBJ_DIR)
-	@echo "[objs directory removed]"
+	@echo "[objs removed]"
 
 fclean: clean
 	@$(RM) $(NAME)

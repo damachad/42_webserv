@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:47 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/31 13:32:16 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:48:11 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,8 +69,7 @@ bool HTTP_Request_Parser::addRequestLine(HTTP_Request& HTTP,
 	line_stream >> method;
 	if (method.size() == 0 || !methodIsValid(method)) {
 		response_status = METHOD_NOT_ALLOWED;
-		if (methodExists(method))
-			response_status = NOT_IMPLEMENTED;
+		if (methodExists(method)) response_status = NOT_IMPLEMENTED;
 		return false;
 	}
 
@@ -115,7 +114,7 @@ bool HTTP_Request_Parser::addHeaderFields(HTTP_Request& HTTP,
 	}
 
 	// Extract key and value
-	std::string key = line.substr(0, colon_pos);	
+	std::string key = line.substr(0, colon_pos);
 	std::string comma_separated_values = line.substr(colon_pos + 1);
 
 	// Trim whitespace from key and value
@@ -135,10 +134,10 @@ bool HTTP_Request_Parser::addHeaderFields(HTTP_Request& HTTP,
 	// Add comma_separated_values into a set
 	std::stringstream ss(comma_separated_values);
 	std::string value;
-	
+
 	if (key == "date" || key == "if-modified-since" || key == "last-modified") {
 		HTTP.header_fields.insert(
-				std::pair<std::string, std::string>(key, comma_separated_values));
+			std::pair<std::string, std::string>(key, comma_separated_values));
 		return true;
 	}
 	while (std::getline(ss, value, ',')) {
@@ -299,7 +298,8 @@ bool HTTP_Request_Parser::methodIsValid(const std::string& method) {
 }
 
 bool HTTP_Request_Parser::methodExists(const std::string& method) {
-	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "PATCH") 
+	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" ||
+		method == "PATCH")
 		return true;
 	return false;
 }
@@ -320,7 +320,6 @@ bool HTTP_Request_Parser::urlIsValid(const std::string& url) {
 		(std::count(url.begin(), url.end(), '=') !=
 		 std::count(url.begin(), url.end(), '&') + 1))
 		return false;
-
 
 	return true;
 }

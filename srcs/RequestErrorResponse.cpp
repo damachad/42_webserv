@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/14 10:40:06 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/09/18 15:08:15 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:34:54 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,5 @@ RequestErrorResponse::RequestErrorResponse(const RequestErrorResponse& src)
 RequestErrorResponse::~RequestErrorResponse() {}
 
 std::string RequestErrorResponse::generateResponse() {
-	// if (_error_status == 100) return loadContinueMessage;
-
 	return loadErrorPage(_error_status);
 }

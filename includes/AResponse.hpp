@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/22 10:02:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:37:03 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ struct HTTP_Response {
 	std::string body;
 
 	// NOTE: Default constructor to initialize the members
-	HTTP_Response() : status(0) {}
+	HTTP_Response() : status(200) {}
 };
 
 class AResponse {

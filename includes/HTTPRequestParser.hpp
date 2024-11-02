@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 16:12:57 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/18 15:36:49 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:28:29 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,6 @@ class HTTP_Request_Parser {
 	static bool addHeaderFields(HTTP_Request& HTTP, const std::string& line);
 	static void addMessageBody(HTTP_Request& HTTP, const std::string& line);
 	static bool checkValidityOfHeaderFields(HTTP_Request& HTTP);
-	static unsigned short check_expect_validity(HTTP_Request& HTTP);
 	static void extractQueries(HTTP_Request& HTTP);
 
 	// Auxiliary functions for above functions
@@ -63,8 +62,6 @@ class HTTP_Request_Parser {
 	static bool urlIsValid(const std::string& url);
 	static bool methodExists(const std::string& method);
 	static bool protocolVersionIsValid(const ::std::string& protocol_version);
-	static bool send100Continue(int client_fd, const HTTP_Request& HTTP);
-	static bool readBody(int client_fd, int epoll_fd, HTTP_Request& HTTP);
 
 	// Private constructor and destructor: class is not instanciable
 	HTTP_Request_Parser();
@@ -75,45 +72,3 @@ std::ostream& operator<<(std::ostream& outstream, const HTTP_Request& request);
 
 #endif
 
-// Curl:
-//
-// HTTP Request:
-// Method: 1
-// URI: /ping
-// Protocol: HTTP/1.1
-// Header fields:
-//        Accept: */*
-//        Host: localhost:9999
-//        User-Agent: curl/7.81.0
-// Query fields:
-//        tia: gorbachov
-//        user: miguel
-// Message body:
-//
-// Firefox:
-// Header fields:
-//        Accept: text/html
-//        Accept: application/xhtml+xml
-//        Accept: application/xml;q=0.9
-//        Accept: image/avif
-//        Accept: image/webp
-//        Accept: image/png
-//        Accept: image/svg+xml
-//        Accept: */*;q=0.8
-//        Accept-Encoding: gzip
-//        Accept-Encoding: deflate
-//        Accept-Encoding: br
-//        Accept-Encoding: zstd
-//        Accept-Language: en-US
-//        Accept-Language: en;q=0.5
-//        Connection: keep-alive
-//        Host: localhost:9999
-//        Priority: u=0
-//        Priority: i
-//        Sec-Fetch-Dest: document
-//        Sec-Fetch-Mode: navigate
-//        Sec-Fetch-Site: none
-//        Sec-Fetch-User: ?1
-//        Upgrade-Insecure-Requests: 1
-//        User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101
-//        Firefox/130.0

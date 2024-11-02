@@ -61,16 +61,14 @@ void Location::initializeDirectiveMap(void) {
 void Location::handleRoot(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in root directive.");
-	if (!_root.empty())
-		throw ConfigError("root directive is duplicate.");
+	if (!_root.empty()) throw ConfigError("root directive is duplicate.");
 	_root = tokens[1];
 }
 
 void Location::handleIndex(std::vector<std::string> &tokens) {
 	tokens.erase(tokens.begin());
 	std::vector<std::string>::const_iterator it;
-	for (it = tokens.begin(); it != tokens.end(); it++)
-		_index.push_back(*it);
+	for (it = tokens.begin(); it != tokens.end(); it++) _index.push_back(*it);
 }
 
 void Location::handleLimitExcept(std::vector<std::string> &tokens) {
@@ -111,8 +109,7 @@ void Location::handleCliMaxSize(std::vector<std::string> &tokens) {
 		throw ConfigError(
 			"Invalid number of arguments in client_max_body_size directive.");
 	if (_clientMaxBodySize != -1)
-		throw ConfigError(
-			"client_max_body_size directive is duplicate.");
+		throw ConfigError("client_max_body_size directive is duplicate.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
 	if (!std::isdigit(unit)) maxSize.resize(maxSize.size() - 1);
@@ -187,8 +184,7 @@ void Location::handleUpload(std::vector<std::string> &tokens) {
 void Location::handleCgiExt(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in cgi_ext directive.");
-	if (!_cgiExt.empty())
-		throw ConfigError("cgi_ext directive is duplicate.");
+	if (!_cgiExt.empty()) throw ConfigError("cgi_ext directive is duplicate.");
 	_cgiExt = tokens[1];
 }
 

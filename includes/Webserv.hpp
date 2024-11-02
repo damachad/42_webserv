@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 12:00:46 by damachad          #+#    #+#             */
-/*   Updated: 2024/10/21 18:18:57 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:56:41 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,24 +15,23 @@
 
 #include <arpa/inet.h>	// for inet.aton()
 #include <dirent.h>
-#include <errno.h>	// For errno
+#include <errno.h>
 #include <fcntl.h>	// open
 #include <limits.h>
-#include <netinet/in.h>
 #include <netinet/in.h>	 // For sockaddr_in
+#include <unistd.h>	 // For read
+#include <signal.h>
 #include <sys/epoll.h>	 // For epoll
 #include <sys/socket.h>	 // For socket functions
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>	 // For read
 #include <sys/resource.h>
-#include <signal.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <cctype>	// For islanum
 #include <cstdlib>	// For exit() and EXIT_FAILURE
-#include <cstring>	// For memset (?)
+#include <cstring>	// For memset
 #include <ctime>
 #include <fstream>	 // For file streams
 #include <iomanip>	 // For iomanip for encoding
@@ -40,6 +39,9 @@
 #include <limits>
 #include <sstream>
 #include <typeinfo>	 // For typeid
+#include <netdb.h>
+#include <cerrno>
+#include <utility>
 
 // STL
 #include <algorithm>
@@ -51,7 +53,6 @@
 enum Method { GET = 1, POST, DELETE, UNKNOWN };
 enum State { FALSE, TRUE, UNSET };
 
-// TODO: Decide what global definitions we want
 // Magic numbers and strings
 #define MAX_CONNECTIONS 100
 #define MAX_STORAGE_SIZE 5368709120

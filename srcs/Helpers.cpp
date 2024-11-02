@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/19 14:45:02 by mde-sa--          #+#    #+#             */
-/*   Updated: 2024/10/17 16:42:43 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 11:46:11 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,7 @@ bool running = true;
 
 // Sets global flag to false when a SIGINT is caught
 void sigIntHandler(int signum) {
-	if (signum == SIGINT)
-		running = false;
+	if (signum == SIGINT) running = false;
 }
 
 // Type conversions
@@ -76,7 +75,8 @@ std::string getHttpDate() {
 
 // Converts a 3-letter month abbreviation into its index (0-11)
 static int getMonthFromString(const std::string& month_str) {
-	const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+	const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+							"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 	for (int i = 0; i < 12; ++i) {
 		if (month_str == months[i]) {
 			return i;
@@ -94,7 +94,8 @@ time_t parseTime(const std::string& http_time) {
 	int day, year, hour, minute, second;
 
 	// Example: "Wed, 21 Oct 2015 07:28:00 GMT"
-	if (sscanf(http_time.c_str(), "%*3s, %d %3s %d %d:%d:%d GMT", &day, month_str, &year, &hour, &minute, &second) != 6)
+	if (sscanf(http_time.c_str(), "%*3s, %d %3s %d %d:%d:%d GMT", &day,
+			   month_str, &year, &hour, &minute, &second) != 6)
 		return -1;
 
 	int month = getMonthFromString(month_str);
@@ -103,13 +104,14 @@ time_t parseTime(const std::string& http_time) {
 	// Set tm structure
 	t.tm_mday = day;
 	t.tm_mon = month;
-	t.tm_year = year - 1900; // tm_year is years since 1900
+	t.tm_year = year - 1900;  // tm_year is years since 1900
 	t.tm_hour = hour;
 	t.tm_min = minute;
 	t.tm_sec = second;
-	t.tm_isdst = 0; // Not considering daylight saving time
+	t.tm_isdst = 0;	 // Not considering daylight saving time
 
 	// Convert to time_t (UTC time since epoch)
-	time_t parsed_time = timegm(&t); // Use timegm to avoid timezone adjustments
+	time_t parsed_time =
+		timegm(&t);	 // Use timegm to avoid timezone adjustments
 	return parsed_time;
 }

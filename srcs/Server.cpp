@@ -12,7 +12,8 @@
 
 #include "Server.hpp"
 
-Server::Server() : _autoIndex(FALSE), _hasAutoIndex(false), _clientMaxBodySize(1048576) {
+Server::Server()
+	: _autoIndex(FALSE), _hasAutoIndex(false), _clientMaxBodySize(1048576) {
 	// NGINX defaults
 	_index.push_back("index.html");
 	_index.push_back("index.htm");
@@ -142,8 +143,7 @@ void Server::handleServerName(std::vector<std::string> &tokens) {
 void Server::handleRoot(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in root directive.");
-	if (!_root.empty())
-		throw ConfigError("root directive is duplicate.");
+	if (!_root.empty()) throw ConfigError("root directive is duplicate.");
 	_root = tokens[1];
 }
 
@@ -151,8 +151,7 @@ void Server::handleRoot(std::vector<std::string> &tokens) {
 void Server::handleIndex(std::vector<std::string> &tokens) {
 	tokens.erase(tokens.begin());
 	std::vector<std::string>::const_iterator it;
-	for (it = tokens.begin(); it != tokens.end(); it++)
-		_index.push_back(*it);
+	for (it = tokens.begin(); it != tokens.end(); it++) _index.push_back(*it);
 }
 
 // Checks and loads error_page into Server
@@ -177,8 +176,7 @@ void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
 		throw ConfigError(
 			"Invalid number of arguments in client_max_body_size directive.");
 	if (_clientMaxBodySize != 1048576)
-		throw ConfigError(
-			"client_max_body_size directive is duplicate.");
+		throw ConfigError("client_max_body_size directive is duplicate.");
 	std::string maxSize = tokens[1];
 	char unit = maxSize[maxSize.size() - 1];
 	if (!std::isdigit(unit)) maxSize.resize(maxSize.size() - 1);
@@ -219,8 +217,7 @@ void Server::handleCliMaxSize(std::vector<std::string> &tokens) {
 
 // Checks and loads autoindex into Server
 void Server::handleAutoIndex(std::vector<std::string> &tokens) {
-	if (_hasAutoIndex)
-		throw ConfigError("autoindex directive is duplicate.");
+	if (_hasAutoIndex) throw ConfigError("autoindex directive is duplicate.");
 	if (tokens[1] == "on")
 		_autoIndex = TRUE;
 	else if (tokens[1] == "off")
@@ -259,8 +256,7 @@ void Server::handleUpload(std::vector<std::string> &tokens) {
 void Server::handleCgiExt(std::vector<std::string> &tokens) {
 	if (tokens.size() > 2)
 		throw ConfigError("Invalid number of arguments in cgi_ext directive.");
-	if (!_cgiExt.empty())
-		throw ConfigError("cgi_ext directive is duplicate.");
+	if (!_cgiExt.empty()) throw ConfigError("cgi_ext directive is duplicate.");
 	_cgiExt = tokens[1];
 }
 
