@@ -6,7 +6,7 @@
 #    By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/01 11:53:48 by damachad          #+#    #+#              #
-#    Updated: 2024/11/02 11:56:01 by damachad         ###   ########.fr        #
+#    Updated: 2024/11/02 16:17:59 by damachad         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -52,19 +52,21 @@ all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJ)
 	@$(CXX) $(CXXFLAGS) $(SRC) -o $(NAME) -I $(INC)
+	@echo "]"
 	@echo "[$(NAME) created]"
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp 
 	@mkdir -p $(@D)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@ -I $(INC)
+	@echo -n "."
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
-	@echo "[objs directory created]"
+	@echo -n "[Compiling"
 
 clean:
 	@$(RM) $(OBJ_DIR)
-	@echo "[objs directory removed]"
+	@echo "[objs removed]"
 
 fclean: clean
 	@$(RM) $(NAME)
