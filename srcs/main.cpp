@@ -6,7 +6,7 @@
 /*   By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/01 11:53:15 by damachad          #+#    #+#             */
-/*   Updated: 2024/11/02 11:48:24 by damachad         ###   ########.fr       */
+/*   Updated: 2024/11/02 12:00:12 by damachad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
+	std::cout << "Welcome to Webserv.\n";
 	// Runs the server on an infinite loop
 	server_cluster.run();
 
