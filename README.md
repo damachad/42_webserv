@@ -95,3 +95,7 @@ This project was developed collaboratively as part of the 42 School curriculum.
 
 ## 📝 Documentation 
 You can find my notes for this project [here](https://spicy-dirigible-2b6.notion.site/Webserver-2b27a84f4c5841dd80fb25229912e953?pvs=4).
+
+## Demo
+
+![webserv_demo](webserv_demo.png)
