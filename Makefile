@@ -6,7 +6,7 @@
 #    By: damachad <damachad@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/01 11:53:48 by damachad          #+#    #+#              #
-#    Updated: 2024/11/02 11:05:23 by damachad         ###   ########.fr        #
+#    Updated: 2024/11/02 11:56:01 by damachad         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,7 +29,7 @@ RM = rm -rf
 
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ FLAGS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
-CXXFLAGS 	= -Wall -Werror -Wextra -Wshadow -pedantic -std=c++98 -g #-fsanitize=address
+CXXFLAGS 	= -Wall -Werror -Wextra -Wshadow -Wunused -pedantic -std=c++98 -g #-fsanitize=address
 
 # /\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_ PATHS _/\_/\_/\_/\_/\_/\_/\_/\_/\_/\_/\ #
 
