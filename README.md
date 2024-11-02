@@ -100,6 +100,6 @@ You can find my notes for this project [here](https://spicy-dirigible-2b6.notion
 
 ![webserv_demo.png](webserv_demo.png)
 
-[webserv_demo.webm](https://github.com/user-attachments/assets/a17c65eb-5b1a-4c57-8907-6e4edffd2f83)
+[webserv.webm](https://github.com/user-attachments/assets/17edbfd8-4ec9-40cd-9052-f6a6d43e4fce)
 
 
