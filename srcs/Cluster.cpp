@@ -161,7 +161,7 @@ void Cluster::startListening(int sock_fd) {
 // Adds sockets to epoll so they can be monitored
 void Cluster::addSocketsToEpoll(int sock_fd) {
 	epoll_event event;
-	bzero(&event, sizeof(event));
+	std::memset(&event, '0', sizeof(event));
 	event.events = EPOLLIN;
 	event.data.fd = sock_fd;
 
@@ -265,7 +265,7 @@ void Cluster::handleNewConnection(int listening_fd) {
 	setSocketToNonBlocking(client_fd);
 
 	struct epoll_event client_event;
-	bzero(&client_event, sizeof(client_event));
+	std::memset(&client_event, '0', sizeof(client_event));
 	client_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
 	client_event.data.fd = client_fd;
 
@@ -299,7 +299,7 @@ void Cluster::handleClientRequest(int connection_fd) {
 			// If we haven't received a complete request, we should rearm the
 			// socket
 			struct epoll_event ev;
-			bzero(&ev, sizeof(ev));
+			std::memset(&ev, '0', sizeof(ev));
 			ev.events = EPOLLIN | EPOLLERR | EPOLLHUP;
 			ev.data.fd = connection_fd;
 
